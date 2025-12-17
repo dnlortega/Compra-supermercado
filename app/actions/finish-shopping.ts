@@ -46,7 +46,7 @@ export async function finishShoppingList(name?: string) {
         throw new Error("No products in the list");
     }
 
-    const total = list.products.reduce((acc: number, p: any) => acc + (p.totalPrice || 0), 0);
+    const total = list.products.reduce((acc: number, p: { totalPrice: number | null }) => acc + (p.totalPrice || 0), 0);
 
     await (prisma as any).shoppingList.update({
         where: { id: list.id },
