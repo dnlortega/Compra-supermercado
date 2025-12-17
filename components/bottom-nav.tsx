@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, List, Receipt, PieChart, History as HistoryIcon } from "lucide-react"
+import { Home, List, Receipt, PieChart, History as HistoryIcon, BookOpen } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -19,6 +19,11 @@ export function BottomNav() {
             href: "/list",
             label: "Lista",
             icon: List,
+        },
+        {
+            href: "/catalog",
+            label: "Catálogo",
+            icon: BookOpen,
         },
         {
             href: "/prices",

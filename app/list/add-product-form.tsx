@@ -7,27 +7,25 @@ import { addProduct } from "@/app/actions/products";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 
-const PRODUCT_SUGGESTIONS = [
-    // Essenciais
-    "Arroz", "Feijão", "Óleo", "Macarrão", "Café", "Açúcar", "Sal", "Farinha",
-    // Hortifruti
-    "Tomate", "Cebola", "Batata", "Banana", "Maçã", "Alface", "Alho",
-    // Frios & Laticínios
-    "Leite", "Manteiga", "Queijo", "Presunto", "Iogurte", "Ovos",
-    // Limpeza
-    "Detergente", "Sabão em Pó", "Água Sanitária", "Amaciante", "Esponja", "Desinfetante",
-    // Higiene
-    "Papel Higiênico", "Sabonete", "Pasta de Dente", "Shampoo", "Condicionador",
-];
+import { getAllCatalogProducts } from "@/app/actions/catalog";
 
 export default function AddProductForm() {
     const [name, setName] = useState("");
     const [quantity, setQuantity] = useState(1);
     const [loading, setLoading] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [catalog, setCatalog] = useState<any[]>([]);
     const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
     const inputRef = useRef<HTMLInputElement>(null);
     const suggestionsRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const loadCatalog = async () => {
+            const data = await getAllCatalogProducts();
+            setCatalog(data);
+        };
+        loadCatalog();
+    }, []);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -49,9 +47,9 @@ export default function AddProductForm() {
         setName(value);
 
         if (value.trim().length > 0) {
-            const filtered = PRODUCT_SUGGESTIONS.filter(suggestion =>
-                suggestion.toLowerCase().includes(value.toLowerCase())
-            );
+            const filtered = catalog
+                .filter(item => item.name.toLowerCase().includes(value.toLowerCase()))
+                .map(item => item.name);
             setFilteredSuggestions(filtered);
             setShowSuggestions(filtered.length > 0);
         } else {

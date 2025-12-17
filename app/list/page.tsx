@@ -21,6 +21,12 @@ export default async function ListPage() {
 
             <AddProductForm />
 
+            <div className="mt-4 flex justify-end">
+                <Link href="/catalog" className="text-sm text-primary hover:underline">
+                    Gerenciar Catálogo de Sugestões
+                </Link>
+            </div>
+
             <div className="mt-8">
                 <h2 className="text-xl font-semibold mb-4">Itens ({products.length})</h2>
                 <ProductList initialProducts={products} />

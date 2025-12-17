@@ -53,3 +53,14 @@ model PriceHistory {
   @@index([productName])
 }
 
+model CatalogProduct {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  category  String   @default("Outros")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("catalog_products")
+}
+
