@@ -66,7 +66,7 @@ function determineCategory(name: string): string {
         "Essenciais": [
             "feijão", "feijao", "arroz", "açúcar", "acucar", "óleo", "oleo",
             "macarrão", "macarrao", "café", "cafe", "sal", "farinha", "biscoito",
-            "bolacha", "molho", "milho", "ervilha", "maionese", "ketchup", "mostarda",
+            "bolacha", "molho", "extrato", "milho", "ervilha", "maionese", "ketchup", "mostarda",
             "vinagre", "azeite", "pipoca", "gelatina", "leite condensado", "creme de leite",
             "achocolatado", "nescau", "toddy", "chá", "cha"
         ],
@@ -82,7 +82,8 @@ function determineCategory(name: string): string {
         ],
         "Carnes & Aves": [
             "carne", "frango", "alcatra", "filé", "file", "costela", "coxa", "sobrecoxa",
-            "salsicha", "linguiça", "linguica", "peixe", "bacon", "bife", "hambúrguer", "hamburguer"
+            "salsicha", "linguiça", "linguica", "peixe", "bacon", "bife", "hambúrguer", "hamburguer",
+            "patinho", "coxão", "coxao", "maminha"
         ],
         "Frios & Laticínios": [
             "leite", "manteiga", "queijo", "presunto", "iogurte", "ovo", "requeijão",
@@ -94,12 +95,14 @@ function determineCategory(name: string): string {
         "Limpeza": [
             "sabão", "sabao", "amaciante", "desinfetante", "pano", "detergente",
             "vash", "água sanitária", "agua sanitaria", "esponja", "limpa vidro",
-            "desengordurante", "lustra móveis", "lustra moveis", "lixo", "vassoura", "rodo"
+            "desengordurante", "lustra móveis", "lustra moveis", "lixo", "vassoura", "rodo",
+            "lava roupa", "sabão líquido", "sabao liquido"
         ],
         "Higiene": [
             "papel higiênico", "papel higienico", "sabonete", "creme dental", "pasta de dente",
             "shampoo", "xampu", "condicionador", "desodorante", "escova", "fio dental",
-            "enxaguante", "absorvente", "algodão", "algodao", "lâmina", "lamina", "barbear"
+            "enxaguante", "absorvente", "algodão", "algodao", "lâmina", "lamina", "barbear",
+            "papel toalha", "guardanapo"
         ],
         "Pet Shop": [
             "ração", "racao", "pet", "cão", "cao", "gato", "areia"

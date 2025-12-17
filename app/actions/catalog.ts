@@ -27,9 +27,9 @@ export async function seedCatalog() {
     const defaultCatalog: Record<string, string[]> = {
         "Essenciais": [
             "Arroz", "Feijão", "Óleo", "Macarrão", "Café", "Açúcar", "Sal", "Farinha",
-            "Biscoito", "Molho de Tomate", "Milho", "Ervilha", "Maionese", "Ketchup",
-            "Mostarda", "Vinagre", "Azeite", "Pipoca", "Gelatina", "Creme de Leite",
-            "Leite Condensado", "Achocolatado", "Chá"
+            "Biscoito", "Molho de Tomate", "Extrato de Tomate", "Milho", "Ervilha",
+            "Maionese", "Ketchup", "Mostarda", "Vinagre", "Azeite", "Pipoca",
+            "Gelatina", "Creme de Leite", "Leite Condensado", "Achocolatado", "Chá"
         ],
         "Bebidas": [
             "Água Mineral", "Suco", "Refrigerante", "Cerveja", "Vinho", "Energético",
@@ -42,7 +42,8 @@ export async function seedCatalog() {
         ],
         "Carnes & Aves": [
             "Carne Moída", "Filé de Frango", "Alcatra", "Contra Filé", "Costela",
-            "Coxa de Frango", "Sobrecoxa", "Salsicha", "Linguiça", "Peixe", "Bacon"
+            "Coxa de Frango", "Sobrecoxa", "Salsicha", "Linguiça", "Peixe", "Bacon",
+            "Patinho", "Coxão Mole", "Maminha"
         ],
         "Frios & Laticínios": [
             "Leite", "Manteiga", "Queijo Mussarela", "Presunto", "Iogurte", "Ovos",
@@ -52,9 +53,9 @@ export async function seedCatalog() {
             "Pão Francês", "Pão de Forma", "Bisnaga", "Bolo", "Pão de Queijo", "Torrada"
         ],
         "Limpeza": [
-            "Detergente", "Sabão em Pó", "Água Sanitária", "Amaciante", "Esponja",
-            "Desinfetante", "Desengordurante", "Limpa Vidros", "Saco de Lixo",
-            "Vassoura", "Rodo", "Pano de Prato"
+            "Detergente", "Sabão em Pó", "Lava Roupa", "Sabão Líquido", "Água Sanitária",
+            "Amaciante", "Esponja", "Desinfetante", "Desengordurante", "Limpa Vidros",
+            "Saco de Lixo", "Papel Toalha", "Vassoura", "Rodo", "Pano de Prato"
         ],
         "Higiene": [
             "Papel Higiênico", "Sabonete", "Pasta de Dente", "Shampoo", "Condicionador",
