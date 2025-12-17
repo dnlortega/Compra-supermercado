@@ -1,30 +1,63 @@
-# Controle de Supermercado 🛒
+# COMPRA FÁCIL 🛒
 
-Sistema web responsivo para controle de compras de mercado built with Next.js, shadcn/ui and PostgreSQL (Neon).
+Sistema completo e responsivo para controle de compras de supermercado, focado em agilidade e organização.
 
-## 🚀 Como rodar o projeto
+## ✨ Principais Diferenciais
 
-1.  **Instale as dependências:**
-    ```bash
-    npm install
-    ```
-
-2.  **Configuração do Banco de Dados:**
-    O projeto já está configurado com o banco Neon.
-    Certifique-se de que o arquivo `.env` contém a URL do banco.
-    ```bash
-    npx prisma db push
-    ```
-
-3.  **Inicie o servidor de desenvolvimento:**
-    ```bash
-    npm run dev
-    ```
-
-4.  **Acesse:** [http://localhost:3000](http://localhost:3000)
+- **MAIÚSCULO POR PADRÃO**: Toda a interface é exibida em letras maiúsculas para facilitar a leitura rápida durante as compras.
+- **ENTRADA DE PREÇOS INTELIGENTE**: Preenchimento de valores otimizado (começa pelos centavos e não exige vírgula), agilizando a inserção no PDV ou no corredor.
 
 ## 📱 Funcionalidades
 
-- **Criar Lista:** Adicione itens e quantidades.
-- **Preencher Valores:** Checklist para inserir preços unitários durante a compra.
-- **Resumo:** Veja o total gasto e detalhes por item.
+- **GESTÃO DE LISTAS**: Adicione itens rapidamente com sugestões automáticas.
+- **CATÁLOGO DE PRODUTOS**: Gerencie seus produtos frequentes para criar novas listas em segundos.
+- **PREENCHIMENTO EM TEMPO REAL**: Checklist de preços com cálculo automático de subtotal e total.
+- **HISTÓRICO E ESTATÍSTICAS**: Visualize suas compras passadas e acompanhe a variação de preços de cada item.
+- **MODO ESCURO/CLARO**: Suporte nativo a temas para melhor conforto visual.
+
+## 🛠️ Stack Tecnológica
+
+- **Framework**: [Next.js 15+](https://nextjs.org/) (App Router)
+- **Linguagem**: [TypeScript](https://www.typescriptlang.org/)
+- **Banco de Dados**: [PostgreSQL](https://www.postgresql.org/) (Hospedado no [Neon DB](https://neon.tech/))
+- **ORM**: [Prisma](https://www.prisma.io/)
+- **UI/UX**: [shadcn/ui](https://ui.shadcn.com/) & [Tailwind CSS](https://tailwindcss.com/)
+- **Ícones**: [Lucide React](https://lucide.dev/)
+
+## 🚀 Como Rodar o Projeto
+
+### 1. Pré-requisitos
+- Node.js instalado.
+- Banco de dados PostgreSQL (recomendamos Neon.tech).
+
+### 2. Instalação
+```bash
+# Clone o repositório e acesse a pasta
+git clone <url-do-repositorio>
+cd Compra-supermercado
+
+# Instale as dependências
+npm install
+```
+
+### 3. Configuração do Ambiente
+Crie um arquivo `.env` na raiz do projeto com a sua URL do banco:
+```env
+DATABASE_URL="postgresql://user:password@host/dbname?sslmode=require"
+```
+
+### 4. Banco de Dados
+Sincronize o esquema do banco de dados:
+```bash
+npx prisma db push
+```
+
+### 5. Iniciar o Desenvolvimento
+```bash
+npm run dev
+```
+
+Acesse [http://localhost:3000](http://localhost:3000) no seu navegador.
+
+---
+Desenvolvido para facilitar o seu dia a dia no mercado! 🍍🥩🧼

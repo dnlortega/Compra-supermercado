@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Edit2, Save, X, Trash2, Plus } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
@@ -53,13 +54,13 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
     const [list, setList] = useState<ShoppingListDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [editPrice, setEditPrice] = useState("");
+    const [editPrice, setEditPrice] = useState<number>(0);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [addProductDialogOpen, setAddProductDialogOpen] = useState(false);
     const [newProduct, setNewProduct] = useState({
         name: "",
         quantity: "",
-        unitPrice: "",
+        unitPrice: 0 as number | null,
         category: "Outros"
     });
 
@@ -82,12 +83,12 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
 
     const handleEdit = (product: Product) => {
         setEditingId(product.id);
-        setEditPrice(product.unitPrice?.toString() || "");
+        setEditPrice(product.unitPrice || 0);
     };
 
     const handleSave = async (productId: string, _quantity: number) => {
-        const newPrice = parseFloat(editPrice);
-        if (isNaN(newPrice)) {
+        const newPrice = editPrice;
+        if (newPrice === undefined || newPrice < 0) {
             toast.error("Preço inválido");
             return;
         }
@@ -135,7 +136,7 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
         }
 
         const qty = parseInt(quantity);
-        const price = unitPrice ? parseFloat(unitPrice.replace(",", ".")) : null;
+        const price = unitPrice;
 
         if (isNaN(qty) || qty <= 0) {
             toast.error("Quantidade deve ser um número positivo");
@@ -161,7 +162,7 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
 
             toast.success("Produto adicionado");
             setAddProductDialogOpen(false);
-            setNewProduct({ name: "", quantity: "", unitPrice: "", category: "Outros" });
+            setNewProduct({ name: "", quantity: "", unitPrice: 0, category: "Outros" });
             loadList();
         } catch (_error) {
             toast.error("Erro ao adicionar produto");
@@ -249,12 +250,10 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="product-price">Valor Unitário (R$)</Label>
-                                        <Input
+                                        <CurrencyInput
                                             id="product-price"
-                                            type="number"
-                                            step="0.01"
                                             value={newProduct.unitPrice}
-                                            onChange={(e) => setNewProduct(prev => ({ ...prev, unitPrice: e.target.value }))}
+                                            onValueChange={(val) => setNewProduct(prev => ({ ...prev, unitPrice: val }))}
                                             placeholder="0,00"
                                         />
                                     </div>
@@ -325,11 +324,9 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
                                         <div className="text-right space-y-1">
                                             {editingId === product.id ? (
                                                 <div className="flex items-center gap-2">
-                                                    <Input
-                                                        type="number"
-                                                        step="0.01"
+                                                    <CurrencyInput
                                                         value={editPrice}
-                                                        onChange={(e) => setEditPrice(e.target.value)}
+                                                        onValueChange={setEditPrice}
                                                         className="w-24 h-8"
                                                     />
                                                     <Button

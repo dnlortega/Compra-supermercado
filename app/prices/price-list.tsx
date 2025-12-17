@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { updateProduct } from "@/app/actions/products";
 import { savePriceHistory, getLastPrice, getPriceHistory } from "@/app/actions/price-history";
 import { updateShoppingListDate } from "@/app/actions/shopping-lists";
@@ -100,7 +101,7 @@ export default function PriceList({
 }
 
 function PriceItem({ product }: { product: Product }) {
-    const [unitPrice, setUnitPrice] = useState<string>(product.unitPrice?.toString() || "");
+    const [unitPrice, setUnitPrice] = useState<number>(product.unitPrice || 0);
     const [quantity, setQuantity] = useState<string>(product.quantity.toString());
     const [total, setTotal] = useState<number>(product.totalPrice || 0);
     const [loading, setLoading] = useState(false);
@@ -129,7 +130,7 @@ function PriceItem({ product }: { product: Product }) {
     };
 
     const handleBlur = async () => {
-        const valPrice = parseFloat(unitPrice.replace(",", "."));
+        const valPrice = unitPrice;
         const valQty = parseInt(quantity);
 
         if (isNaN(valPrice) && isNaN(valQty)) return;
@@ -164,21 +165,20 @@ function PriceItem({ product }: { product: Product }) {
         }
     };
 
-    const handlePriceChange = (val: string) => {
+    const handlePriceChange = (val: number) => {
         setUnitPrice(val);
-        const numPrice = parseFloat(val.replace(",", "."));
         const numQty = parseInt(quantity);
-        if (!isNaN(numPrice) && !isNaN(numQty)) {
-            setTotal(numPrice * numQty);
-        } else if (!isNaN(numPrice)) {
-            setTotal(numPrice * product.quantity);
+        if (!isNaN(val) && !isNaN(numQty)) {
+            setTotal(val * numQty);
+        } else if (!isNaN(val)) {
+            setTotal(val * product.quantity);
         }
     };
 
     const handleQtyChange = (val: string) => {
         setQuantity(val);
         const numQty = parseInt(val);
-        const numPrice = parseFloat(unitPrice.replace(",", "."));
+        const numPrice = unitPrice;
         if (!isNaN(numQty) && !isNaN(numPrice)) {
             setTotal(numQty * numPrice);
         } else if (!isNaN(numQty) && product.unitPrice) {
@@ -188,12 +188,12 @@ function PriceItem({ product }: { product: Product }) {
 
     const useLastPrice = () => {
         if (lastPrice) {
-            setUnitPrice(lastPrice.toString());
+            setUnitPrice(lastPrice);
             setTotal(lastPrice * product.quantity);
         }
     };
 
-    const priceDifference = lastPrice && unitPrice ? parseFloat(unitPrice.replace(",", ".")) - lastPrice : 0;
+    const priceDifference = lastPrice && unitPrice ? unitPrice - lastPrice : 0;
 
     return (
         <Card className="p-4 flex flex-col gap-2">
@@ -240,12 +240,10 @@ function PriceItem({ product }: { product: Product }) {
                     <div className="space-y-1">
                         <Label className="text-xs font-medium text-muted-foreground uppercase">Valor Unitário (R$)</Label>
                         <div className="flex gap-2 items-center">
-                            <Input
-                                type="number"
-                                step="0.01"
+                            <CurrencyInput
                                 placeholder="0,00"
                                 value={unitPrice}
-                                onChange={(e) => handlePriceChange(e.target.value)}
+                                onValueChange={handlePriceChange}
                                 onBlur={handleBlur}
                                 disabled={loading}
                                 className="text-lg"
