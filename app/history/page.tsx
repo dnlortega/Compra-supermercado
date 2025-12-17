@@ -50,8 +50,8 @@ export default function HistoryPage() {
             if (data.length > 0) {
                 setExpandedMonths({ [data[0].month]: true });
             }
-        } catch (e) {
-            console.error("Failed to load history", e);
+        } catch (_e) {
+            console.error("Failed to load history", _e);
         } finally {
             setLoading(false);
         }
@@ -78,7 +78,7 @@ export default function HistoryPage() {
 
             toast.success("Compra excluída");
             loadHistory();
-        } catch (error) {
+        } catch (_error) {
             toast.error("Erro ao excluir");
         } finally {
             setDeleteDialogOpen(false);

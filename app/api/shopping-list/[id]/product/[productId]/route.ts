@@ -46,7 +46,7 @@ export async function PATCH(
         revalidatePath(`/history/${id}`);
 
         return NextResponse.json({ success: true });
-    } catch (error) {
+    } catch (_error) {
         return NextResponse.json({ error: "Failed to update product" }, { status: 500 });
     }
 }
