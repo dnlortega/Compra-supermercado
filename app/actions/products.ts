@@ -63,22 +63,46 @@ function determineCategory(name: string): string {
     const lower = name.toLowerCase();
 
     const categories: Record<string, string[]> = {
-        "Comida": [
+        "Essenciais": [
             "feijão", "feijao", "arroz", "açúcar", "acucar", "óleo", "oleo",
-            "macarrão", "macarrao", "nescau", "chocolate", "molho", "alho",
-            "ovo", "carne", "frango", "peixe", "leite", "pão", "pao", "café", "cafe"
+            "macarrão", "macarrao", "café", "cafe", "sal", "farinha", "biscoito",
+            "bolacha", "molho", "milho", "ervilha", "maionese", "ketchup", "mostarda",
+            "vinagre", "azeite", "pipoca", "gelatina", "leite condensado", "creme de leite",
+            "achocolatado", "nescau", "toddy", "chá", "cha"
+        ],
+        "Bebidas": [
+            "água", "agua", "suco", "refrigerante", "coca", "guaraná", "guarana",
+            "cerveja", "vinho", "energético", "energetico", "coco", "chá gelado"
         ],
         "Hortifruti": [
             "fruta", "legume", "banana", "maçã", "maca", "batata", "cebola",
-            "tomate", "alface", "cenoura"
+            "tomate", "alface", "alho", "cenoura", "abóbora", "abobora", "chuchu",
+            "limão", "limao", "laranja", "pêra", "pera", "melancia", "mamão", "mamao",
+            "abacaxi", "couve", "brócolis", "brocolis", "pimentão", "pimentao", "abobrinha"
         ],
-        "Higiene Pessoal": [
-            "papel higiênico", "papel higienico", "sabonete", "creme dental", "pasta de dente",
-            "shampoo", "xampu", "condicionador", "desodorante", "escova", "fio dental"
+        "Carnes & Aves": [
+            "carne", "frango", "alcatra", "filé", "file", "costela", "coxa", "sobrecoxa",
+            "salsicha", "linguiça", "linguica", "peixe", "bacon", "bife", "hambúrguer", "hamburguer"
+        ],
+        "Frios & Laticínios": [
+            "leite", "manteiga", "queijo", "presunto", "iogurte", "ovo", "requeijão",
+            "requeijao", "margarina", "mortadela", "salame", "peru"
+        ],
+        "Padaria": [
+            "pão", "pao", "bisnaga", "bolo", "rosca", "torrada"
         ],
         "Limpeza": [
             "sabão", "sabao", "amaciante", "desinfetante", "pano", "detergente",
-            "vash", "água sanitária", "agua sanitaria", "esponja", "limpa vidro"
+            "vash", "água sanitária", "agua sanitaria", "esponja", "limpa vidro",
+            "desengordurante", "lustra móveis", "lustra moveis", "lixo", "vassoura", "rodo"
+        ],
+        "Higiene": [
+            "papel higiênico", "papel higienico", "sabonete", "creme dental", "pasta de dente",
+            "shampoo", "xampu", "condicionador", "desodorante", "escova", "fio dental",
+            "enxaguante", "absorvente", "algodão", "algodao", "lâmina", "lamina", "barbear"
+        ],
+        "Pet Shop": [
+            "ração", "racao", "pet", "cão", "cao", "gato", "areia"
         ]
     };
 

@@ -21,11 +21,6 @@ export function BottomNav() {
             icon: List,
         },
         {
-            href: "/catalog",
-            label: "Catálogo",
-            icon: BookOpen,
-        },
-        {
             href: "/prices",
             label: "Compras",
             icon: Receipt,
