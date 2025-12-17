@@ -5,10 +5,11 @@ import { ArrowLeft } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FinishShoppingButton } from "@/components/finish-shopping-button";
 
 export default async function SummaryPage() {
     const products = await getProducts();
-    const totalSpent = products.reduce((acc, p) => acc + (p.totalPrice || 0), 0);
+    const totalSpent = products.reduce((acc: number, p: any) => acc + (p.totalPrice || 0), 0);
 
     return (
         <div className="container mx-auto p-4 max-w-2xl bg-background min-h-screen">
@@ -43,7 +44,7 @@ export default async function SummaryPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {products.map((product) => (
+                        {products.map((product: any) => (
                             <TableRow key={product.id}>
                                 <TableCell className="font-medium">{product.name}</TableCell>
                                 <TableCell className="text-right">{product.quantity}</TableCell>
@@ -61,6 +62,8 @@ export default async function SummaryPage() {
                     </TableBody>
                 </Table>
             </div>
+
+            <FinishShoppingButton disabled={products.length === 0} />
         </div>
     );
 }

@@ -13,6 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme-provider";
+import { BottomNav } from "@/components/bottom-nav";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export const metadata: Metadata = {
   title: "Controle de Supermercado",
@@ -25,12 +28,30 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
-        <Toaster />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <div className="flex flex-col min-h-screen">
+            <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <div className="container flex h-14 items-center justify-between px-4">
+                <h1 className="text-lg font-semibold">Compra Supermercado</h1>
+                <ThemeToggle />
+              </div>
+            </header>
+            <main className="flex-1 pb-20">
+              {children}
+            </main>
+            <BottomNav />
+          </div>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -7,15 +7,49 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+model ShoppingList {
+  id        String    @id @default(uuid())
+  name      String?
+  date      DateTime  @default(now())
+  status    String    @default("OPEN") // OPEN, COMPLETED
+  total     Float     @default(0)
+  products  Product[]
+  
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("shopping_lists")
+}
+
 model Product {
-  id          String   @id @default(uuid())
-  name        String
-  quantity    Int
-  unitPrice   Float?   @map("unit_price")
-  totalPrice  Float?   @map("total_price")
-  checked     Boolean  @default(false)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id             String        @id @default(uuid())
+  name           String
+  quantity       Int
+  unitPrice      Float?        @map("unit_price")
+  totalPrice     Float?        @map("total_price")
+  checked        Boolean       @default(false)
+  category       String        @default("Outros")
+  
+  shoppingListId String?       @map("shopping_list_id")
+  shoppingList   ShoppingList? @relation(fields: [shoppingListId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
 
   @@map("products")
 }
+
+model PriceHistory {
+  id            String   @id @default(uuid())
+  productName   String   @map("product_name")
+  unitPrice     Float    @map("unit_price")
+  storeName     String?  @map("store_name")
+  purchaseDate  DateTime @default(now()) @map("purchase_date")
+  
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("price_history")
+  @@index([productName])
+}
+
