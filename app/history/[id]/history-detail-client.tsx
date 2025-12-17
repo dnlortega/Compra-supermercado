@@ -48,6 +48,7 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
 
     useEffect(() => {
         loadList();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [listId]);
 
     const loadList = async () => {
@@ -55,7 +56,7 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
             const response = await fetch(`/api/shopping-list/${listId}`);
             const data = await response.json();
             setList(data);
-        } catch (error) {
+        } catch (_error) {
             toast.error("Erro ao carregar detalhes");
         } finally {
             setLoading(false);
@@ -67,7 +68,7 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
         setEditPrice(product.unitPrice?.toString() || "");
     };
 
-    const handleSave = async (productId: string, quantity: number) => {
+    const handleSave = async (productId: string, _quantity: number) => {
         const newPrice = parseFloat(editPrice);
         if (isNaN(newPrice)) {
             toast.error("Preço inválido");
@@ -84,7 +85,7 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
             toast.success("Preço atualizado");
             setEditingId(null);
             loadList();
-        } catch (error) {
+        } catch (_error) {
             toast.error("Erro ao atualizar");
         }
     };
@@ -101,7 +102,7 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
 
             toast.success("Compra excluída com sucesso");
             router.push("/history");
-        } catch (error) {
+        } catch (_error) {
             toast.error("Erro ao excluir compra");
         } finally {
             setDeleteDialogOpen(false);

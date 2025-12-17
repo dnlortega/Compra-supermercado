@@ -1,8 +1,6 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Copy } from "lucide-react";
-import { toast } from "sonner";
 
 const SUGGESTIONS = {
     "Essenciais": ["Arroz", "Feijão", "Óleo", "Macarrão", "Café", "Açúcar", "Sal", "Farinha"],

@@ -168,7 +168,7 @@ function ProductItem({ product }: { product: Product }) {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Tem certeza que deseja remover "{product.name}" da lista?
+                            Tem certeza que deseja remover '{product.name}' da lista?
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

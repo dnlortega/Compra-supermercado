@@ -22,8 +22,8 @@ export async function GET(
         }
 
         return NextResponse.json(list);
-    } catch (error) {
-        console.error("Error fetching shopping list:", error);
+    } catch (_error) {
+        console.error("Error fetching shopping list:", _error);
         return NextResponse.json({ error: "Failed to fetch list" }, { status: 500 });
     }
 }
@@ -42,8 +42,8 @@ export async function DELETE(
         revalidatePath("/history");
 
         return NextResponse.json({ success: true });
-    } catch (error) {
-        console.error("Error deleting shopping list:", error);
+    } catch (_error) {
+        console.error("Error deleting shopping list:", _error);
         return NextResponse.json({ error: "Failed to delete shopping list" }, { status: 500 });
     }
 }

@@ -70,6 +70,7 @@ function PriceItem({ product }: { product: Product }) {
 
     useEffect(() => {
         loadLastPrice();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const loadLastPrice = async () => {

@@ -47,8 +47,7 @@ export async function getHistory() {
             lists,
         }));
 
-    } catch (error) {
-        console.error("Error fetching history:", error);
+    } catch (_error) {
         return [];
     }
 }
