@@ -44,3 +44,26 @@ export async function getLastPrice(productName: string) {
 
     return lastEntry?.unitPrice || null;
 }
+
+export async function cleanupPriceHistoryForPurchase(productName: string, purchaseDate: Date) {
+    // Remove price history entries that match the purchase date
+    // This helps clean up when products are removed from purchase history
+    const startOfDay = new Date(purchaseDate);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(purchaseDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    await (prisma as any).priceHistory.deleteMany({
+        where: {
+            productName: {
+                equals: productName,
+                mode: 'insensitive',
+            },
+            purchaseDate: {
+                gte: startOfDay,
+                lte: endOfDay,
+            },
+        },
+    });
+}

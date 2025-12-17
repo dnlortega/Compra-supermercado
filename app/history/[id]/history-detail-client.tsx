@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Edit2, Save, X, Trash2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, Edit2, Save, X, Trash2, Plus } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -19,7 +20,16 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
+    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Product {
     id: string;
@@ -45,6 +55,13 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editPrice, setEditPrice] = useState("");
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [addProductDialogOpen, setAddProductDialogOpen] = useState(false);
+    const [newProduct, setNewProduct] = useState({
+        name: "",
+        quantity: "",
+        unitPrice: "",
+        category: "Outros"
+    });
 
     useEffect(() => {
         loadList();
@@ -109,6 +126,61 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
         }
     };
 
+    const handleAddProduct = async () => {
+        const { name, quantity, unitPrice } = newProduct;
+
+        if (!name.trim() || !quantity) {
+            toast.error("Nome e quantidade são obrigatórios");
+            return;
+        }
+
+        const qty = parseInt(quantity);
+        const price = unitPrice ? parseFloat(unitPrice.replace(",", ".")) : null;
+
+        if (isNaN(qty) || qty <= 0) {
+            toast.error("Quantidade deve ser um número positivo");
+            return;
+        }
+
+        if (price !== null && (isNaN(price) || price < 0)) {
+            toast.error("Preço deve ser um número válido");
+            return;
+        }
+
+        try {
+            await fetch(`/api/shopping-list/${listId}/product`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: name.trim(),
+                    quantity: qty,
+                    unitPrice: price,
+                    category: newProduct.category,
+                }),
+            });
+
+            toast.success("Produto adicionado");
+            setAddProductDialogOpen(false);
+            setNewProduct({ name: "", quantity: "", unitPrice: "", category: "Outros" });
+            loadList();
+        } catch (_error) {
+            toast.error("Erro ao adicionar produto");
+        }
+    };
+
+    const handleRemoveProduct = async (productId: string, productName: string) => {
+        try {
+            await fetch(`/api/shopping-list/${listId}/product/${productId}`, {
+                method: "DELETE",
+            });
+
+            toast.success("Produto removido");
+            loadList();
+        } catch (_error) {
+            toast.error("Erro ao remover produto");
+        }
+    };
+
     const groupedProducts = list?.products.reduce((acc, product) => {
         const category = product.category || "Outros";
         if (!acc[category]) acc[category] = [];
@@ -140,14 +212,82 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
                         </p>
                     </div>
                 </div>
-                <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={handleDeleteClick}
-                    title="Excluir compra"
-                >
-                    <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex gap-2">
+                    <Dialog open={addProductDialogOpen} onOpenChange={setAddProductDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="default" size="icon" title="Adicionar produto">
+                                <Plus className="h-4 w-4" />
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Adicionar Produto</DialogTitle>
+                                <DialogDescription>
+                                    Adicione um novo produto a esta compra.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="product-name">Nome do Produto</Label>
+                                    <Input
+                                        id="product-name"
+                                        value={newProduct.name}
+                                        onChange={(e) => setNewProduct(prev => ({ ...prev, name: e.target.value }))}
+                                        placeholder="Ex: Arroz, Feijão..."
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="product-quantity">Quantidade</Label>
+                                        <Input
+                                            id="product-quantity"
+                                            type="number"
+                                            value={newProduct.quantity}
+                                            onChange={(e) => setNewProduct(prev => ({ ...prev, quantity: e.target.value }))}
+                                            placeholder="1"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="product-price">Valor Unitário (R$)</Label>
+                                        <Input
+                                            id="product-price"
+                                            type="number"
+                                            step="0.01"
+                                            value={newProduct.unitPrice}
+                                            onChange={(e) => setNewProduct(prev => ({ ...prev, unitPrice: e.target.value }))}
+                                            placeholder="0,00"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="product-category">Categoria</Label>
+                                    <Input
+                                        id="product-category"
+                                        value={newProduct.category}
+                                        onChange={(e) => setNewProduct(prev => ({ ...prev, category: e.target.value }))}
+                                        placeholder="Ex: Mercearia, Limpeza..."
+                                    />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setAddProductDialogOpen(false)}>
+                                    Cancelar
+                                </Button>
+                                <Button onClick={handleAddProduct}>
+                                    Adicionar Produto
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                    <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={handleDeleteClick}
+                        title="Excluir compra"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
             </div>
 
             <Card>
@@ -166,13 +306,22 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
                             {category}
                         </h3>
                         {groupedProducts[category].map((product) => (
-                            <Card key={product.id}>
+                            <Card key={product.id} className="relative group">
                                 <CardContent className="p-4">
                                     <div className="flex justify-between items-start">
                                         <div className="flex-1">
                                             <h4 className="font-semibold">{product.name}</h4>
                                             <p className="text-sm text-muted-foreground">Qtd: {product.quantity}</p>
                                         </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 text-muted-foreground hover:text-destructive"
+                                            onClick={() => handleRemoveProduct(product.id, product.name)}
+                                            title="Remover produto"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </Button>
                                         <div className="text-right space-y-1">
                                             {editingId === product.id ? (
                                                 <div className="flex items-center gap-2">
