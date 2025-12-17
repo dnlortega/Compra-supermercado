@@ -4,11 +4,12 @@ import { revalidatePath } from "next/cache";
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params;
         const list = await (prisma as any).shoppingList.findUnique({
-            where: { id: params.id },
+            where: { id },
             include: {
                 products: {
                     orderBy: { category: 'asc' }
@@ -29,12 +30,13 @@ export async function GET(
 
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params;
         // Delete the shopping list (products will be deleted automatically due to cascade)
         await (prisma as any).shoppingList.delete({
-            where: { id: params.id },
+            where: { id },
         });
 
         revalidatePath("/history");
