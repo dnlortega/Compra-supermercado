@@ -99,6 +99,9 @@ export default function AddProductForm() {
                         }}
                         disabled={loading}
                         autoComplete="off"
+                        spellCheck="true"
+                        autoCorrect="on"
+                        autoCapitalize="sentences"
                     />
 
                     {showSuggestions && filteredSuggestions.length > 0 && (

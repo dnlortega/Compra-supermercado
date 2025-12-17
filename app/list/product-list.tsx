@@ -143,7 +143,14 @@ function ProductItem({ product }: { product: Product }) {
                             <div className="grid gap-4 py-4">
                                 <div className="grid gap-2">
                                     <Label htmlFor="name">Nome</Label>
-                                    <Input id="name" value={editName} onChange={(e) => setEditName(e.target.value)} />
+                                    <Input
+                                        id="name"
+                                        value={editName}
+                                        onChange={(e) => setEditName(e.target.value)}
+                                        spellCheck="true"
+                                        autoCorrect="on"
+                                        autoCapitalize="sentences"
+                                    />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="qty">Quantidade</Label>

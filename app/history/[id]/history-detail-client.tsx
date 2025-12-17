@@ -236,6 +236,9 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
                                         value={newProduct.name}
                                         onChange={(e) => setNewProduct(prev => ({ ...prev, name: e.target.value }))}
                                         placeholder="Ex: Arroz, Feijão..."
+                                        spellCheck="true"
+                                        autoCorrect="on"
+                                        autoCapitalize="sentences"
                                     />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
@@ -266,6 +269,9 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
                                         value={newProduct.category}
                                         onChange={(e) => setNewProduct(prev => ({ ...prev, category: e.target.value }))}
                                         placeholder="Ex: Mercearia, Limpeza..."
+                                        spellCheck="true"
+                                        autoCorrect="on"
+                                        autoCapitalize="sentences"
                                     />
                                 </div>
                             </div>
