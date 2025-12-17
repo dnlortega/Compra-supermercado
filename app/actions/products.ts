@@ -96,7 +96,7 @@ function determineCategory(name: string): string {
             "sabão", "sabao", "amaciante", "desinfetante", "pano", "detergente",
             "vash", "água sanitária", "agua sanitaria", "esponja", "limpa vidro",
             "desengordurante", "lustra móveis", "lustra moveis", "lixo", "vassoura", "rodo",
-            "lava roupa", "sabão líquido", "sabao liquido"
+            "lava roupa", "lava roupas líquido", "lava roupas liquido", "sabão líquido", "sabao liquido"
         ],
         "Higiene": [
             "papel higiênico", "papel higienico", "sabonete", "creme dental", "pasta de dente",

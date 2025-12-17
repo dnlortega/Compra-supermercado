@@ -53,7 +53,7 @@ export async function seedCatalog() {
             "Pão Francês", "Pão de Forma", "Bisnaga", "Bolo", "Pão de Queijo", "Torrada"
         ],
         "Limpeza": [
-            "Detergente", "Sabão em Pó", "Lava Roupa", "Sabão Líquido", "Água Sanitária",
+            "Detergente", "Sabão em Pó", "Lava Roupa", "Lava Roupas Líquido", "Sabão Líquido", "Água Sanitária",
             "Amaciante", "Esponja", "Desinfetante", "Desengordurante", "Limpa Vidros",
             "Saco de Lixo", "Papel Toalha", "Vassoura", "Rodo", "Pano de Prato"
         ],
