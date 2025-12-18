@@ -96,6 +96,35 @@ export default function PriceList({
                 </div>
             </Card>
 
+            <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 bg-red-50/50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-lg">
+                    <p className="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-tighter mb-1">Mais Caro</p>
+                    {(() => {
+                        const priced = initialProducts.filter(p => p.unitPrice && p.unitPrice > 0);
+                        const mostExpensive = priced.length > 0 ? priced.reduce((prev, curr) => (prev.unitPrice || 0) > (curr.unitPrice || 0) ? prev : curr) : null;
+                        return mostExpensive ? (
+                            <div className="truncate">
+                                <span className="text-xs font-bold block truncate">{mostExpensive.name}</span>
+                                <span className="text-sm font-black text-red-700 dark:text-red-300">{formatCurrency(mostExpensive.unitPrice || 0)}</span>
+                            </div>
+                        ) : <span className="text-xs text-muted-foreground">--</span>;
+                    })()}
+                </div>
+                <div className="p-3 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/20 rounded-lg">
+                    <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-tighter mb-1">Mais Barato</p>
+                    {(() => {
+                        const priced = initialProducts.filter(p => p.unitPrice && p.unitPrice > 0);
+                        const cheapest = priced.length > 0 ? priced.reduce((prev, curr) => (prev.unitPrice || 0) < (curr.unitPrice || 0) ? prev : curr) : null;
+                        return cheapest ? (
+                            <div className="truncate">
+                                <span className="text-xs font-bold block truncate">{cheapest.name}</span>
+                                <span className="text-sm font-black text-blue-700 dark:text-blue-300">{formatCurrency(cheapest.unitPrice || 0)}</span>
+                            </div>
+                        ) : <span className="text-xs text-muted-foreground">--</span>;
+                    })()}
+                </div>
+            </div>
+
             {categories.map((category) => (
                 <div key={category} className="space-y-3">
                     <h3 className="font-semibold text-muted-foreground ml-2 uppercase text-xs tracking-wider">{category}</h3>
