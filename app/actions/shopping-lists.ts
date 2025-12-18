@@ -10,7 +10,9 @@ export async function getOpenList() {
     });
 }
 
-export async function updateShoppingListDate(id: string, date: Date) {
+export async function updateShoppingListDate(id: string, dateStr: string) {
+    // Normalize to noon UTC to avoid timezone shifts
+    const date = new Date(`${dateStr}T12:00:00Z`);
     await (prisma as any).shoppingList.update({
         where: { id },
         data: { date },

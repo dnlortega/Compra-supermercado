@@ -45,13 +45,17 @@ export default function PriceList({
     listId?: string,
     initialDate: Date
 }) {
-    const [date, setDate] = useState<string>(format(initialDate, "yyyy-MM-dd"));
+    // Format to YYYY-MM-DD correctly without timezone shifts for the input value
+    const [date, setDate] = useState<string>(() => {
+        const d = new Date(initialDate);
+        return d.toISOString().split('T')[0];
+    });
 
     const handleDateChange = async (newDate: string) => {
         setDate(newDate);
         if (listId) {
             try {
-                await updateShoppingListDate(listId, new Date(newDate));
+                await updateShoppingListDate(listId, newDate);
                 toast.success("Data da compra atualizada");
             } catch {
                 toast.error("Erro ao atualizar data");
@@ -63,6 +67,13 @@ export default function PriceList({
         const category = product.category || "Outros";
         if (!acc[category]) acc[category] = [];
         acc[category].push(product);
+        // Sort within category: null/0 prices first
+        acc[category].sort((a, b) => {
+            const aHasPrice = a.unitPrice && a.unitPrice > 0;
+            const bHasPrice = b.unitPrice && b.unitPrice > 0;
+            if (aHasPrice === bHasPrice) return a.name.localeCompare(b.name);
+            return aHasPrice ? 1 : -1;
+        });
         return acc;
     }, {} as Record<string, Product[]>);
 
