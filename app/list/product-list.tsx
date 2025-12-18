@@ -44,7 +44,7 @@ export default function ProductList({ initialProducts }: { initialProducts: Prod
     const categories = Object.keys(groupedProducts).sort();
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
             {categories.map((category) => (
                 <div key={category} className="space-y-2">
                     <h3 className="font-semibold text-muted-foreground ml-2 uppercase text-xs tracking-wider">{category}</h3>
@@ -112,7 +112,7 @@ function ProductItem({ product }: { product: Product }) {
 
     return (
         <>
-            <div className="flex items-center justify-between p-4 bg-card rounded-lg border shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-card rounded-lg border shadow-sm animate-in zoom-in-95 duration-300">
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                         <Button variant="outline" size="icon" className="h-8 w-8" onClick={decrement} disabled={loading}>
@@ -159,7 +159,7 @@ function ProductItem({ product }: { product: Product }) {
                             </div>
                             <DialogFooter>
                                 <Button variant="outline" onClick={() => setIsEditing(false)}>Cancelar</Button>
-                                <Button onClick={handleUpdate} disabled={loading}>Salvar</Button>
+                                <Button onClick={handleUpdate} loading={loading}>Salvar</Button>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>

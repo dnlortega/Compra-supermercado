@@ -8,6 +8,8 @@ interface SuggestedProductsProps {
     onSelect: (name: string) => void;
 }
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 export function SuggestedProducts({ onSelect }: SuggestedProductsProps) {
     const [catalog, setCatalog] = useState<Record<string, any[]>>({});
     const [loading, setLoading] = useState(true);
@@ -27,13 +29,32 @@ export function SuggestedProducts({ onSelect }: SuggestedProductsProps) {
         load();
     }, []);
 
-    if (loading) return <div className="animate-pulse h-20 bg-muted/50 rounded-lg mt-6" />;
+    if (loading) {
+        return (
+            <div className="space-y-4 mt-6 animate-in fade-in duration-500">
+                <Skeleton className="h-4 w-32" />
+                <div className="space-y-4">
+                    {[1, 2].map(i => (
+                        <div key={i} className="space-y-2">
+                            <Skeleton className="h-3 w-20" />
+                            <div className="flex flex-wrap gap-2">
+                                {[1, 2, 3, 4, 5].map(j => (
+                                    <Skeleton key={j} className="h-6 w-16 rounded-full" />
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
 
     const categories = Object.keys(catalog);
     if (categories.length === 0) return null;
 
     return (
-        <div className="space-y-4 mt-6">
+        <div className="space-y-4 mt-6 animate-in fade-in slide-in-from-top-2 duration-500">
+
             <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Sugestões Rápidas</h3>
 
             <div className="space-y-4">

@@ -69,7 +69,7 @@ export default function PriceList({
     const categories = Object.keys(groupedProducts).sort();
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
             <Card className="p-4 bg-muted/50 border-none shadow-none">
                 <div className="space-y-2">
                     <Label className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -196,7 +196,7 @@ function PriceItem({ product }: { product: Product }) {
     const priceDifference = lastPrice && unitPrice ? unitPrice - lastPrice : 0;
 
     return (
-        <Card className="p-4 flex flex-col gap-2">
+        <Card className="p-4 flex flex-col gap-2 animate-in zoom-in-95 duration-300">
             <div className="flex justify-between items-start">
                 <div>
                     <h3 className="font-semibold text-lg">{product.name}</h3>

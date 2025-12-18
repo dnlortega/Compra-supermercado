@@ -12,6 +12,7 @@ import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -193,15 +194,49 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
     const categories = Object.keys(groupedProducts).sort();
 
     if (loading) {
-        return <div className="p-8 text-center">Carregando...</div>;
+        return (
+            <div className="container p-4 pb-24 space-y-6 max-w-2xl mx-auto animate-in fade-in duration-500">
+                <div className="flex items-center gap-4">
+                    <Skeleton className="size-10 rounded-full" />
+                    <div className="space-y-2">
+                        <Skeleton className="h-8 w-48" />
+                        <Skeleton className="h-4 w-32" />
+                    </div>
+                </div>
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-24" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-10 w-32" />
+                    </CardContent>
+                </Card>
+                <div className="space-y-6">
+                    {[1, 2].map(i => (
+                        <div key={i} className="space-y-3">
+                            <Skeleton className="h-4 w-20 ml-2" />
+                            {[1, 2, 3].map(j => (
+                                <Skeleton key={j} className="h-24 w-full rounded-xl" />
+                            ))}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
     }
 
     if (!list) {
-        return <div className="p-8 text-center">Lista não encontrada</div>;
+        return (
+            <div className="p-8 text-center animate-in fade-in zoom-in-95 duration-300">
+                <h2 className="text-xl font-semibold mb-2">Lista não encontrada</h2>
+                <Button onClick={() => router.push("/history")}>Voltar para o Histórico</Button>
+            </div>
+        );
     }
 
     return (
-        <div className="container p-4 pb-24 space-y-6 max-w-2xl mx-auto">
+        <div className="container p-4 pb-24 space-y-6 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+
             <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" onClick={() => router.back()}>

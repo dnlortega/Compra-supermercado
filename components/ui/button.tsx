@@ -36,15 +36,20 @@ const buttonVariants = cva(
   }
 )
 
+import { Loader2 } from "lucide-react"
+
 function Button({
   className,
   variant = "default",
   size = "default",
   asChild = false,
+  loading = false,
+  children,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
+    loading?: boolean
   }) {
   const Comp = asChild ? Slot : "button"
 
@@ -54,8 +59,18 @@ function Button({
       data-variant={variant}
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
+      disabled={loading || props.disabled}
       {...props}
-    />
+    >
+      {loading ? (
+        <>
+          <Loader2 className="animate-spin" />
+          {children}
+        </>
+      ) : (
+        children
+      )}
+    </Comp>
   )
 }
 

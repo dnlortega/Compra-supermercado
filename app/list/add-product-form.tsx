@@ -107,7 +107,7 @@ export default function AddProductForm() {
                     {showSuggestions && filteredSuggestions.length > 0 && (
                         <div
                             ref={suggestionsRef}
-                            className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-y-auto"
+                            className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200"
                         >
                             {filteredSuggestions.map((suggestion, index) => (
                                 <button
@@ -132,7 +132,7 @@ export default function AddProductForm() {
                         disabled={loading}
                     />
                 </div>
-                <Button type="submit" disabled={loading}>
+                <Button type="submit" loading={loading}>
                     <Plus className="w-4 h-4 mr-2" />
                     Add
                 </Button>

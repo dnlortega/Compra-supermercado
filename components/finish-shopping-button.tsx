@@ -30,10 +30,11 @@ export function FinishShoppingButton({ disabled }: { disabled: boolean }) {
             className="w-full mt-6"
             size="lg"
             onClick={handleFinish}
-            disabled={disabled || loading}
+            loading={loading}
+            disabled={disabled}
         >
             <CheckCheck className="mr-2 h-4 w-4" />
-            {loading ? "Finalizando..." : "Finalizar Compra"}
+            Finalizar Compra
         </Button>
     );
 }
