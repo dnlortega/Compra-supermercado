@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { revalidatePath } from "next/cache";
+// no cache revalidation — always rely on DB
 
 export async function getOpenList() {
     return await (prisma as any).shoppingList.findFirst({
@@ -17,5 +17,5 @@ export async function updateShoppingListDate(id: string, dateStr: string) {
         where: { id },
         data: { date },
     });
-    revalidatePath("/prices");
+    // removed cache revalidation; pages will read from DB directly
 }

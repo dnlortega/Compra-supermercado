@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+// no cache revalidation — always rely on DB
 
 export async function GET(
     request: Request,
@@ -39,7 +39,7 @@ export async function DELETE(
             where: { id },
         });
 
-        revalidatePath("/history");
+        // removed cache revalidation; pages will read from DB directly
 
         return NextResponse.json({ success: true });
     } catch (_error) {
@@ -79,8 +79,7 @@ export async function PATCH(
             data,
         });
 
-        revalidatePath("/history");
-        revalidatePath(`/history/${id}`);
+        // removed cache revalidation; pages will read from DB directly
 
         return NextResponse.json({ success: true });
     } catch (_error) {

@@ -10,6 +10,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
     DialogTrigger,
     DialogFooter,
 } from "@/components/ui/dialog";
@@ -76,6 +77,8 @@ function ProductItem({ product }: { product: Product }) {
         try {
             await deleteProduct(product.id);
             toast.success("Produto removido");
+            // reload to reflect the DB (no cache revalidation)
+            window.location.reload();
         } catch {
             toast.error("Erro ao remover");
         } finally {
@@ -90,6 +93,8 @@ function ProductItem({ product }: { product: Product }) {
             await updateProduct(product.id, { name: editName, quantity: editQty });
             toast.success("Produto atualizado");
             setIsEditing(false);
+            // reload to reflect the DB (no cache revalidation)
+            window.location.reload();
         } catch {
             toast.error("Erro ao atualizar");
         } finally {
@@ -100,6 +105,7 @@ function ProductItem({ product }: { product: Product }) {
     const increment = async () => {
         try {
             await updateProduct(product.id, { quantity: product.quantity + 1 });
+            window.location.reload();
         } catch { }
     }
 
@@ -107,6 +113,7 @@ function ProductItem({ product }: { product: Product }) {
         if (product.quantity <= 1) return;
         try {
             await updateProduct(product.id, { quantity: product.quantity - 1 });
+            window.location.reload();
         } catch { }
     }
 

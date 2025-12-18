@@ -1,7 +1,6 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { revalidatePath } from "next/cache";
 
 // Helper to get or create the current open shopping list
 async function getCurrentListId() {
@@ -56,6 +55,13 @@ export async function getProducts() {
 
     // If no list exists, return empty array
     return [];
+}
+
+export async function getAllProductNames() {
+    // Return unique product names from the product table (historical + current)
+    const items = await (prisma as any).product.findMany({ select: { name: true }, orderBy: { name: 'asc' } });
+    const unique = Array.from(new Set(items.map((p: any) => p.name)));
+    return unique;
 }
 
 
@@ -132,7 +138,7 @@ export async function addProduct(data: { name: string; quantity: number }) {
             },
         });
 
-        revalidatePaths();
+        // removed cache revalidation; pages read directly from DB
         return { success: true };
     } catch (error) {
         console.error("Add product error:", error);
@@ -159,19 +165,13 @@ export async function updateProduct(id: string, data: Partial<{ name: string; qu
             totalPrice,
         },
     });
-    revalidatePaths();
+    // removed cache revalidation; pages read directly from DB
 }
 
 export async function deleteProduct(id: string) {
     await (prisma as any).product.delete({
         where: { id },
     });
-    revalidatePaths();
+    // removed cache revalidation; pages read directly from DB
 }
-
-function revalidatePaths() {
-    revalidatePath("/list");
-    revalidatePath("/prices");
-    revalidatePath("/summary");
-    revalidatePath("/history");
-}
+// cache revalidation removed — we force components/pages to read from DB

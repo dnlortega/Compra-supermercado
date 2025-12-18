@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { revalidatePath } from "next/cache";
+// no cache revalidation — always rely on DB
 
 export async function finishShoppingList(name?: string) {
     // First, try to find an open list
@@ -57,7 +57,5 @@ export async function finishShoppingList(name?: string) {
         }
     });
 
-    revalidatePath("/history");
-    revalidatePath("/summary");
-    revalidatePath("/");
+    // removed cache revalidation; pages will read from DB directly
 }

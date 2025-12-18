@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { revalidatePath } from "next/cache";
+// no cache revalidation — always rely on DB
 
 export async function exportAllHistory() {
     try {
@@ -76,7 +76,7 @@ export async function importData(jsonData: string) {
             importedCount++;
         }
 
-        revalidatePath("/history");
+        // removed cache revalidation; pages will read from DB directly
         return { success: true, count: importedCount };
     } catch (error) {
         console.error("Import error:", error);

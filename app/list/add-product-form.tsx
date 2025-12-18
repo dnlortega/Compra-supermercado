@@ -7,7 +7,7 @@ import { addProduct } from "@/app/actions/products";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 
-import { getAllCatalogProducts } from "@/app/actions/catalog";
+import { getAllProductNames } from "@/app/actions/products";
 
 export default function AddProductForm() {
     const [name, setName] = useState("");
@@ -20,11 +20,11 @@ export default function AddProductForm() {
     const suggestionsRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const loadCatalog = async () => {
-            const data = await getAllCatalogProducts();
-            setCatalog(data);
+        const loadNames = async () => {
+            const data = await getAllProductNames();
+            setCatalog(data.map((n: string) => ({ name: n })));
         };
-        loadCatalog();
+        loadNames();
     }, []);
 
     useEffect(() => {
@@ -77,7 +77,9 @@ export default function AddProductForm() {
             setName("");
             setQuantity(1);
             setShowSuggestions(false);
-            toast.success("Produto adicionado!");
+                toast.success("Produto adicionado!");
+                // reload to reflect DB changes (no cache-based revalidation)
+                window.location.reload();
         } catch (error) {
             console.error(error);
             toast.error("Erro ao adicionar produto");

@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { revalidatePath } from "next/cache";
+// no cache revalidation — always rely on DB
 
 export async function getCatalogProducts() {
     const products = await (prisma as any).catalogProduct.findMany({
@@ -75,5 +75,19 @@ export async function seedCatalog() {
             });
         }
     }
-    revalidatePath("/list");
+    // removed cache revalidation; pages will read from DB directly
+}
+
+export async function createCatalogProduct(name: string, category?: string) {
+    try {
+        await (prisma as any).catalogProduct.upsert({
+            where: { name },
+            update: { category },
+            create: { name, category },
+        });
+        return { success: true };
+    } catch (error) {
+        console.error("Error creating catalog product:", error);
+        return { success: false, error: "Falha ao cadastrar produto" };
+    }
 }

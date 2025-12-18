@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+// no cache revalidation — always rely on DB
 
 export async function POST(
     request: Request,
@@ -43,8 +43,7 @@ export async function POST(
             data: { total: newTotal },
         });
 
-        revalidatePath("/history");
-        revalidatePath(`/history/${id}`);
+        // removed cache revalidation; pages will read from DB directly
 
         return NextResponse.json(product);
     } catch (_error) {

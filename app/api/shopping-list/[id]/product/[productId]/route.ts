@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
 import { cleanupPriceHistoryForPurchase } from "@/app/actions/price-history";
 
 export async function PATCH(
@@ -43,8 +42,7 @@ export async function PATCH(
             data: { total: newTotal },
         });
 
-        revalidatePath("/history");
-        revalidatePath(`/history/${id}`);
+        // removed cache revalidation; pages will read from DB directly
 
         return NextResponse.json({ success: true });
     } catch (_error) {
@@ -94,8 +92,7 @@ export async function DELETE(
             data: { total: newTotal },
         });
 
-        revalidatePath("/history");
-        revalidatePath(`/history/${id}`);
+        // removed cache revalidation; pages will read from DB directly
 
         return NextResponse.json({ success: true });
     } catch (_error) {
