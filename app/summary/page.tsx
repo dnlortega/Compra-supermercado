@@ -11,6 +11,19 @@ export default async function SummaryPage() {
     const products = await getProducts();
     const totalSpent = products.reduce((acc: number, p: any) => acc + (p.totalPrice || 0), 0);
 
+    // Flatten products list: split items with quantity > 1 into multiple rows
+    const flattenedItems = products.flatMap((product: any) => {
+        const items = [];
+        for (let i = 0; i < product.quantity; i++) {
+            items.push({
+                ...product,
+                displayQuantity: 1,
+                displayTotal: product.unitPrice || 0
+            });
+        }
+        return items;
+    });
+
     const pricedProducts = products.filter((p: any) => p.unitPrice && p.unitPrice > 0);
     const mostExpensive = pricedProducts.length > 0
         ? pricedProducts.reduce((prev: any, curr: any) => prev.unitPrice > curr.unitPrice ? prev : curr)
@@ -81,6 +94,7 @@ export default async function SummaryPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead className="w-10">#</TableHead>
                             <TableHead>Produto</TableHead>
                             <TableHead className="text-right">Qtd</TableHead>
                             <TableHead className="text-right">Unit.</TableHead>
@@ -88,17 +102,18 @@ export default async function SummaryPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {products.map((product: any) => (
-                            <TableRow key={product.id}>
-                                <TableCell className="font-medium">{product.name}</TableCell>
-                                <TableCell className="text-right">{product.quantity}</TableCell>
-                                <TableCell className="text-right">{product.unitPrice ? formatCurrency(product.unitPrice) : "-"}</TableCell>
-                                <TableCell className="text-right font-bold">{product.totalPrice ? formatCurrency(product.totalPrice) : "-"}</TableCell>
+                        {flattenedItems.map((item: any, index: number) => (
+                            <TableRow key={`${item.id}-${index}`}>
+                                <TableCell className="text-muted-foreground text-xs font-mono">{index + 1}</TableCell>
+                                <TableCell className="font-medium">{item.name}</TableCell>
+                                <TableCell className="text-right">{item.displayQuantity}</TableCell>
+                                <TableCell className="text-right">{item.unitPrice ? formatCurrency(item.unitPrice) : "-"}</TableCell>
+                                <TableCell className="text-right font-bold">{formatCurrency(item.displayTotal)}</TableCell>
                             </TableRow>
                         ))}
-                        {products.length === 0 && (
+                        {flattenedItems.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={4} className="text-center h-24 text-muted-foreground">
+                                <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
                                     Nenhum produto cadastrado.
                                 </TableCell>
                             </TableRow>
