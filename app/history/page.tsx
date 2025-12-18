@@ -5,8 +5,9 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingBag, Calendar, ChevronDown, ChevronUp, ChevronRight, Trash2 } from "lucide-react";
+import { ShoppingBag, Calendar, ChevronDown, ChevronUp, ChevronRight, Trash2, Download, Upload } from "lucide-react";
 import { getHistory } from "@/app/actions/history";
+import { exportAllHistory, importData } from "@/app/actions/export-import";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -86,6 +87,52 @@ export default function HistoryPage() {
         }
     };
 
+    const handleExport = async () => {
+        try {
+            const result = await exportAllHistory();
+            if (result.success && result.data) {
+                const blob = new Blob([JSON.stringify(result.data, null, 2)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `historico-compras-${format(new Date(), "yyyy-MM-dd")}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                toast.success("Histórico exportado com sucesso");
+            } else {
+                toast.error(result.error || "Erro ao exportar");
+            }
+        } catch (error) {
+            toast.error("Erro ao exportar dados");
+        }
+    };
+
+    const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const content = event.target?.result as string;
+            try {
+                const result = await importData(content);
+                if (result.success) {
+                    toast.success(`${result.count} listas importadas com sucesso`);
+                    loadHistory();
+                } else {
+                    toast.error(result.error || "Erro ao importar");
+                }
+            } catch (error) {
+                toast.error("Arquivo inválido");
+            }
+        };
+        reader.readAsText(file);
+        // Reset input
+        e.target.value = "";
+    };
+
     if (loading) return <div className="p-8 text-center">Carregando histórico...</div>;
 
     if (history.length === 0) {
@@ -93,14 +140,61 @@ export default function HistoryPage() {
             <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4 p-4 text-center text-muted-foreground">
                 <ShoppingBag className="h-12 w-12 opacity-50" />
                 <p>Nenhum histórico de compras encontrado.</p>
-                <p className="text-sm">Finalize uma lista para vê-la aqui.</p>
+                <p className="text-sm mb-4">Finalize uma lista para vê-la aqui ou importe seus dados.</p>
+                <div className="relative">
+                    <input
+                        type="file"
+                        id="import-file-empty"
+                        className="hidden"
+                        accept=".json"
+                        onChange={handleImport}
+                    />
+                    <Button
+                        variant="outline"
+                        onClick={() => document.getElementById('import-file-empty')?.click()}
+                    >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Importar Dados
+                    </Button>
+                </div>
             </div>
         );
     }
 
     return (
         <div className="container p-4 pb-24 space-y-6 max-w-2xl mx-auto">
-            <h1 className="text-2xl font-bold">Histórico de Compras</h1>
+            <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold">Histórico de Compras</h1>
+                <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                        onClick={handleExport}
+                    >
+                        <Download className="h-4 w-4" />
+                        Exportar
+                    </Button>
+                    <div className="relative">
+                        <input
+                            type="file"
+                            id="import-file"
+                            className="hidden"
+                            accept=".json"
+                            onChange={handleImport}
+                        />
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-2"
+                            onClick={() => document.getElementById('import-file')?.click()}
+                        >
+                            <Upload className="h-4 w-4" />
+                            Importar
+                        </Button>
+                    </div>
+                </div>
+            </div>
 
             <div className="space-y-4">
                 {history.map((group) => (

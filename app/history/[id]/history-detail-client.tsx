@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Edit2, Save, X, Trash2, Plus } from "lucide-react";
+import { ArrowLeft, Edit2, Save, X, Trash2, Plus, Download } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { exportSingleList } from "@/app/actions/export-import";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -49,6 +50,8 @@ interface ShoppingListDetail {
     date: Date;
     total: number;
     products: Product[];
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 export default function HistoryDetailClient({ listId }: { listId: string }) {
@@ -69,6 +72,10 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
     const [tempDate, setTempDate] = useState("");
     const [isEditingName, setIsEditingName] = useState(false);
     const [tempName, setTempName] = useState("");
+    const [isEditingCreatedAt, setIsEditingCreatedAt] = useState(false);
+    const [tempCreatedAt, setTempCreatedAt] = useState("");
+    const [isEditingUpdatedAt, setIsEditingUpdatedAt] = useState(false);
+    const [tempUpdatedAt, setTempUpdatedAt] = useState("");
 
     useEffect(() => {
         loadList();
@@ -133,6 +140,30 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
         }
     };
 
+    const handleExport = async () => {
+        if (!list) return;
+        try {
+            const result = await exportSingleList(listId);
+            if (result.success && result.data) {
+                const blob = new Blob([JSON.stringify(result.data, null, 2)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                const dateStr = format(new Date(list.date), "yyyy-MM-dd");
+                a.download = `compra-${list.name || "sem-nome"}-${dateStr}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                toast.success("Compra exportada com sucesso");
+            } else {
+                toast.error(result.error || "Erro ao exportar");
+            }
+        } catch (error) {
+            toast.error("Erro ao exportar dados");
+        }
+    };
+
     const handleAddProduct = async () => {
         const { name, quantity, unitPrice } = newProduct;
 
@@ -194,7 +225,19 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
         setIsEditingDate(true);
     };
 
-    const handleSaveList = async (updates: { date?: string; name?: string }) => {
+    const startEditingCreatedAt = () => {
+        if (!list) return;
+        setTempCreatedAt(new Date(list.createdAt).toISOString().split('T')[0]);
+        setIsEditingCreatedAt(true);
+    };
+
+    const startEditingUpdatedAt = () => {
+        if (!list) return;
+        setTempUpdatedAt(new Date(list.updatedAt).toISOString().split('T')[0]);
+        setIsEditingUpdatedAt(true);
+    };
+
+    const handleSaveList = async (updates: { date?: string; name?: string; createdAt?: string; updatedAt?: string }) => {
         try {
             const response = await fetch(`/api/shopping-list/${listId}`, {
                 method: "PATCH",
@@ -207,6 +250,8 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
             toast.success("Compra atualizada");
             setIsEditingDate(false);
             setIsEditingName(false);
+            setIsEditingCreatedAt(false);
+            setIsEditingUpdatedAt(false);
             loadList();
         } catch (_error) {
             toast.error("Erro ao atualizar compra");
@@ -398,6 +443,14 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={handleExport}
+                        title="Exportar compra"
+                    >
+                        <Download className="h-4 w-4" />
+                    </Button>
                     <Button
                         variant="destructive"
                         size="icon"

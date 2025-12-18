@@ -139,6 +139,9 @@ function ProductItem({ product }: { product: Product }) {
                         <DialogContent>
                             <DialogHeader>
                                 <DialogTitle>Editar Produto</DialogTitle>
+                                <DialogDescription>
+                                    Altere o nome ou a quantidade do produto selecionado.
+                                </DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
                                 <div className="grid gap-2">

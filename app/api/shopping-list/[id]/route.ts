@@ -54,7 +54,7 @@ export async function PATCH(
 ) {
     try {
         const { id } = await params;
-        const { date, name } = await request.json();
+        const { date, name, createdAt, updatedAt } = await request.json();
 
         const data: any = {};
         if (date) {
@@ -62,6 +62,12 @@ export async function PATCH(
         }
         if (name !== undefined) {
             data.name = name;
+        }
+        if (createdAt) {
+            data.createdAt = new Date(`${createdAt}T12:00:00Z`);
+        }
+        if (updatedAt) {
+            data.updatedAt = new Date(`${updatedAt}T12:00:00Z`);
         }
 
         if (Object.keys(data).length === 0) {

@@ -69,7 +69,11 @@ export default function AddProductForm() {
 
         setLoading(true);
         try {
-            await addProduct({ name, quantity });
+            const result = await addProduct({ name, quantity });
+            if (result && !result.success) {
+                toast.error(result.error || "Erro ao adicionar produto");
+                return;
+            }
             setName("");
             setQuantity(1);
             setShowSuggestions(false);

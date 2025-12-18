@@ -17,7 +17,7 @@ model ShoppingList {
   products  Product[]
   
   createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  updatedAt DateTime  @default(now()) @map("updated_at")
 
   @@map("shopping_lists")
 }
@@ -35,7 +35,7 @@ model Product {
   shoppingList   ShoppingList? @relation(fields: [shoppingListId], references: [id], onDelete: Cascade)
 
   createdAt      DateTime      @default(now()) @map("created_at")
-  updatedAt      DateTime      @updatedAt @map("updated_at")
+  updatedAt      DateTime      @default(now()) @map("updated_at")
 
   @@map("products")
 }

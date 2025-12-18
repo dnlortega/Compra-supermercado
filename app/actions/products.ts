@@ -22,14 +22,14 @@ async function getCurrentListId() {
 
 // Migrate orphaned products to a new list
 async function migrateOrphanedProducts() {
-    const orphanedProducts = await prisma.product.findMany({
+    const orphanedProducts = await (prisma as any).product.findMany({
         where: { shoppingListId: null },
     });
 
     if (orphanedProducts.length > 0) {
         const listId = await getCurrentListId();
 
-        await prisma.product.updateMany({
+        await (prisma as any).product.updateMany({
             where: { shoppingListId: null },
             data: { shoppingListId: listId },
         });
@@ -119,23 +119,29 @@ function determineCategory(name: string): string {
 }
 
 export async function addProduct(data: { name: string; quantity: number }) {
-    const listId = await getCurrentListId();
-    const category = determineCategory(data.name);
+    try {
+        const listId = await getCurrentListId();
+        const category = determineCategory(data.name);
 
-    await prisma.product.create({
-        data: {
-            name: data.name,
-            quantity: data.quantity,
-            shoppingListId: listId,
-            category,
-        },
-    });
+        await (prisma as any).product.create({
+            data: {
+                name: data.name,
+                quantity: data.quantity,
+                shoppingListId: listId,
+                category,
+            },
+        });
 
-    revalidatePaths();
+        revalidatePaths();
+        return { success: true };
+    } catch (error) {
+        console.error("Add product error:", error);
+        return { success: false, error: "Falha ao adicionar produto" };
+    }
 }
 
 export async function updateProduct(id: string, data: Partial<{ name: string; quantity: number; unitPrice: number; checked: boolean }>) {
-    const current = await prisma.product.findUnique({ where: { id } });
+    const current = await (prisma as any).product.findUnique({ where: { id } });
     if (!current) throw new Error("Product not found");
 
     const quantity = data.quantity ?? current.quantity;
@@ -146,7 +152,7 @@ export async function updateProduct(id: string, data: Partial<{ name: string; qu
         totalPrice = quantity * unitPrice;
     }
 
-    await prisma.product.update({
+    await (prisma as any).product.update({
         where: { id },
         data: {
             ...data,
@@ -157,7 +163,7 @@ export async function updateProduct(id: string, data: Partial<{ name: string; qu
 }
 
 export async function deleteProduct(id: string) {
-    await prisma.product.delete({
+    await (prisma as any).product.delete({
         where: { id },
     });
     revalidatePaths();
