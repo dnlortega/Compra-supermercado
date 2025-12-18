@@ -2,27 +2,14 @@ import { getProducts } from "@/app/actions/products";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FinishShoppingButton } from "@/components/finish-shopping-button";
+import { SummaryItems } from "@/components/summary-items";
 
 export default async function SummaryPage() {
     const products = await getProducts();
     const totalSpent = products.reduce((acc: number, p: any) => acc + (p.totalPrice || 0), 0);
-
-    // Flatten products list: split items with quantity > 1 into multiple rows
-    const flattenedItems = products.flatMap((product: any) => {
-        const items = [];
-        for (let i = 0; i < product.quantity; i++) {
-            items.push({
-                ...product,
-                displayQuantity: 1,
-                displayTotal: product.unitPrice || 0
-            });
-        }
-        return items;
-    });
 
     const pricedProducts = products.filter((p: any) => p.unitPrice && p.unitPrice > 0);
     const mostExpensive = pricedProducts.length > 0
@@ -90,37 +77,7 @@ export default async function SummaryPage() {
                 </div>
             </div>
 
-            <div className="rounded-md border">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="w-10">#</TableHead>
-                            <TableHead>Produto</TableHead>
-                            <TableHead className="text-right">Qtd</TableHead>
-                            <TableHead className="text-right">Unit.</TableHead>
-                            <TableHead className="text-right">Total</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {flattenedItems.map((item: any, index: number) => (
-                            <TableRow key={`${item.id}-${index}`}>
-                                <TableCell className="text-muted-foreground text-xs font-mono">{index + 1}</TableCell>
-                                <TableCell className="font-medium">{item.name}</TableCell>
-                                <TableCell className="text-right">{item.displayQuantity}</TableCell>
-                                <TableCell className="text-right">{item.unitPrice ? formatCurrency(item.unitPrice) : "-"}</TableCell>
-                                <TableCell className="text-right font-bold">{formatCurrency(item.displayTotal)}</TableCell>
-                            </TableRow>
-                        ))}
-                        {flattenedItems.length === 0 && (
-                            <TableRow>
-                                <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
-                                    Nenhum produto cadastrado.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+            <SummaryItems products={products} />
 
             <FinishShoppingButton disabled={products.length === 0} />
         </div>

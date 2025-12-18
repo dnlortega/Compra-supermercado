@@ -48,3 +48,37 @@ export async function DELETE(
     }
 }
 
+export async function PATCH(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { id } = await params;
+        const { date, name } = await request.json();
+
+        const data: any = {};
+        if (date) {
+            data.date = new Date(`${date}T12:00:00Z`);
+        }
+        if (name !== undefined) {
+            data.name = name;
+        }
+
+        if (Object.keys(data).length === 0) {
+            return NextResponse.json({ error: "No data to update" }, { status: 400 });
+        }
+
+        await (prisma as any).shoppingList.update({
+            where: { id },
+            data,
+        });
+
+        revalidatePath("/history");
+        revalidatePath(`/history/${id}`);
+
+        return NextResponse.json({ success: true });
+    } catch (_error) {
+        console.error("Error updating shopping list:", _error);
+        return NextResponse.json({ error: "Failed to update shopping list" }, { status: 500 });
+    }
+}

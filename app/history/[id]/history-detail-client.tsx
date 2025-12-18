@@ -65,6 +65,10 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
         unitPrice: 0 as number | null,
         category: "Outros"
     });
+    const [isEditingDate, setIsEditingDate] = useState(false);
+    const [tempDate, setTempDate] = useState("");
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [tempName, setTempName] = useState("");
 
     useEffect(() => {
         loadList();
@@ -184,6 +188,37 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
         }
     };
 
+    const startEditingDate = () => {
+        if (!list) return;
+        setTempDate(new Date(list.date).toISOString().split('T')[0]);
+        setIsEditingDate(true);
+    };
+
+    const handleSaveList = async (updates: { date?: string; name?: string }) => {
+        try {
+            const response = await fetch(`/api/shopping-list/${listId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updates),
+            });
+
+            if (!response.ok) throw new Error();
+
+            toast.success("Compra atualizada");
+            setIsEditingDate(false);
+            setIsEditingName(false);
+            loadList();
+        } catch (_error) {
+            toast.error("Erro ao atualizar compra");
+        }
+    };
+
+    const startEditingName = () => {
+        if (!list) return;
+        setTempName(list.name || "");
+        setIsEditingName(true);
+    };
+
     const groupedProducts = list?.products.reduce((acc, product) => {
         const category = product.category || "Outros";
         if (!acc[category]) acc[category] = [];
@@ -242,11 +277,54 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
                     <Button variant="ghost" size="icon" onClick={() => router.back()}>
                         <ArrowLeft className="h-6 w-6" />
                     </Button>
-                    <div>
-                        <h1 className="text-2xl font-bold">{list.name || "Compra"}</h1>
-                        <p className="text-sm text-muted-foreground">
-                            {format(new Date(list.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                        </p>
+                    <div className="flex-1">
+                        {isEditingName ? (
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    value={tempName}
+                                    onChange={(e) => setTempName(e.target.value)}
+                                    className="h-9 font-bold text-xl uppercase"
+                                    placeholder="Nome da Compra"
+                                />
+                                <Button size="sm" variant="ghost" onClick={() => handleSaveList({ name: tempName })}>
+                                    <Save className="h-4 w-4 text-green-600" />
+                                </Button>
+                                <Button size="sm" variant="ghost" onClick={() => setIsEditingName(false)}>
+                                    <X className="h-4 w-4 text-red-600" />
+                                </Button>
+                            </div>
+                        ) : (
+                            <h1
+                                className="text-2xl font-bold uppercase cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group"
+                                onClick={startEditingName}
+                            >
+                                {list.name || "Compra"}
+                                <Edit2 className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </h1>
+                        )}
+                        {isEditingDate ? (
+                            <div className="flex items-center gap-2 mt-1">
+                                <Input
+                                    type="date"
+                                    value={tempDate}
+                                    onChange={(e) => setTempDate(e.target.value)}
+                                    className="h-8 w-40 text-sm"
+                                />
+                                <Button size="sm" variant="ghost" onClick={() => handleSaveList({ date: tempDate })}>
+                                    <Save className="h-4 w-4 text-green-600" />
+                                </Button>
+                                <Button size="sm" variant="ghost" onClick={() => setIsEditingDate(false)}>
+                                    <X className="h-4 w-4 text-red-600" />
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2 mt-1 group cursor-pointer" onClick={startEditingDate}>
+                                <p className="text-sm text-muted-foreground">
+                                    {format(new Date(list.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                                </p>
+                                <Edit2 className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div className="flex gap-2">
