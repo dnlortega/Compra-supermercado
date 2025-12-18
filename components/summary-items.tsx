@@ -4,7 +4,9 @@ import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Trash2 } from "lucide-react";
+import { deleteProduct } from "@/app/actions/products";
+import { toast } from "sonner";
 
 interface Product {
     id: string;
@@ -44,6 +46,7 @@ export function SummaryItems({ products }: { products: Product[] }) {
                     <TableRow>
                         <TableHead className="w-10">#</TableHead>
                         <TableHead>Produto</TableHead>
+                        <TableHead className="w-16">Ações</TableHead>
                         <TableHead className="text-right">Qtd</TableHead>
                         <TableHead className="text-right">Unit.</TableHead>
                         <TableHead className="text-right">Total</TableHead>
@@ -60,6 +63,19 @@ export function SummaryItems({ products }: { products: Product[] }) {
                             >
                                 <TableCell className="text-muted-foreground text-xs font-mono">{index + 1}</TableCell>
                                 <TableCell className="font-medium">{item.name}</TableCell>
+                                <TableCell className="text-center">
+                                    <Button variant="ghost" size="icon" onClick={async () => {
+                                        try {
+                                            await deleteProduct(item.id);
+                                            toast.success("Produto removido");
+                                            window.location.reload();
+                                        } catch (e) {
+                                            toast.error("Erro ao remover produto");
+                                        }
+                                    }}>
+                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                    </Button>
+                                </TableCell>
                                 <TableCell className="text-right">{item.displayQuantity}</TableCell>
                                 <TableCell className="text-right">{item.unitPrice ? formatCurrency(item.unitPrice) : "-"}</TableCell>
                                 <TableCell className="text-right font-bold">{formatCurrency(item.displayTotal)}</TableCell>
@@ -78,7 +94,7 @@ export function SummaryItems({ products }: { products: Product[] }) {
                     })}
                     {flattenedItems.length === 0 && (
                         <TableRow>
-                            <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">
+                            <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
                                 Nenhum produto cadastrado.
                             </TableCell>
                         </TableRow>

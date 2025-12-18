@@ -10,7 +10,7 @@ import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { History, TrendingUp, TrendingDown, Calendar } from "lucide-react";
+import { History, TrendingUp, TrendingDown, Calendar, Trash2 } from "lucide-react";
 import {
     Popover,
     PopoverContent,
@@ -19,6 +19,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Label } from "@/components/ui/label";
+import { deleteProduct } from "@/app/actions/products";
 
 interface Product {
     id: string;
@@ -244,6 +245,20 @@ function PriceItem({ product }: { product: Product }) {
                 <div className="text-right">
                     <p className="font-bold text-lg text-green-600">{formatCurrency(total)}</p>
                 </div>
+            </div>
+
+            <div className="flex justify-end mt-2">
+                <Button variant="ghost" size="icon" onClick={async () => {
+                    try {
+                        await deleteProduct(product.id);
+                        toast.success("Produto removido");
+                        window.location.reload();
+                    } catch (e) {
+                        toast.error("Erro ao remover produto");
+                    }
+                }}>
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                </Button>
             </div>
 
             <div className="mt-2 space-y-2">
