@@ -1,61 +1,115 @@
 import Link from "next/link";
-import { PlusCircle, ShoppingCart, TrendingUp } from "lucide-react";
+import { PlusCircle, ShoppingCart, TrendingUp, Calendar, ChevronRight, History } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { prisma } from "@/lib/db";
+import { formatCurrency } from "@/lib/utils";
+import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Badge } from "@/components/ui/badge";
 
-export default function Home() {
+export default async function Home() {
+  const now = new Date();
+  const firstDayOfMonth = startOfMonth(now);
+  const lastDayOfMonth = endOfMonth(now);
+
+  const firstDayLastMonth = startOfMonth(subMonths(now, 1));
+  const lastDayLastMonth = endOfMonth(subMonths(now, 1));
+
+  // 1. Get total spent this month
+  const currentMonthLists = await (prisma as any).shoppingList.findMany({
+    where: {
+      status: "COMPLETED",
+      date: {
+        gte: firstDayOfMonth,
+        lte: lastDayOfMonth,
+      },
+    },
+  });
+  const totalSpent = currentMonthLists.reduce((acc: number, list: any) => acc + (list.total || 0), 0);
+
+  // 2. Get total spent last month for comparison
+  const lastMonthLists = await (prisma as any).shoppingList.findMany({
+    where: {
+      status: "COMPLETED",
+      date: {
+        gte: firstDayLastMonth,
+        lte: lastDayLastMonth,
+      },
+    },
+  });
+  const totalSpentLastMonth = lastMonthLists.reduce((acc: number, list: any) => acc + (list.total || 0), 0);
+
+  const percentageChange = totalSpentLastMonth > 0
+    ? Math.round(((totalSpent - totalSpentLastMonth) / totalSpentLastMonth) * 100)
+    : 0;
+
+  // 3. Get pending items count in open list
+  const openList = await (prisma as any).shoppingList.findFirst({
+    where: { status: "OPEN" },
+    include: { _count: { select: { products: true } } },
+  });
+  const pendingItems = openList?._count?.products || 0;
+
+  // 4. Get recent purchases (last 3)
+  const recentPurchases = await (prisma as any).shoppingList.findMany({
+    where: { status: "COMPLETED" },
+    orderBy: { date: "desc" },
+    take: 3,
+  });
+
   return (
-    <div className="flex flex-col gap-6 p-4">
+    <div className="flex flex-col gap-6 p-4 max-w-2xl mx-auto pb-24 animate-in fade-in duration-700">
       <header className="flex items-center justify-between pb-4 border-b">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold tracking-tight">Olá, Daniel 👋</h1>
-          <p className="text-sm text-muted-foreground">
-            Controle suas compras do mês
+          <p className="text-sm text-muted-foreground uppercase">
+            {format(now, "EEEE, dd 'de' MMMM", { locale: ptBR })}
           </p>
         </div>
       </header>
 
-      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+      <section className="grid gap-4 sm:grid-cols-2">
+        <Card className="bg-primary/5 border-primary/10">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Gasto</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Total Gasto (Mês)</CardTitle>
+            <TrendingUp className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R$ 0,00</div>
-            <p className="text-xs text-muted-foreground">
-              +0% em relação ao mês anterior
+            <div className="text-3xl font-black text-primary">{formatCurrency(totalSpent)}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {percentageChange >= 0 ? "+" : ""}{percentageChange}% em relação ao mês anterior
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-muted/30 border-muted/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Itens na Lista</CardTitle>
+            <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Itens Pendentes</CardTitle>
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">
-              Produtos pendentes
+            <div className="text-3xl font-black">{pendingItems}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Produtos na lista atual
             </p>
           </CardContent>
         </Card>
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Ações Rápidas</h2>
+        <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground ml-1">Ações Rápidas</h2>
         <div className="grid grid-cols-2 gap-4">
           <Link href="/list" className="w-full">
-            <Button variant="outline" className="w-full h-24 flex flex-col gap-2 border-dashed border-2">
-              <PlusCircle className="h-6 w-6" />
-              <span>Nova Lista</span>
+            <Button variant="outline" className="w-full h-24 flex flex-col gap-2 border-dashed border-2 hover:bg-primary/5 hover:border-primary/50 transition-all">
+              <PlusCircle className="h-6 w-6 text-primary" />
+              <span className="font-bold">LISTA ATUAL</span>
             </Button>
           </Link>
-          <Link href="/summary" className="w-full">
-            <Button variant="outline" className="w-full h-24 flex flex-col gap-2">
-              <TrendingUp className="h-6 w-6" />
-              <span>Ver Relatórios</span>
+          <Link href="/history" className="w-full">
+            <Button variant="outline" className="w-full h-24 flex flex-col gap-2 hover:bg-primary/5 transition-all">
+              <History className="h-6 w-6 text-primary" />
+              <span className="font-bold">HISTÓRICO</span>
             </Button>
           </Link>
         </div>
@@ -63,17 +117,47 @@ export default function Home() {
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Últimas Compras</h2>
-          <Button variant="link" size="sm" asChild>
-            <Link href="/list">Ver todas</Link>
+          <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground ml-1">Últimas Compras</h2>
+          <Button variant="link" size="sm" asChild className="text-xs font-bold uppercase">
+            <Link href="/history">Ver todas</Link>
           </Button>
         </div>
-        <div className="flex flex-col gap-2 text-center py-8 text-muted-foreground bg-muted/20 rounded-lg border-2 border-dashed">
-          <p>Nenhuma compra recente</p>
-          <Button variant="link" size="sm" asChild>
-            <Link href="/list" className="bg-transparent">Criar nova lista</Link>
-          </Button>
-        </div>
+
+        {recentPurchases.length > 0 ? (
+          <div className="flex flex-col gap-3">
+            {recentPurchases.map((list: any) => (
+              <Link key={list.id} href={`/history/${list.id}`}>
+                <Card className="hover:bg-accent/50 transition-all cursor-pointer overflow-hidden border-none bg-muted/20">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-background p-2 rounded-full">
+                        <Calendar className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-bold uppercase text-sm">{list.name || "Compra"}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(list.date), "dd 'de' MMMM", { locale: ptBR })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-black text-primary">{formatCurrency(list.total)}</span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2 text-center py-10 text-muted-foreground bg-muted/10 rounded-xl border-2 border-dashed">
+            <ShoppingCart className="h-8 w-8 mx-auto opacity-20 mb-2" />
+            <p className="text-sm font-medium">Nenhuma compra finalizada</p>
+            <Button variant="link" size="sm" asChild>
+              <Link href="/list" className="text-primary font-bold">CRIAR PRIMEIRA LISTA</Link>
+            </Button>
+          </div>
+        )}
       </section>
     </div>
   );
