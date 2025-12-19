@@ -100,3 +100,43 @@ export async function createPriceHistoryEntry(productName: string, unitPrice: nu
         },
     });
 }
+
+export async function copyProductToPriceHistory(productId: string) {
+    const product = await (prisma as any).product.findUnique({ where: { id: productId }, include: { shoppingList: true } });
+    if (!product) throw new Error('Product not found');
+    if (product.unitPrice === null || product.unitPrice === undefined) throw new Error('Product has no unitPrice');
+
+    const purchaseDate = product.shoppingList?.date ?? new Date();
+
+    return await (prisma as any).priceHistory.create({
+        data: {
+            productName: product.name,
+            unitPrice: product.unitPrice,
+            purchaseDate,
+        },
+    });
+}
+
+export async function importOpenListToPriceHistory(shoppingListId?: string) {
+    // If no list id provided, find the open list
+    let listId = shoppingListId;
+    if (!listId) {
+        const open = await (prisma as any).shoppingList.findFirst({ where: { status: 'OPEN' } });
+        if (!open) return { created: 0 };
+        listId = open.id;
+    }
+
+    const products = await (prisma as any).product.findMany({ where: { shoppingListId: listId, unitPrice: { not: null } } });
+    let created = 0;
+    for (const p of products) {
+        try {
+            await (prisma as any).priceHistory.create({ data: { productName: p.name, unitPrice: p.unitPrice || 0, purchaseDate: new Date() } });
+            created += 1;
+        } catch (err) {
+            // ignore individual failures
+            console.error('Failed to create price history for', p.name, err);
+        }
+    }
+
+    return { created };
+}

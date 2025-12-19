@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Trash2, Edit2, Minus, Plus } from "lucide-react";
 import { deleteProduct, updateProduct } from "@/app/actions/products";
+import { copyProductToPriceHistory } from "@/app/actions/price-history";
 import { toast } from "sonner";
 import {
     Dialog,
@@ -173,6 +174,21 @@ function ProductItem({ product }: { product: Product }) {
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
+
+                    <Button variant="ghost" size="icon" onClick={async () => {
+                        try {
+                            await copyProductToPriceHistory(product.id);
+                            toast.success('Copiado para histórico');
+                        } catch (e: any) {
+                            console.error(e);
+                            toast.error(e?.message || 'Erro ao copiar para histórico');
+                        }
+                    }} title="Copiar para histórico">
+                        {/* Using Trash icon slot for small button space; consider changing icon */}
+                        <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M12 3v4m5 4v6a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-6" />
+                        </svg>
+                    </Button>
 
                     <Button variant="ghost" size="icon" onClick={handleDeleteClick} disabled={loading}>
                         <Trash2 className="h-4 w-4 text-red-500" />
