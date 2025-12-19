@@ -21,8 +21,8 @@ export default function AddProductForm() {
 
     useEffect(() => {
         const loadNames = async () => {
-            const data = await getAllProductNames();
-            setCatalog(data.map((n: string) => ({ name: n })));
+            const data = await getAllProductNames() as string[];
+            setCatalog(data.map((n) => ({ name: n })));
         };
         loadNames();
     }, []);

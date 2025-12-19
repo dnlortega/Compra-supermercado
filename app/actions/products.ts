@@ -169,9 +169,26 @@ export async function updateProduct(id: string, data: Partial<{ name: string; qu
 }
 
 export async function deleteProduct(id: string) {
-    await (prisma as any).product.delete({
-        where: { id },
-    });
+    // Find product to obtain its name for price history cleanup
+    const product = await (prisma as any).product.findUnique({ where: { id } });
+    if (product) {
+        // Delete all price history entries for this product name (case-insensitive)
+        try {
+            await (prisma as any).priceHistory.deleteMany({
+                where: {
+                    productName: {
+                        equals: product.name,
+                        mode: 'insensitive',
+                    },
+                },
+            });
+        } catch (err) {
+            console.error('Error deleting price history for product', product.name, err);
+        }
+
+        // Delete the product itself
+        await (prisma as any).product.delete({ where: { id } });
+    }
     // removed cache revalidation; pages read directly from DB
 }
 // cache revalidation removed — we force components/pages to read from DB
