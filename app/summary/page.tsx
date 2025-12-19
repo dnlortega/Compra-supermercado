@@ -1,7 +1,7 @@
 import { getProducts } from "@/app/actions/products";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, List } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FinishShoppingButton } from "@/components/finish-shopping-button";
@@ -21,13 +21,23 @@ export default async function SummaryPage() {
 
     return (
         <div className="container mx-auto p-4 max-w-2xl bg-background min-h-screen">
-            <div className="flex items-center gap-4 mb-6">
-                <Link href="/">
-                    <Button variant="ghost" size="icon">
-                        <ArrowLeft className="h-6 w-6" />
-                    </Button>
-                </Link>
-                <h1 className="text-2xl font-bold">Resumo da Compra</h1>
+            <div className="flex items-center justify-between gap-4 mb-6">
+                <div className="flex items-center gap-4">
+                    <Link href="/">
+                        <Button variant="ghost" size="icon">
+                            <ArrowLeft className="h-6 w-6" />
+                        </Button>
+                    </Link>
+                    <h1 className="text-2xl font-bold">Resumo da Compra</h1>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <Link href="/summary/shopping-lists-admin">
+                        <Button variant="outline" size="sm">
+                            <List className="h-4 w-4 mr-2" /> Gerenciar Listas
+                        </Button>
+                    </Link>
+                </div>
             </div>
 
             <div className="grid gap-4 mb-8">
