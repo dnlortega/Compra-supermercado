@@ -67,3 +67,36 @@ export async function cleanupPriceHistoryForPurchase(productName: string, purcha
         },
     });
 }
+
+export async function listPriceHistory(filter?: { productName?: string; take?: number }) {
+    const where: any = {};
+    if (filter?.productName) {
+        where.productName = { contains: filter.productName, mode: 'insensitive' };
+    }
+
+    const history = await (prisma as any).priceHistory.findMany({
+        where: Object.keys(where).length ? where : undefined,
+        orderBy: { purchaseDate: 'desc' },
+        take: filter?.take || 200,
+    });
+
+    return history;
+}
+
+export async function deletePriceHistoryEntry(id: string) {
+    return await (prisma as any).priceHistory.delete({ where: { id } });
+}
+
+export async function updatePriceHistoryEntry(id: string, data: { productName?: string; unitPrice?: number; purchaseDate?: Date }) {
+    return await (prisma as any).priceHistory.update({ where: { id }, data });
+}
+
+export async function createPriceHistoryEntry(productName: string, unitPrice: number, purchaseDate?: Date) {
+    return await (prisma as any).priceHistory.create({
+        data: {
+            productName,
+            unitPrice,
+            purchaseDate: purchaseDate ?? new Date(),
+        },
+    });
+}
