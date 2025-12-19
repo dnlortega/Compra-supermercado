@@ -36,32 +36,42 @@ async function migrateOrphanedProducts() {
 }
 
 export async function getProducts() {
-    // First, migrate any orphaned products
-    await migrateOrphanedProducts();
+    try {
+        // First, migrate any orphaned products
+        await migrateOrphanedProducts();
 
-    // Try to find an open list
-    const list = await (prisma as any).shoppingList.findFirst({
-        where: { status: "OPEN" },
-        include: {
-            products: {
-                orderBy: { createdAt: "desc" }
-            }
-        },
-    });
+        // Try to find an open list
+        const list = await (prisma as any).shoppingList.findFirst({
+            where: { status: "OPEN" },
+            include: {
+                products: {
+                    orderBy: { createdAt: "desc" }
+                }
+            },
+        });
 
-    if (list) {
-        return list.products;
+        if (list) {
+            return list.products;
+        }
+
+        // If no list exists, return empty array
+        return [];
+    } catch (err) {
+        console.error("Error in getProducts:", err);
+        throw err;
     }
-
-    // If no list exists, return empty array
-    return [];
 }
 
 export async function getAllProductNames() {
-    // Return unique product names from the product table (historical + current)
-    const items = await (prisma as any).product.findMany({ select: { name: true }, orderBy: { name: 'asc' } });
-    const unique = Array.from(new Set(items.map((p: any) => p.name)));
-    return unique;
+    try {
+        // Return unique product names from the product table (historical + current)
+        const items = await (prisma as any).product.findMany({ select: { name: true }, orderBy: { name: 'asc' } });
+        const unique = Array.from(new Set(items.map((p: any) => p.name)));
+        return unique;
+    } catch (err) {
+        console.error("Error in getAllProductNames:", err);
+        throw err;
+    }
 }
 
 
@@ -188,6 +198,32 @@ export async function deleteProduct(id: string) {
 
         // Delete the product itself
         await (prisma as any).product.delete({ where: { id } });
+
+        // If there are no other product rows with the same name, remove the catalog entry
+        try {
+            const others = await (prisma as any).product.count({
+                where: {
+                    name: {
+                        equals: product.name,
+                        mode: 'insensitive',
+                    },
+                    id: { not: id },
+                },
+            });
+
+            if (others === 0) {
+                await (prisma as any).catalogProduct.deleteMany({
+                    where: {
+                        name: {
+                            equals: product.name,
+                            mode: 'insensitive',
+                        },
+                    },
+                });
+            }
+        } catch (err) {
+            console.error('Error deleting catalog product for', product.name, err);
+        }
     }
     // removed cache revalidation; pages read directly from DB
 }

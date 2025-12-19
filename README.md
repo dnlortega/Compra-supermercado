@@ -61,3 +61,34 @@ Acesse [http://localhost:3000](http://localhost:3000) no seu navegador.
 
 ---
 Desenvolvido para facilitar o seu dia a dia no mercado! 🍍🥩🧼
+
+## 🧪 Testar fluxo de exclusão (automático)
+
+Existe um script de teste que cria um produto de exemplo, adiciona entradas em `price_history` e um `catalogProduct`, executa a remoção e imprime contagens antes/depois.
+
+Uso:
+
+1. Configure `DATABASE_URL` no seu `.env` (mesma configuração usada pela aplicação).
+2. Execute o script:
+
+```powershell
+# (no Windows PowerShell)
+npm run test-delete-flow
+```
+
+Saída esperada (exemplo):
+
+```
+--- Test delete flow START ---
+Before - products: 1 priceHistory: 2 catalog: 1
+Deleted priceHistory entries for TEST_PRODUCT_DELETE
+Deleted product id <uuid>
+Other products with same name after deletion: 0
+Deleted catalogProduct count: 1
+After - products: 0 priceHistory: 0 catalog: 0
+--- Test delete flow END ---
+```
+
+Observações:
+- O script usa `@prisma/client` e assume que as migrations/esquema já estão aplicados.
+- Não rode em ambientes de produção sem antes revisar os dados que serão criados/excluídos.

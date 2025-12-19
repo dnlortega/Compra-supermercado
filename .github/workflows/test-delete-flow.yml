@@ -1,0 +1,59 @@
+name: Test Delete Flow
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  test-delete-flow:
+    name: Run delete-flow test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Wait for Postgres
+        run: |
+          echo "Waiting for Postgres to be available..."
+          for i in {1..20}; do
+            if pg_isready -h localhost -p 5432 -U postgres; then
+              echo "Postgres is ready" && break
+            fi
+            sleep 1
+          done
+
+      - name: Set DATABASE_URL
+        run: echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres" >> $GITHUB_ENV
+
+      - name: Push Prisma schema
+        run: npx prisma db push --accept-data-loss
+
+      - name: Run delete-flow test
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: npm run test-delete-flow
