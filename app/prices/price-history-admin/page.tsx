@@ -7,6 +7,7 @@ import PriceHistoryTable from "./price-history-table";
 import PriceHistoryForm from "./price-history-form";
 import { listPriceHistory, deletePriceHistoryEntry, createPriceHistoryEntry, updatePriceHistoryEntry } from "@/app/actions/price-history";
 import { toast } from "sonner";
+import ImportFileToPriceHistoryButton from "@/components/import-file-to-price-history-button";
 
 export default function PriceHistoryAdminPage() {
     const [entries, setEntries] = useState<any[]>([]);
@@ -29,6 +30,12 @@ export default function PriceHistoryAdminPage() {
     };
 
     useEffect(() => { void load(); }, [filter]);
+
+    useEffect(() => {
+        const handler = () => { void load(); };
+        window.addEventListener('price-history-imported', handler as EventListener);
+        return () => window.removeEventListener('price-history-imported', handler as EventListener);
+    }, []);
 
     const handleDelete = async (id: string) => {
         if (!confirm("Confirma remoção deste registro de preço?")) return;
@@ -80,6 +87,7 @@ export default function PriceHistoryAdminPage() {
                 <div className="flex items-center gap-2">
                     <input className="input" placeholder="Filtrar por produto" value={filter} onChange={(e) => setFilter(e.target.value)} />
                     <Button onClick={handleCreate}>Adicionar</Button>
+                    <ImportFileToPriceHistoryButton />
                     <Button variant="ghost" onClick={load}>Atualizar</Button>
                 </div>
             </div>

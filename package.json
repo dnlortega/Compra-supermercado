@@ -8,7 +8,10 @@
     "test-delete-flow": "node ./scripts/test-delete-flow.js",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "import-shopping-list": "node ./scripts/import-shopping-list.js"
+    ,
+    "import-price-history": "node ./scripts/import-price-history.js"
   },
   "dependencies": {
     "@prisma/client": "6.0.1",

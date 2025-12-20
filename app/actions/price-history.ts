@@ -127,16 +127,16 @@ export async function importOpenListToPriceHistory(shoppingListId?: string) {
     }
 
     const products = await (prisma as any).product.findMany({ where: { shoppingListId: listId, unitPrice: { not: null } } });
-    let created = 0;
+    const createdEntries: any[] = [];
     for (const p of products) {
         try {
-            await (prisma as any).priceHistory.create({ data: { productName: p.name, unitPrice: p.unitPrice || 0, purchaseDate: new Date() } });
-            created += 1;
+            const entry = await (prisma as any).priceHistory.create({ data: { productName: p.name, unitPrice: p.unitPrice || 0, purchaseDate: new Date() } });
+            createdEntries.push(entry);
         } catch (err) {
             // ignore individual failures
             console.error('Failed to create price history for', p.name, err);
         }
     }
 
-    return { created };
+    return { created: createdEntries.length, entries: createdEntries };
 }

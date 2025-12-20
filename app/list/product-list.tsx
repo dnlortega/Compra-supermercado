@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import CreatedEntriesModal from "@/components/created-entries-modal";
 import { Trash2, Edit2, Minus, Plus } from "lucide-react";
 import { deleteProduct, updateProduct } from "@/app/actions/products";
-import { copyProductToPriceHistory } from "@/app/actions/price-history";
 import { toast } from "sonner";
 import {
     Dialog,
@@ -68,6 +68,8 @@ function ProductItem({ product }: { product: Product }) {
     const [editName, setEditName] = useState(product.name);
     const [editQty, setEditQty] = useState(product.quantity);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [createdEntries, setCreatedEntries] = useState<any[]>([]);
 
     const handleDeleteClick = () => {
         setDeleteDialogOpen(true);
@@ -177,14 +179,24 @@ function ProductItem({ product }: { product: Product }) {
 
                     <Button variant="ghost" size="icon" onClick={async () => {
                         try {
-                            await copyProductToPriceHistory(product.id);
+                            const res = await fetch(`/api/copy-product/${product.id}`, { method: 'POST' });
+                            const data = await res.json();
+                            if (!res.ok) {
+                                toast.error(data?.error || 'Erro ao copiar para histórico');
+                                return;
+                            }
+                            // API returns created entry
+                            const entry = data?.result;
+                            if (entry) {
+                                setCreatedEntries([entry]);
+                                setModalOpen(true);
+                            }
                             toast.success('Copiado para histórico');
-                        } catch (e: any) {
+                        } catch (e) {
                             console.error(e);
-                            toast.error(e?.message || 'Erro ao copiar para histórico');
+                            toast.error('Erro ao copiar para histórico');
                         }
                     }} title="Copiar para histórico">
-                        {/* Using Trash icon slot for small button space; consider changing icon */}
                         <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M12 3v4m5 4v6a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-6" />
                         </svg>
@@ -195,6 +207,7 @@ function ProductItem({ product }: { product: Product }) {
                     </Button>
                 </div>
             </div>
+                <CreatedEntriesModal open={modalOpen} entries={createdEntries} onOpenChange={setModalOpen} />
 
             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <AlertDialogContent>
