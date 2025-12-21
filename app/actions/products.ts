@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 async function getCurrentListId() {
     const list = await (prisma as any).shoppingList.findFirst({
         where: { status: "OPEN" },
+        orderBy: { createdAt: "desc" },
     });
 
     if (list) return list.id;
@@ -43,6 +44,7 @@ export async function getProducts() {
         // Try to find an open list
         const list = await (prisma as any).shoppingList.findFirst({
             where: { status: "OPEN" },
+            orderBy: { createdAt: "desc" },
             include: {
                 products: {
                     orderBy: { createdAt: "desc" }

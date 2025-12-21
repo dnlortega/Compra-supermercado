@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 export async function getOpenList() {
     return await (prisma as any).shoppingList.findFirst({
         where: { status: "OPEN" },
+        orderBy: { createdAt: "desc" },
         include: { products: true },
     });
 }

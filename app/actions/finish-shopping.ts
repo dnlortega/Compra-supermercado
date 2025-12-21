@@ -57,13 +57,29 @@ export async function finishShoppingList(name?: string) {
         }
     });
 
+    // Ensure no other OPEN lists exist (shouldn't happen, but just in case)
+    await (prisma as any).shoppingList.updateMany({
+        where: { 
+            status: "OPEN",
+            id: { not: list.id }
+        },
+        data: {
+            status: "COMPLETED",
+        }
+    });
+
     // Create a new empty list for future shopping
-    await (prisma as any).shoppingList.create({
+    const newList = await (prisma as any).shoppingList.create({
         data: {
             status: "OPEN",
             date: new Date(),
         },
     });
+
+    // Verify the new list was created
+    if (!newList || !newList.id) {
+        throw new Error("Failed to create new shopping list");
+    }
 
     // removed cache revalidation; pages will read from DB directly
 }
