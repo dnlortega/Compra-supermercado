@@ -186,7 +186,7 @@ export async function deleteProduct(id: string) {
         const product = await (prisma as any).product.findUnique({ where: { id } });
         
         if (!product) {
-            throw new Error("Produto não encontrado");
+            return { success: false, error: "Produto não encontrado" };
         }
 
         // Delete the product itself
@@ -219,9 +219,11 @@ export async function deleteProduct(id: string) {
             console.error('Error deleting catalog product for', product.name, err);
             // Don't throw here, product was already deleted
         }
-    } catch (error) {
+
+        return { success: true };
+    } catch (error: any) {
         console.error("Error in deleteProduct:", error);
-        throw error;
+        return { success: false, error: error?.message || "Erro ao deletar produto" };
     }
     // removed cache revalidation; pages read directly from DB
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import CreatedEntriesModal from "@/components/created-entries-modal";
 import { Trash2, Edit2, Minus, Plus } from "lucide-react";
@@ -63,6 +64,7 @@ export default function ProductList({ initialProducts }: { initialProducts: Prod
 }
 
 function ProductItem({ product }: { product: Product }) {
+    const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState(product.name);
@@ -79,10 +81,15 @@ function ProductItem({ product }: { product: Product }) {
         setLoading(true);
         setDeleteDialogOpen(false);
         try {
-            await deleteProduct(product.id);
-            toast.success("Produto removido");
-            // reload to reflect the DB (no cache revalidation)
-            window.location.reload();
+            const result = await deleteProduct(product.id);
+            if (result && result.success) {
+                toast.success("Produto removido");
+                // Use router.refresh() for smoother update
+                router.refresh();
+            } else {
+                toast.error(result?.error || "Erro ao remover produto");
+                setDeleteDialogOpen(true); // Reopen dialog if error
+            }
         } catch (error) {
             console.error("Error deleting product:", error);
             toast.error("Erro ao remover produto");
@@ -98,8 +105,7 @@ function ProductItem({ product }: { product: Product }) {
             await updateProduct(product.id, { name: editName, quantity: editQty });
             toast.success("Produto atualizado");
             setIsEditing(false);
-            // reload to reflect the DB (no cache revalidation)
-            window.location.reload();
+            router.refresh();
         } catch {
             toast.error("Erro ao atualizar");
         } finally {
@@ -110,7 +116,7 @@ function ProductItem({ product }: { product: Product }) {
     const increment = async () => {
         try {
             await updateProduct(product.id, { quantity: product.quantity + 1 });
-            window.location.reload();
+            router.refresh();
         } catch { }
     }
 
@@ -118,7 +124,7 @@ function ProductItem({ product }: { product: Product }) {
         if (product.quantity <= 1) return;
         try {
             await updateProduct(product.id, { quantity: product.quantity - 1 });
-            window.location.reload();
+            router.refresh();
         } catch { }
     }
 
