@@ -268,7 +268,9 @@ function PriceItem({ product }: { product: Product }) {
                         
                         if (response.ok && data.success) {
                             toast.success("Produto removido");
-                            window.location.reload();
+                            requestAnimationFrame(() => {
+                                window.location.reload();
+                            });
                         } else {
                             toast.error(data?.error || "Erro ao remover produto");
                         }

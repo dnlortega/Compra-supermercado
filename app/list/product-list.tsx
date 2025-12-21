@@ -87,7 +87,10 @@ function ProductItem({ product }: { product: Product }) {
             
             if (response.ok && data.success) {
                 toast.success("Produto removido");
-                window.location.reload();
+                // Use requestAnimationFrame to defer reload for better performance
+                requestAnimationFrame(() => {
+                    window.location.reload();
+                });
             } else {
                 toast.error(data?.error || "Erro ao remover produto");
                 setDeleteDialogOpen(true); // Reopen dialog if error
@@ -107,7 +110,9 @@ function ProductItem({ product }: { product: Product }) {
             await updateProduct(product.id, { name: editName, quantity: editQty });
             toast.success("Produto atualizado");
             setIsEditing(false);
-            window.location.reload();
+            requestAnimationFrame(() => {
+                window.location.reload();
+            });
         } catch {
             toast.error("Erro ao atualizar");
             setLoading(false);
@@ -117,7 +122,9 @@ function ProductItem({ product }: { product: Product }) {
     const increment = async () => {
         try {
             await updateProduct(product.id, { quantity: product.quantity + 1 });
-            window.location.reload();
+            requestAnimationFrame(() => {
+                window.location.reload();
+            });
         } catch { }
     }
 
@@ -125,7 +132,9 @@ function ProductItem({ product }: { product: Product }) {
         if (product.quantity <= 1) return;
         try {
             await updateProduct(product.id, { quantity: product.quantity - 1 });
-            window.location.reload();
+            requestAnimationFrame(() => {
+                window.location.reload();
+            });
         } catch { }
     }
 

@@ -32,7 +32,12 @@ export default function PriceHistoryAdminPage() {
     useEffect(() => { void load(); }, [filter]);
 
     useEffect(() => {
-        const handler = () => { void load(); };
+        const handler = () => { 
+            // Use requestAnimationFrame to defer load operation
+            requestAnimationFrame(() => {
+                void load();
+            });
+        };
         window.addEventListener('price-history-imported', handler as EventListener);
         return () => window.removeEventListener('price-history-imported', handler as EventListener);
     }, []);

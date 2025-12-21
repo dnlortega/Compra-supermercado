@@ -46,15 +46,19 @@ export default function AddProductForm() {
     const handleInputChange = (value: string) => {
         setName(value);
 
-        if (value.trim().length > 0) {
-            const filtered = catalog
-                .filter(item => item.name.toLowerCase().includes(value.toLowerCase()))
-                .map(item => item.name);
-            setFilteredSuggestions(filtered);
-            setShowSuggestions(filtered.length > 0);
-        } else {
-            setShowSuggestions(false);
-        }
+        // Use requestAnimationFrame to defer filtering for better performance
+        requestAnimationFrame(() => {
+            if (value.trim().length > 0) {
+                const lowerValue = value.toLowerCase();
+                const filtered = catalog
+                    .filter(item => item.name.toLowerCase().includes(lowerValue))
+                    .map(item => item.name);
+                setFilteredSuggestions(filtered);
+                setShowSuggestions(filtered.length > 0);
+            } else {
+                setShowSuggestions(false);
+            }
+        });
     };
 
     const handleSuggestionClick = (suggestion: string) => {
@@ -78,8 +82,10 @@ export default function AddProductForm() {
             setQuantity(1);
             setShowSuggestions(false);
                 toast.success("Produto adicionado!");
-                // reload to reflect DB changes (no cache-based revalidation)
-                window.location.reload();
+                // Use requestAnimationFrame to defer reload for better performance
+                requestAnimationFrame(() => {
+                    window.location.reload();
+                });
         } catch (error) {
             console.error(error);
             toast.error("Erro ao adicionar produto");
