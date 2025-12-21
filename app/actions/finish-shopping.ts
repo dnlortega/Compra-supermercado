@@ -57,5 +57,13 @@ export async function finishShoppingList(name?: string) {
         }
     });
 
+    // Create a new empty list for future shopping
+    await (prisma as any).shoppingList.create({
+        data: {
+            status: "OPEN",
+            date: new Date(),
+        },
+    });
+
     // removed cache revalidation; pages will read from DB directly
 }
