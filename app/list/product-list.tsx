@@ -77,16 +77,18 @@ function ProductItem({ product }: { product: Product }) {
 
     const confirmDelete = async () => {
         setLoading(true);
+        setDeleteDialogOpen(false);
         try {
             await deleteProduct(product.id);
             toast.success("Produto removido");
             // reload to reflect the DB (no cache revalidation)
             window.location.reload();
-        } catch {
-            toast.error("Erro ao remover");
+        } catch (error) {
+            console.error("Error deleting product:", error);
+            toast.error("Erro ao remover produto");
+            setDeleteDialogOpen(true); // Reopen dialog if error
         } finally {
             setLoading(false);
-            setDeleteDialogOpen(false);
         }
     };
 

@@ -181,27 +181,19 @@ export async function updateProduct(id: string, data: Partial<{ name: string; qu
 }
 
 export async function deleteProduct(id: string) {
-    // Find product to obtain its name for price history cleanup
-    const product = await (prisma as any).product.findUnique({ where: { id } });
-    if (product) {
-        // Delete all price history entries for this product name (case-insensitive)
-        try {
-            await (prisma as any).priceHistory.deleteMany({
-                where: {
-                    productName: {
-                        equals: product.name,
-                        mode: 'insensitive',
-                    },
-                },
-            });
-        } catch (err) {
-            console.error('Error deleting price history for product', product.name, err);
+    try {
+        // Find product before deleting
+        const product = await (prisma as any).product.findUnique({ where: { id } });
+        
+        if (!product) {
+            throw new Error("Produto não encontrado");
         }
 
         // Delete the product itself
         await (prisma as any).product.delete({ where: { id } });
 
         // If there are no other product rows with the same name, remove the catalog entry
+        // (but keep price history - it should persist even when product is removed from list)
         try {
             const others = await (prisma as any).product.count({
                 where: {
@@ -225,7 +217,11 @@ export async function deleteProduct(id: string) {
             }
         } catch (err) {
             console.error('Error deleting catalog product for', product.name, err);
+            // Don't throw here, product was already deleted
         }
+    } catch (error) {
+        console.error("Error in deleteProduct:", error);
+        throw error;
     }
     // removed cache revalidation; pages read directly from DB
 }
