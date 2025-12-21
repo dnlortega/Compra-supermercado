@@ -35,6 +35,11 @@ export function BottomNav() {
             label: "Histórico",
             icon: HistoryIcon,
         },
+        {
+            href: "/about",
+            label: "Sobre",
+            icon: BookOpen,
+        },
     ]
 
     return (
