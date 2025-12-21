@@ -1,19 +1,45 @@
 import { NextResponse } from "next/server";
-import { copyProductToPriceHistory } from "@/app/actions/price-history";
+import { prisma } from "@/lib/db";
 
-export async function POST(req: Request, context: any) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        // Next 16 may provide context.params as a Promise — normalize it
-        let params = context?.params;
-        if (params && typeof params.then === 'function') {
-            params = await params;
+        const { id } = await params;
+        
+        if (!id) {
+            return NextResponse.json({ success: false, error: 'Missing id' }, { status: 400 });
         }
-        const id = params?.id;
-        if (!id) return NextResponse.json({ success: false, error: 'Missing id' }, { status: 400 });
-        const created = await copyProductToPriceHistory(id);
+
+        // Find product with its shopping list
+        const product = await (prisma as any).product.findUnique({
+            where: { id },
+            include: { shoppingList: true }
+        });
+
+        if (!product) {
+            return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });
+        }
+
+        if (product.unitPrice === null || product.unitPrice === undefined) {
+            return NextResponse.json({ success: false, error: 'Product has no unitPrice' }, { status: 400 });
+        }
+
+        const purchaseDate = product.shoppingList?.date ?? new Date();
+
+        // Create price history entry
+        const created = await (prisma as any).priceHistory.create({
+            data: {
+                productName: product.name,
+                unitPrice: product.unitPrice,
+                purchaseDate,
+            },
+        });
+
         return NextResponse.json({ success: true, result: created });
-    } catch (err) {
+    } catch (err: any) {
         console.error('copy-product error', err);
-        return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
+        return NextResponse.json({ 
+            success: false, 
+            error: err?.message || 'Failed to copy product to price history' 
+        }, { status: 500 });
     }
 }
