@@ -17,12 +17,13 @@ export function CurrencyInput({ onValueChange, value, ...props }: CurrencyInputP
     let numericValue: number;
     if (typeof val === "string") {
         const clean = val.replace(/[^\d]/g, "");
+        if (!clean) return "";
         numericValue = parseInt(clean) / 100;
     } else {
         numericValue = val;
     }
 
-    if (isNaN(numericValue)) return "";
+    if (isNaN(numericValue) || numericValue < 0) return "";
     
     return new Intl.NumberFormat("pt-BR", {
       minimumFractionDigits: 2,
@@ -31,7 +32,8 @@ export function CurrencyInput({ onValueChange, value, ...props }: CurrencyInputP
   };
 
   useEffect(() => {
-    setDisplayValue(format(value));
+    const formatted = format(value);
+    setDisplayValue(formatted);
   }, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

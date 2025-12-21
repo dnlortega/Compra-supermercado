@@ -12,18 +12,19 @@ interface Product {
     id: string;
     name: string;
     quantity: number;
-    unitPrice: number;
-    totalPrice: number;
+    unitPrice: number | null;
+    totalPrice: number | null;
 }
 
 export function SummaryItems({ products }: { products: Product[] }) {
     const flattenedItems = products.flatMap((product) => {
         const items = [];
+        const unitPrice = product.unitPrice ?? 0;
         for (let i = 0; i < product.quantity; i++) {
             items.push({
                 ...product,
                 displayQuantity: 1,
-                displayTotal: product.unitPrice || 0,
+                displayTotal: unitPrice,
                 unitKey: `${product.id}-${i}`
             });
         }

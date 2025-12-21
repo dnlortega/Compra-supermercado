@@ -150,10 +150,17 @@ function PriceItem({ product }: { product: Product }) {
     const [priceHistory, setPriceHistory] = useState<PriceHistoryEntry[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
 
+    // Sincronizar estado quando produto mudar (apenas quando o ID do produto mudar)
+    useEffect(() => {
+        setUnitPrice(product.unitPrice || 0);
+        setQuantity(product.quantity.toString());
+        setTotal(product.totalPrice || 0);
+    }, [product.id]);
+
     useEffect(() => {
         loadLastPrice();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [product.name]);
 
     const loadLastPrice = async () => {
         const price = await getLastPrice(product.name);
@@ -174,10 +181,13 @@ function PriceItem({ product }: { product: Product }) {
         const valPrice = unitPrice;
         const valQty = parseInt(quantity);
 
-        if (isNaN(valPrice) && isNaN(valQty)) return;
+        // Normalizar valores para comparação
+        const currentUnitPrice = product.unitPrice ?? 0;
+        const normalizedValPrice = valPrice || 0;
+        const normalizedCurrentPrice = currentUnitPrice || 0;
 
         // Se mudou preço ou quantidade
-        const priceChanged = !isNaN(valPrice) && valPrice !== product.unitPrice;
+        const priceChanged = Math.abs(normalizedValPrice - normalizedCurrentPrice) > 0.001;
         const qtyChanged = !isNaN(valQty) && valQty !== product.quantity;
 
         if (!priceChanged && !qtyChanged) return;
@@ -185,21 +195,22 @@ function PriceItem({ product }: { product: Product }) {
         setLoading(true);
         try {
             await updateProduct(product.id, {
-                unitPrice: isNaN(valPrice) ? undefined : valPrice,
-                quantity: isNaN(valQty) ? undefined : valQty
+                unitPrice: valPrice > 0 ? valPrice : undefined,
+                quantity: !isNaN(valQty) ? valQty : undefined
             });
 
-            if (priceChanged) {
+            if (priceChanged && valPrice > 0) {
                 await savePriceHistory(product.name, valPrice);
             }
 
-            const currentPrice = isNaN(valPrice) ? (product.unitPrice || 0) : valPrice;
-            const currentQty = isNaN(valQty) ? product.quantity : valQty;
+            const currentPrice = valPrice > 0 ? valPrice : (product.unitPrice || 0);
+            const currentQty = !isNaN(valQty) ? valQty : product.quantity;
 
             setTotal(currentPrice * currentQty);
-            if (priceChanged) setLastPrice(valPrice);
+            if (priceChanged && valPrice > 0) setLastPrice(valPrice);
             toast.success("Alterações salvas");
-        } catch {
+        } catch (error) {
+            console.error("Error saving product:", error);
             toast.error("Erro ao salvar");
         } finally {
             setLoading(false);
