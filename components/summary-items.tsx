@@ -5,7 +5,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Check, Trash2 } from "lucide-react";
-import { deleteProduct } from "@/app/actions/products";
 import { toast } from "sonner";
 
 interface Product {
@@ -67,10 +66,20 @@ export function SummaryItems({ products }: { products: Product[] }) {
                                 <TableCell className="text-center">
                                     <Button variant="ghost" size="icon" onClick={async () => {
                                         try {
-                                            await deleteProduct(item.id);
-                                            toast.success("Produto removido");
-                                            window.location.reload();
+                                            const response = await fetch(`/api/product/${item.id}`, {
+                                                method: 'DELETE',
+                                            });
+                                            
+                                            const data = await response.json();
+                                            
+                                            if (response.ok && data.success) {
+                                                toast.success("Produto removido");
+                                                window.location.reload();
+                                            } else {
+                                                toast.error(data?.error || "Erro ao remover produto");
+                                            }
                                         } catch (e) {
+                                            console.error("Error deleting product:", e);
                                             toast.error("Erro ao remover produto");
                                         }
                                     }}>

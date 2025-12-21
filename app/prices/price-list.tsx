@@ -19,7 +19,6 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Label } from "@/components/ui/label";
-import { deleteProduct } from "@/app/actions/products";
 
 interface Product {
     id: string;
@@ -261,10 +260,20 @@ function PriceItem({ product }: { product: Product }) {
             <div className="flex justify-end mt-2">
                 <Button variant="ghost" size="icon" onClick={async () => {
                     try {
-                        await deleteProduct(product.id);
-                        toast.success("Produto removido");
-                        window.location.reload();
+                        const response = await fetch(`/api/product/${product.id}`, {
+                            method: 'DELETE',
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok && data.success) {
+                            toast.success("Produto removido");
+                            window.location.reload();
+                        } else {
+                            toast.error(data?.error || "Erro ao remover produto");
+                        }
                     } catch (e) {
+                        console.error("Error deleting product:", e);
                         toast.error("Erro ao remover produto");
                     }
                 }}>

@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import CreatedEntriesModal from "@/components/created-entries-modal";
 import { Trash2, Edit2, Minus, Plus } from "lucide-react";
-import { deleteProduct, updateProduct } from "@/app/actions/products";
+import { updateProduct } from "@/app/actions/products";
 import { toast } from "sonner";
 import {
     Dialog,
@@ -64,7 +63,6 @@ export default function ProductList({ initialProducts }: { initialProducts: Prod
 }
 
 function ProductItem({ product }: { product: Product }) {
-    const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState(product.name);
@@ -81,20 +79,24 @@ function ProductItem({ product }: { product: Product }) {
         setLoading(true);
         setDeleteDialogOpen(false);
         try {
-            const result = await deleteProduct(product.id);
-            if (result && result.success) {
+            const response = await fetch(`/api/product/${product.id}`, {
+                method: 'DELETE',
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
                 toast.success("Produto removido");
-                // Use router.refresh() for smoother update
-                router.refresh();
+                window.location.reload();
             } else {
-                toast.error(result?.error || "Erro ao remover produto");
+                toast.error(data?.error || "Erro ao remover produto");
                 setDeleteDialogOpen(true); // Reopen dialog if error
+                setLoading(false);
             }
         } catch (error) {
             console.error("Error deleting product:", error);
             toast.error("Erro ao remover produto");
             setDeleteDialogOpen(true); // Reopen dialog if error
-        } finally {
             setLoading(false);
         }
     };
@@ -105,10 +107,9 @@ function ProductItem({ product }: { product: Product }) {
             await updateProduct(product.id, { name: editName, quantity: editQty });
             toast.success("Produto atualizado");
             setIsEditing(false);
-            router.refresh();
+            window.location.reload();
         } catch {
             toast.error("Erro ao atualizar");
-        } finally {
             setLoading(false);
         }
     };
@@ -116,7 +117,7 @@ function ProductItem({ product }: { product: Product }) {
     const increment = async () => {
         try {
             await updateProduct(product.id, { quantity: product.quantity + 1 });
-            router.refresh();
+            window.location.reload();
         } catch { }
     }
 
@@ -124,7 +125,7 @@ function ProductItem({ product }: { product: Product }) {
         if (product.quantity <= 1) return;
         try {
             await updateProduct(product.id, { quantity: product.quantity - 1 });
-            router.refresh();
+            window.location.reload();
         } catch { }
     }
 
