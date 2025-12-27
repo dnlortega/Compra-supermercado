@@ -17,46 +17,58 @@ export default async function Home() {
   const lastDayLastMonth = endOfMonth(subMonths(now, 1));
 
   // 1. Get total spent this month
-  const currentMonthLists = await (prisma as any).shoppingList.findMany({
-    where: {
-      status: "COMPLETED",
-      date: {
-        gte: firstDayOfMonth,
-        lte: lastDayOfMonth,
+  let totalSpent = 0;
+  let totalSpentLastMonth = 0;
+  let pendingItems = 0;
+  let recentPurchases: any[] = [];
+  let percentageChange = 0;
+
+  try {
+    const currentMonthLists = await prisma.shoppingList.findMany({
+      where: {
+        status: "COMPLETED",
+        date: {
+          gte: firstDayOfMonth,
+          lte: lastDayOfMonth,
+        },
       },
-    },
-  });
-  const totalSpent = currentMonthLists.reduce((acc: number, list: any) => acc + (list.total || 0), 0);
+    });
+    totalSpent = currentMonthLists.reduce((acc, list) => acc + (list.total || 0), 0);
 
-  // 2. Get total spent last month for comparison
-  const lastMonthLists = await (prisma as any).shoppingList.findMany({
-    where: {
-      status: "COMPLETED",
-      date: {
-        gte: firstDayLastMonth,
-        lte: lastDayLastMonth,
+    // 2. Get total spent last month for comparison
+    const lastMonthLists = await prisma.shoppingList.findMany({
+      where: {
+        status: "COMPLETED",
+        date: {
+          gte: firstDayLastMonth,
+          lte: lastDayLastMonth,
+        },
       },
-    },
-  });
-  const totalSpentLastMonth = lastMonthLists.reduce((acc: number, list: any) => acc + (list.total || 0), 0);
+    });
+    totalSpentLastMonth = lastMonthLists.reduce((acc, list) => acc + (list.total || 0), 0);
 
-  const percentageChange = totalSpentLastMonth > 0
-    ? Math.round(((totalSpent - totalSpentLastMonth) / totalSpentLastMonth) * 100)
-    : 0;
+    percentageChange = totalSpentLastMonth > 0
+      ? Math.round(((totalSpent - totalSpentLastMonth) / totalSpentLastMonth) * 100)
+      : 0;
 
-  // 3. Get pending items count in open list
-  const openList = await (prisma as any).shoppingList.findFirst({
-    where: { status: "OPEN" },
-    include: { _count: { select: { products: true } } },
-  });
-  const pendingItems = openList?._count?.products || 0;
+    // 3. Get pending items count in open list
+    const openList = await prisma.shoppingList.findFirst({
+      where: { status: "OPEN" },
+      include: { _count: { select: { products: true } } },
+    });
+    pendingItems = openList?._count?.products || 0;
 
-  // 4. Get recent purchases (last 3)
-  const recentPurchases = await (prisma as any).shoppingList.findMany({
-    where: { status: "COMPLETED" },
-    orderBy: { date: "desc" },
-    take: 3,
-  });
+    // 4. Get recent purchases (last 3)
+    recentPurchases = await prisma.shoppingList.findMany({
+      where: { status: "COMPLETED" },
+      orderBy: { date: "desc" },
+      take: 3,
+    });
+
+  } catch (error) {
+    console.error("Failed to fetch dashboard data:", error);
+    // Continue rendering with default zero values
+  }
 
   return (
     <div className="flex flex-col gap-6 p-4 max-w-2xl mx-auto pb-24 animate-in fade-in duration-700">

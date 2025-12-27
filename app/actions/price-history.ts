@@ -1,19 +1,21 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { revalidatePath } from "next/cache";
 
 export async function savePriceHistory(productName: string, unitPrice: number) {
-    await (prisma as any).priceHistory.create({
+    await prisma.priceHistory.create({
         data: {
             productName,
             unitPrice,
             purchaseDate: new Date(),
         },
     });
+    revalidatePath("/prices");
 }
 
 export async function getPriceHistory(productName: string) {
-    const history = await (prisma as any).priceHistory.findMany({
+    const history = await prisma.priceHistory.findMany({
         where: {
             productName: {
                 equals: productName,
@@ -30,7 +32,7 @@ export async function getPriceHistory(productName: string) {
 }
 
 export async function getLastPrice(productName: string) {
-    const lastEntry = await (prisma as any).priceHistory.findFirst({
+    const lastEntry = await prisma.priceHistory.findFirst({
         where: {
             productName: {
                 equals: productName,
@@ -54,7 +56,7 @@ export async function cleanupPriceHistoryForPurchase(productName: string, purcha
     const endOfDay = new Date(purchaseDate);
     endOfDay.setHours(23, 59, 59, 999);
 
-    await (prisma as any).priceHistory.deleteMany({
+    await prisma.priceHistory.deleteMany({
         where: {
             productName: {
                 equals: productName,
@@ -66,6 +68,7 @@ export async function cleanupPriceHistoryForPurchase(productName: string, purcha
             },
         },
     });
+    revalidatePath("/prices");
 }
 
 export async function listPriceHistory(filter?: { productName?: string; take?: number }) {
@@ -74,7 +77,7 @@ export async function listPriceHistory(filter?: { productName?: string; take?: n
         where.productName = { contains: filter.productName, mode: 'insensitive' };
     }
 
-    const history = await (prisma as any).priceHistory.findMany({
+    const history = await prisma.priceHistory.findMany({
         where: Object.keys(where).length ? where : undefined,
         orderBy: { purchaseDate: 'desc' },
         take: filter?.take || 200,
@@ -84,53 +87,61 @@ export async function listPriceHistory(filter?: { productName?: string; take?: n
 }
 
 export async function deletePriceHistoryEntry(id: string) {
-    return await (prisma as any).priceHistory.delete({ where: { id } });
+    const res = await prisma.priceHistory.delete({ where: { id } });
+    revalidatePath("/prices");
+    return res;
 }
 
 export async function updatePriceHistoryEntry(id: string, data: { productName?: string; unitPrice?: number; purchaseDate?: Date }) {
-    return await (prisma as any).priceHistory.update({ where: { id }, data });
+    const res = await prisma.priceHistory.update({ where: { id }, data });
+    revalidatePath("/prices");
+    return res;
 }
 
 export async function createPriceHistoryEntry(productName: string, unitPrice: number, purchaseDate?: Date) {
-    return await (prisma as any).priceHistory.create({
+    const res = await prisma.priceHistory.create({
         data: {
             productName,
             unitPrice,
             purchaseDate: purchaseDate ?? new Date(),
         },
     });
+    revalidatePath("/prices");
+    return res;
 }
 
 export async function copyProductToPriceHistory(productId: string) {
-    const product = await (prisma as any).product.findUnique({ where: { id: productId }, include: { shoppingList: true } });
+    const product = await prisma.product.findUnique({ where: { id: productId }, include: { shoppingList: true } });
     if (!product) throw new Error('Product not found');
     if (product.unitPrice === null || product.unitPrice === undefined) throw new Error('Product has no unitPrice');
 
     const purchaseDate = product.shoppingList?.date ?? new Date();
 
-    return await (prisma as any).priceHistory.create({
+    const res = await prisma.priceHistory.create({
         data: {
             productName: product.name,
             unitPrice: product.unitPrice,
             purchaseDate,
         },
     });
+    revalidatePath("/prices");
+    return res;
 }
 
 export async function importOpenListToPriceHistory(shoppingListId?: string) {
     // If no list id provided, find the open list
     let listId = shoppingListId;
     if (!listId) {
-        const open = await (prisma as any).shoppingList.findFirst({ where: { status: 'OPEN' } });
+        const open = await prisma.shoppingList.findFirst({ where: { status: 'OPEN' } });
         if (!open) return { created: 0 };
         listId = open.id;
     }
 
-    const products = await (prisma as any).product.findMany({ where: { shoppingListId: listId, unitPrice: { not: null } } });
+    const products = await prisma.product.findMany({ where: { shoppingListId: listId, unitPrice: { not: null } } });
     const createdEntries: any[] = [];
     for (const p of products) {
         try {
-            const entry = await (prisma as any).priceHistory.create({ data: { productName: p.name, unitPrice: p.unitPrice || 0, purchaseDate: new Date() } });
+            const entry = await prisma.priceHistory.create({ data: { productName: p.name, unitPrice: p.unitPrice || 0, purchaseDate: new Date() } });
             createdEntries.push(entry);
         } catch (err) {
             // ignore individual failures
@@ -138,5 +149,6 @@ export async function importOpenListToPriceHistory(shoppingListId?: string) {
         }
     }
 
+    revalidatePath("/prices");
     return { created: createdEntries.length, entries: createdEntries };
 }

@@ -1,10 +1,11 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { revalidatePath } from "next/cache";
 // no cache revalidation — always rely on DB
 
 export async function getCatalogProducts() {
-    const products = await (prisma as any).catalogProduct.findMany({
+    const products = await prisma.catalogProduct.findMany({
         orderBy: { name: "asc" },
     });
 
@@ -18,7 +19,7 @@ export async function getCatalogProducts() {
 }
 
 export async function getAllCatalogProducts() {
-    return await (prisma as any).catalogProduct.findMany({
+    return await prisma.catalogProduct.findMany({
         orderBy: { name: "asc" },
     });
 }
@@ -68,23 +69,25 @@ export async function seedCatalog() {
 
     for (const [category, items] of Object.entries(defaultCatalog)) {
         for (const name of items) {
-            await (prisma as any).catalogProduct.upsert({
+            await prisma.catalogProduct.upsert({
                 where: { name },
                 update: { category },
                 create: { name, category },
             });
         }
     }
-    // removed cache revalidation; pages will read from DB directly
+}
+revalidatePath("/list");
 }
 
 export async function createCatalogProduct(name: string, category?: string) {
     try {
-        await (prisma as any).catalogProduct.upsert({
+        await prisma.catalogProduct.upsert({
             where: { name },
             update: { category },
             create: { name, category },
         });
+        revalidatePath("/list");
         return { success: true };
     } catch (error) {
         console.error("Error creating catalog product:", error);

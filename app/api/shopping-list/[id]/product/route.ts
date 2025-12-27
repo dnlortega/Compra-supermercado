@@ -1,6 +1,7 @@
+
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
-// no cache revalidation — always rely on DB
+import { revalidatePath } from "next/cache";
 
 export async function POST(
     request: Request,
@@ -31,17 +32,22 @@ export async function POST(
         });
 
         // Recalculate list total
-        const list = await (prisma as any).shoppingList.findUnique({
+        const list = await prisma.shoppingList.findUnique({
             where: { id },
             include: { products: true },
         });
 
-        const newTotal = list.products.reduce((acc: number, p: any) => acc + (p.totalPrice || 0), 0);
+        if (list) {
+            const newTotal = list.products.reduce((acc: number, p: any) => acc + (p.totalPrice || 0), 0);
 
-        await (prisma as any).shoppingList.update({
-            where: { id },
-            data: { total: newTotal },
-        });
+            await prisma.shoppingList.update({
+                where: { id },
+                data: { total: newTotal },
+            });
+        }
+
+        revalidatePath("/list");
+        revalidatePath("/history");
 
         // removed cache revalidation; pages will read from DB directly
 

@@ -9,7 +9,7 @@ export async function getHistory() {
         // Attempt to aggregate if ShoppingList exists
         // We use 'any' casting to avoid build errors if the client isn't fully updated in the IDE context
         // but the runtime might support it if the DB is updated.
-        const lists = await (prisma as any).shoppingList.findMany({
+        const lists = await prisma.shoppingList.findMany({
             where: {
                 status: "COMPLETED",
             },

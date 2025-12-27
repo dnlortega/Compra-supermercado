@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { cleanupPriceHistoryForPurchase } from "@/app/actions/price-history";
 
 export async function PATCH(
@@ -30,19 +31,22 @@ export async function PATCH(
         });
 
         // Recalculate list total
-        const list = await (prisma as any).shoppingList.findUnique({
+        const list = await prisma.shoppingList.findUnique({
             where: { id },
             include: { products: true },
         });
 
-        const newTotal = list.products.reduce((acc: number, p: any) => acc + (p.totalPrice || 0), 0);
+        if (list) {
+            const newTotal = list.products.reduce((acc: number, p: any) => acc + (p.totalPrice || 0), 0);
 
-        await (prisma as any).shoppingList.update({
-            where: { id },
-            data: { total: newTotal },
-        });
+            await prisma.shoppingList.update({
+                where: { id },
+                data: { total: newTotal },
+            });
+        }
 
-        // removed cache revalidation; pages will read from DB directly
+        revalidatePath("/list");
+        revalidatePath("/history");
 
         return NextResponse.json({ success: true });
     } catch (_error) {
@@ -80,19 +84,22 @@ export async function DELETE(
         }
 
         // Recalculate list total
-        const list = await (prisma as any).shoppingList.findUnique({
+        const list = await prisma.shoppingList.findUnique({
             where: { id },
             include: { products: true },
         });
 
-        const newTotal = list.products.reduce((acc: number, p: any) => acc + (p.totalPrice || 0), 0);
+        if (list) {
+            const newTotal = list.products.reduce((acc: number, p: any) => acc + (p.totalPrice || 0), 0);
 
-        await (prisma as any).shoppingList.update({
-            where: { id },
-            data: { total: newTotal },
-        });
+            await prisma.shoppingList.update({
+                where: { id },
+                data: { total: newTotal },
+            });
+        }
 
-        // removed cache revalidation; pages will read from DB directly
+        revalidatePath("/list");
+        revalidatePath("/history");
 
         return NextResponse.json({ success: true });
     } catch (_error) {

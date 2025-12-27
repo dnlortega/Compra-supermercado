@@ -1,6 +1,7 @@
+
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
-// no cache revalidation — always rely on DB
+import { revalidatePath } from "next/cache";
 
 export async function GET(
     request: Request,
@@ -8,7 +9,7 @@ export async function GET(
 ) {
     try {
         const { id } = await params;
-        const list = await (prisma as any).shoppingList.findUnique({
+        const list = await prisma.shoppingList.findUnique({
             where: { id },
             include: {
                 products: {
@@ -35,11 +36,13 @@ export async function DELETE(
     try {
         const { id } = await params;
         // Delete the shopping list (products will be deleted automatically due to cascade)
-        await (prisma as any).shoppingList.delete({
+        await prisma.shoppingList.delete({
             where: { id },
         });
 
-        // removed cache revalidation; pages will read from DB directly
+        revalidatePath("/");
+        revalidatePath("/history");
+        revalidatePath("/list");
 
         return NextResponse.json({ success: true });
     } catch (_error) {
@@ -74,12 +77,14 @@ export async function PATCH(
             return NextResponse.json({ error: "No data to update" }, { status: 400 });
         }
 
-        await (prisma as any).shoppingList.update({
+        await prisma.shoppingList.update({
             where: { id },
             data,
         });
 
-        // removed cache revalidation; pages will read from DB directly
+        revalidatePath("/");
+        revalidatePath("/history");
+        revalidatePath("/list");
 
         return NextResponse.json({ success: true });
     } catch (_error) {

@@ -1,17 +1,18 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { revalidatePath } from "next/cache";
 
 // Helper to get or create the current open shopping list
 async function getCurrentListId() {
-    const list = await (prisma as any).shoppingList.findFirst({
+    const list = await prisma.shoppingList.findFirst({
         where: { status: "OPEN" },
         orderBy: { createdAt: "desc" },
     });
 
     if (list) return list.id;
 
-    const newList = await (prisma as any).shoppingList.create({
+    const newList = await prisma.shoppingList.create({
         data: {
             status: "OPEN",
             date: new Date(),
@@ -22,14 +23,14 @@ async function getCurrentListId() {
 
 // Migrate orphaned products to a new list
 async function migrateOrphanedProducts() {
-    const orphanedProducts = await (prisma as any).product.findMany({
+    const orphanedProducts = await prisma.product.findMany({
         where: { shoppingListId: null },
     });
 
     if (orphanedProducts.length > 0) {
         const listId = await getCurrentListId();
 
-        await (prisma as any).product.updateMany({
+        await prisma.product.updateMany({
             where: { shoppingListId: null },
             data: { shoppingListId: listId },
         });
@@ -42,7 +43,7 @@ export async function getProducts() {
         await migrateOrphanedProducts();
 
         // Try to find an open list
-        const list = await (prisma as any).shoppingList.findFirst({
+        const list = await prisma.shoppingList.findFirst({
             where: { status: "OPEN" },
             orderBy: { createdAt: "desc" },
             include: {
@@ -67,7 +68,7 @@ export async function getProducts() {
 export async function getAllProductNames() {
     try {
         // Return unique product names from the product table (historical + current)
-        const items = await (prisma as any).product.findMany({ select: { name: true }, orderBy: { name: 'asc' } });
+        const items = await prisma.product.findMany({ select: { name: true }, orderBy: { name: 'asc' } });
         const unique = Array.from(new Set(items.map((p: any) => p.name)));
         return unique;
     } catch (err) {
@@ -141,7 +142,7 @@ export async function addProduct(data: { name: string; quantity: number }) {
         const listId = await getCurrentListId();
         const category = determineCategory(data.name);
 
-        await (prisma as any).product.create({
+        await prisma.product.create({
             data: {
                 name: data.name,
                 quantity: data.quantity,
@@ -150,7 +151,8 @@ export async function addProduct(data: { name: string; quantity: number }) {
             },
         });
 
-        // removed cache revalidation; pages read directly from DB
+        revalidatePath("/list");
+        revalidatePath("/");
         return { success: true };
     } catch (error) {
         console.error("Add product error:", error);
@@ -159,7 +161,7 @@ export async function addProduct(data: { name: string; quantity: number }) {
 }
 
 export async function updateProduct(id: string, data: Partial<{ name: string; quantity: number; unitPrice: number; checked: boolean }>) {
-    const current = await (prisma as any).product.findUnique({ where: { id } });
+    const current = await prisma.product.findUnique({ where: { id } });
     if (!current) throw new Error("Product not found");
 
     const quantity = data.quantity ?? current.quantity;
@@ -170,32 +172,33 @@ export async function updateProduct(id: string, data: Partial<{ name: string; qu
         totalPrice = quantity * unitPrice;
     }
 
-    await (prisma as any).product.update({
+    await prisma.product.update({
         where: { id },
         data: {
             ...data,
             totalPrice,
         },
     });
-    // removed cache revalidation; pages read directly from DB
+    revalidatePath("/list");
+    revalidatePath("/");
 }
 
 export async function deleteProduct(id: string) {
     try {
         // Find product before deleting
-        const product = await (prisma as any).product.findUnique({ where: { id } });
-        
+        const product = await prisma.product.findUnique({ where: { id } });
+
         if (!product) {
             return { success: false, error: "Produto não encontrado" };
         }
 
         // Delete the product itself
-        await (prisma as any).product.delete({ where: { id } });
+        await prisma.product.delete({ where: { id } });
 
         // If there are no other product rows with the same name, remove the catalog entry
         // (but keep price history - it should persist even when product is removed from list)
         try {
-            const others = await (prisma as any).product.count({
+            const others = await prisma.product.count({
                 where: {
                     name: {
                         equals: product.name,
@@ -206,7 +209,7 @@ export async function deleteProduct(id: string) {
             });
 
             if (others === 0) {
-                await (prisma as any).catalogProduct.deleteMany({
+                await prisma.catalogProduct.deleteMany({
                     where: {
                         name: {
                             equals: product.name,
@@ -220,6 +223,8 @@ export async function deleteProduct(id: string) {
             // Don't throw here, product was already deleted
         }
 
+        revalidatePath("/list");
+        revalidatePath("/");
         return { success: true };
     } catch (error: any) {
         console.error("Error in deleteProduct:", error);

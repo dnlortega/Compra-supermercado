@@ -1,5 +1,7 @@
+
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 
 export async function DELETE(
     request: Request,
@@ -9,7 +11,7 @@ export async function DELETE(
         const { id } = await params;
 
         // Find product and its list
-        const product = await (prisma as any).product.findUnique({
+        const product = await prisma.product.findUnique({
             where: { id },
             include: { shoppingList: true },
         });
@@ -21,12 +23,12 @@ export async function DELETE(
         const listId = product.shoppingListId;
 
         // Delete the product
-        await (prisma as any).product.delete({ where: { id } });
+        await prisma.product.delete({ where: { id } });
 
         // If there are no other product rows with the same name, remove the catalog entry
         // (but keep price history - it should persist even when product is removed from list)
         try {
-            const others = await (prisma as any).product.count({
+            const others = await prisma.product.count({
                 where: {
                     name: {
                         equals: product.name,
@@ -37,7 +39,7 @@ export async function DELETE(
             });
 
             if (others === 0) {
-                await (prisma as any).catalogProduct.deleteMany({
+                await prisma.catalogProduct.deleteMany({
                     where: {
                         name: {
                             equals: product.name,
@@ -54,14 +56,14 @@ export async function DELETE(
         // Recalculate list total if list exists
         if (listId) {
             try {
-                const list = await (prisma as any).shoppingList.findUnique({
+                const list = await prisma.shoppingList.findUnique({
                     where: { id: listId },
                     include: { products: true },
                 });
 
                 if (list) {
                     const newTotal = list.products.reduce((acc: number, p: any) => acc + (p.totalPrice || 0), 0);
-                    await (prisma as any).shoppingList.update({
+                    await prisma.shoppingList.update({
                         where: { id: listId },
                         data: { total: newTotal },
                     });
@@ -72,6 +74,8 @@ export async function DELETE(
             }
         }
 
+        revalidatePath("/");
+        revalidatePath("/list");
         return NextResponse.json({ success: true });
     } catch (error: any) {
         console.error("Error deleting product:", error);

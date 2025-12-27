@@ -1,11 +1,12 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { revalidatePath } from "next/cache";
 // no cache revalidation — always rely on DB
 
 export async function exportAllHistory() {
     try {
-        const lists = await (prisma as any).shoppingList.findMany({
+        const lists = await prisma.shoppingList.findMany({
             include: {
                 products: true,
             },
@@ -22,7 +23,7 @@ export async function exportAllHistory() {
 
 export async function exportSingleList(id: string) {
     try {
-        const list = await (prisma as any).shoppingList.findUnique({
+        const list = await prisma.shoppingList.findUnique({
             where: { id },
             include: {
                 products: true,
@@ -54,7 +55,7 @@ export async function importData(jsonData: string) {
             const { products, id: _id, createdAt: _c, updatedAt: _u, ...listInfo } = listData;
 
             // Create new list
-            const newList = await (prisma as any).shoppingList.create({
+            const newList = await prisma.shoppingList.create({
                 data: {
                     ...listInfo,
                     date: new Date(listInfo.date),
@@ -77,6 +78,9 @@ export async function importData(jsonData: string) {
         }
 
         // removed cache revalidation; pages will read from DB directly
+        revalidatePath("/");
+        revalidatePath("/list");
+        revalidatePath("/history");
         return { success: true, count: importedCount };
     } catch (error) {
         console.error("Import error:", error);

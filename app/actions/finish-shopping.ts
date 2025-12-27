@@ -1,11 +1,12 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { revalidatePath } from "next/cache";
 // no cache revalidation — always rely on DB
 
 export async function finishShoppingList(name?: string) {
     // First, try to find an open list
-    let list = await (prisma as any).shoppingList.findFirst({
+    let list = await prisma.shoppingList.findFirst({
         where: { status: "OPEN" },
         include: { products: true },
     });
@@ -21,7 +22,7 @@ export async function finishShoppingList(name?: string) {
         }
 
         // Create a new list and assign orphaned products to it
-        list = await (prisma as any).shoppingList.create({
+        list = await prisma.shoppingList.create({
             data: {
                 status: "OPEN",
                 date: new Date(),
@@ -36,7 +37,7 @@ export async function finishShoppingList(name?: string) {
         });
 
         // Reload list with products
-        list = await (prisma as any).shoppingList.findUnique({
+        list = await prisma.shoppingList.findUnique({
             where: { id: list.id },
             include: { products: true },
         });
@@ -48,7 +49,7 @@ export async function finishShoppingList(name?: string) {
 
     const total = list.products.reduce((acc: number, p: { totalPrice: number | null }) => acc + (p.totalPrice || 0), 0);
 
-    await (prisma as any).shoppingList.update({
+    await prisma.shoppingList.update({
         where: { id: list.id },
         data: {
             status: "COMPLETED",
@@ -58,8 +59,8 @@ export async function finishShoppingList(name?: string) {
     });
 
     // Ensure no other OPEN lists exist (shouldn't happen, but just in case)
-    await (prisma as any).shoppingList.updateMany({
-        where: { 
+    await prisma.shoppingList.updateMany({
+        where: {
             status: "OPEN",
             id: { not: list.id }
         },
@@ -69,7 +70,7 @@ export async function finishShoppingList(name?: string) {
     });
 
     // Create a new empty list for future shopping
-    const newList = await (prisma as any).shoppingList.create({
+    const newList = await prisma.shoppingList.create({
         data: {
             status: "OPEN",
             date: new Date(),
@@ -81,5 +82,7 @@ export async function finishShoppingList(name?: string) {
         throw new Error("Failed to create new shopping list");
     }
 
-    // removed cache revalidation; pages will read from DB directly
+    revalidatePath("/");
+    revalidatePath("/list");
+    revalidatePath("/history");
 }
