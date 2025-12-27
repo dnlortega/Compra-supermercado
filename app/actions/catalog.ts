@@ -76,8 +76,7 @@ export async function seedCatalog() {
             });
         }
     }
-}
-revalidatePath("/list");
+    revalidatePath("/list");
 }
 
 export async function createCatalogProduct(name: string, category?: string) {
