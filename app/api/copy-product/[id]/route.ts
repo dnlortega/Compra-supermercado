@@ -7,30 +7,33 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         const { id } = await params;
 
         if (!id) {
-            return NextResponse.json({ success: false, error: 'Missing id' }, { status: 400 });
+            return NextResponse.json({ success: false, error: 'ID ausente' }, { status: 400 });
         }
 
-        // Find product with its shopping list
-        const product = await prisma.product.findUnique({
+        // Find shopping list item with its catalog details
+        const item = await prisma.shoppingListItem.findUnique({
             where: { id },
-            include: { shoppingList: true }
+            include: {
+                shoppingList: true,
+                catalogProduct: true
+            }
         });
 
-        if (!product) {
-            return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });
+        if (!item) {
+            return NextResponse.json({ success: false, error: 'Item não encontrado' }, { status: 404 });
         }
 
-        if (product.unitPrice === null || product.unitPrice === undefined) {
-            return NextResponse.json({ success: false, error: 'Product has no unitPrice' }, { status: 400 });
+        if (item.unitPrice === null || item.unitPrice === undefined) {
+            return NextResponse.json({ success: false, error: 'O item não possui preço unitário' }, { status: 400 });
         }
 
-        const purchaseDate = product.shoppingList?.date ?? new Date();
+        const purchaseDate = item.shoppingList?.date ?? new Date();
 
-        // Create price history entry
+        // Create price history entry linked to catalog product
         const created = await prisma.priceHistory.create({
             data: {
-                productName: product.name,
-                unitPrice: product.unitPrice,
+                catalogProductId: item.catalogProductId,
+                unitPrice: item.unitPrice,
                 purchaseDate,
             },
         });
@@ -42,7 +45,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         console.error('copy-product error', err);
         return NextResponse.json({
             success: false,
-            error: err?.message || 'Failed to copy product to price history'
+            error: err?.message || 'Falha ao copiar produto para o histórico'
         }, { status: 500 });
     }
 }

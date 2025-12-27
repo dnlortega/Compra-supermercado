@@ -85,7 +85,20 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
     const loadList = async () => {
         try {
             const response = await fetch(`/api/shopping-list/${listId}`);
-            const data = await response.json();
+            let data = await response.json();
+
+            // Map items to products for component compatibility
+            if (data && data.items) {
+                data.products = data.items.map((item: any) => ({
+                    id: item.id,
+                    name: item.catalogProduct?.name || "Produto sem nome",
+                    quantity: item.quantity,
+                    unitPrice: item.unitPrice,
+                    totalPrice: item.totalPrice,
+                    category: item.catalogProduct?.category?.name || "Outros"
+                }));
+            }
+
             setList(data);
         } catch (_error) {
             toast.error("Erro ao carregar detalhes");

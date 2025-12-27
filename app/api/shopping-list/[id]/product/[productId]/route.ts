@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { cleanupPriceHistoryForPurchase } from "@/app/actions/price-history";
 
 export async function PATCH(
     request: Request,
@@ -12,17 +11,17 @@ export async function PATCH(
         const body = await request.json();
         const { unitPrice } = body;
 
-        const product = await prisma.product.findUnique({
+        const item = await prisma.shoppingListItem.findUnique({
             where: { id: productId },
         });
 
-        if (!product) {
-            return NextResponse.json({ error: "Product not found" }, { status: 404 });
+        if (!item) {
+            return NextResponse.json({ error: "Item não encontrado" }, { status: 404 });
         }
 
-        const totalPrice = unitPrice * product.quantity;
+        const totalPrice = unitPrice * item.quantity;
 
-        await prisma.product.update({
+        await prisma.shoppingListItem.update({
             where: { id: productId },
             data: {
                 unitPrice,
@@ -33,12 +32,11 @@ export async function PATCH(
         // Recalculate list total
         const list = await prisma.shoppingList.findUnique({
             where: { id },
-            include: { products: true },
+            include: { items: true },
         });
 
         if (list) {
-            const newTotal = list.products.reduce((acc: number, p: any) => acc + (p.totalPrice || 0), 0);
-
+            const newTotal = list.items.reduce((acc: number, i: any) => acc + (i.totalPrice || 0), 0);
             await prisma.shoppingList.update({
                 where: { id },
                 data: { total: newTotal },
@@ -47,10 +45,11 @@ export async function PATCH(
 
         revalidatePath("/list");
         revalidatePath("/history");
+        revalidatePaths();
 
         return NextResponse.json({ success: true });
     } catch (_error) {
-        return NextResponse.json({ error: "Failed to update product" }, { status: 500 });
+        return NextResponse.json({ error: "Falha ao atualizar item" }, { status: 500 });
     }
 }
 
@@ -61,50 +60,48 @@ export async function DELETE(
     try {
         const { id, productId } = await params;
 
-        // Get product and list details before deleting for price history cleanup
-        const product = await prisma.product.findUnique({
+        // Get item details
+        const item = await prisma.shoppingListItem.findUnique({
             where: { id: productId },
-            include: {
-                shoppingList: true,
-            },
+            include: { shoppingList: true },
         });
 
-        if (!product) {
-            return NextResponse.json({ error: "Product not found" }, { status: 404 });
+        if (!item) {
+            return NextResponse.json({ error: "Item não encontrado" }, { status: 404 });
         }
 
-        // Delete the product
-        await prisma.product.delete({
+        // Delete the item
+        await prisma.shoppingListItem.delete({
             where: { id: productId },
         });
-
-        // Clean up price history for this specific purchase
-        if (product.unitPrice && product.shoppingList) {
-            await cleanupPriceHistoryForPurchase(product.name, product.shoppingList.date);
-        }
 
         // Recalculate list total
         const list = await prisma.shoppingList.findUnique({
             where: { id },
-            include: { products: true },
+            include: { items: true },
         });
 
         if (list) {
-            const newTotal = list.products.reduce((acc: number, p: any) => acc + (p.totalPrice || 0), 0);
-
+            const newTotal = list.items.reduce((acc: number, i: any) => acc + (i.totalPrice || 0), 0);
             await prisma.shoppingList.update({
                 where: { id },
                 data: { total: newTotal },
             });
         }
 
-        revalidatePath("/list");
-        revalidatePath("/history");
+        revalidatePaths();
 
         return NextResponse.json({ success: true });
     } catch (_error) {
-        console.error("Error deleting product:", _error);
-        return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });
+        console.error("Error deleting item:", _error);
+        return NextResponse.json({ error: "Falha ao deletar item" }, { status: 500 });
     }
+}
+
+function revalidatePaths() {
+    revalidatePath("/list");
+    revalidatePath("/history");
+    revalidatePath("/");
+    revalidatePath("/summary");
 }
 

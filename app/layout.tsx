@@ -17,6 +17,10 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { BottomNav } from "@/components/bottom-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
 
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Info } from "lucide-react";
+
 export const metadata: Metadata = {
   title: "Controle de Supermercado",
   description: "App para controle de compras",
@@ -41,8 +45,15 @@ export default function RootLayout({
           <div className="flex flex-col min-h-screen">
             <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
               <div className="container flex h-14 items-center justify-between px-4">
-                <h1 className="text-lg font-semibold">Compra Supermercado</h1>
-                <ThemeToggle />
+                <h1 className="text-lg font-semibold tracking-tight">Compra Supermercado</h1>
+                <div className="flex items-center gap-1">
+                  <Link href="/about">
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary transition-colors">
+                      <Info className="h-5 w-5" />
+                    </Button>
+                  </Link>
+                  <ThemeToggle />
+                </div>
               </div>
             </header>
             <main className="flex-1 pb-20">
