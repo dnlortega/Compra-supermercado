@@ -1,4 +1,3 @@
-
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
@@ -10,59 +9,31 @@ export async function DELETE(
     try {
         const { id } = await params;
 
-        // Find product and its list
-        const product = await prisma.product.findUnique({
+        // Find item and its list
+        const item = await prisma.shoppingListItem.findUnique({
             where: { id },
             include: { shoppingList: true },
         });
 
-        if (!product) {
-            return NextResponse.json({ error: "Product not found" }, { status: 404 });
+        if (!item) {
+            return NextResponse.json({ error: "Item não encontrado" }, { status: 404 });
         }
 
-        const listId = product.shoppingListId;
+        const listId = item.shoppingListId;
 
-        // Delete the product
-        await prisma.product.delete({ where: { id } });
-
-        // If there are no other product rows with the same name, remove the catalog entry
-        // (but keep price history - it should persist even when product is removed from list)
-        try {
-            const others = await prisma.product.count({
-                where: {
-                    name: {
-                        equals: product.name,
-                        mode: 'insensitive',
-                    },
-                    id: { not: id },
-                },
-            });
-
-            if (others === 0) {
-                await prisma.catalogProduct.deleteMany({
-                    where: {
-                        name: {
-                            equals: product.name,
-                            mode: 'insensitive',
-                        },
-                    },
-                });
-            }
-        } catch (err) {
-            console.error('Error deleting catalog product for', product.name, err);
-            // Don't throw here, product was already deleted
-        }
+        // Delete the item
+        await prisma.shoppingListItem.delete({ where: { id } });
 
         // Recalculate list total if list exists
         if (listId) {
             try {
                 const list = await prisma.shoppingList.findUnique({
                     where: { id: listId },
-                    include: { products: true },
+                    include: { items: true },
                 });
 
                 if (list) {
-                    const newTotal = list.products.reduce((acc: number, p: any) => acc + (p.totalPrice || 0), 0);
+                    const newTotal = list.items.reduce((acc: number, i: any) => acc + (i.totalPrice || 0), 0);
                     await prisma.shoppingList.update({
                         where: { id: listId },
                         data: { total: newTotal },
@@ -70,7 +41,6 @@ export async function DELETE(
                 }
             } catch (err) {
                 console.error('Error updating list total:', err);
-                // Don't throw, product was already deleted
             }
         }
 
@@ -78,10 +48,11 @@ export async function DELETE(
         revalidatePath("/list");
         revalidatePath("/prices");
         revalidatePath("/summary");
+
         return NextResponse.json({ success: true });
     } catch (error: any) {
         console.error("Error deleting product:", error);
-        return NextResponse.json({ error: error?.message || "Failed to delete product" }, { status: 500 });
+        return NextResponse.json({ error: error?.message || "Erro ao deletar produto" }, { status: 500 });
     }
 }
 

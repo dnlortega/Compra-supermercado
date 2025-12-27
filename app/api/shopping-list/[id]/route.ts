@@ -12,20 +12,21 @@ export async function GET(
         const list = await prisma.shoppingList.findUnique({
             where: { id },
             include: {
-                products: {
-                    orderBy: { category: 'asc' }
+                items: {
+                    include: { catalogProduct: true },
+                    orderBy: { catalogProduct: { name: 'asc' } }
                 }
             },
         });
 
         if (!list) {
-            return NextResponse.json({ error: "List not found" }, { status: 404 });
+            return NextResponse.json({ error: "Lista não encontrada" }, { status: 404 });
         }
 
         return NextResponse.json(list);
     } catch (_error) {
         console.error("Error fetching shopping list:", _error);
-        return NextResponse.json({ error: "Failed to fetch list" }, { status: 500 });
+        return NextResponse.json({ error: "Falha ao buscar lista" }, { status: 500 });
     }
 }
 

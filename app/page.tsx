@@ -54,9 +54,9 @@ export default async function Home() {
     // 3. Get pending items count in open list
     const openList = await prisma.shoppingList.findFirst({
       where: { status: "OPEN" },
-      include: { _count: { select: { products: true } } },
+      include: { _count: { select: { items: true } } },
     });
-    pendingItems = openList?._count?.products || 0;
+    pendingItems = openList?._count?.items || 0;
 
     // 4. Get recent purchases (last 3)
     recentPurchases = await prisma.shoppingList.findMany({

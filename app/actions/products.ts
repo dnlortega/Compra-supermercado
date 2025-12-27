@@ -21,43 +21,42 @@ async function getCurrentListId() {
     return newList.id;
 }
 
-// Migrate orphaned products to a new list
-async function migrateOrphanedProducts() {
-    const orphanedProducts = await prisma.product.findMany({
-        where: { shoppingListId: null },
-    });
-
-    if (orphanedProducts.length > 0) {
-        const listId = await getCurrentListId();
-
-        await prisma.product.updateMany({
-            where: { shoppingListId: null },
-            data: { shoppingListId: listId },
-        });
-    }
-}
-
 export async function getProducts() {
     try {
-        // First, migrate any orphaned products
-        await migrateOrphanedProducts();
-
-        // Try to find an open list
+        // Find an open list
         const list = await prisma.shoppingList.findFirst({
             where: { status: "OPEN" },
             orderBy: { createdAt: "desc" },
             include: {
-                products: {
+                items: {
+                    include: {
+                        catalogProduct: {
+                            include: {
+                                category: true
+                            }
+                        }
+                    },
                     orderBy: { createdAt: "desc" }
                 }
             },
         });
 
         if (list) {
-            return list.products;
+            // Flatten to match expected structure if needed, or return adjusted
+            return list.items.map(item => ({
+                id: item.id,
+                name: item.catalogProduct.name,
+                quantity: item.quantity,
+                unit: item.unit,
+                unitPrice: item.unitPrice,
+                totalPrice: item.totalPrice,
+                checked: item.checked,
+                category: item.catalogProduct.category?.name || "Outros",
+                catalogProductId: item.catalogProductId,
+                createdAt: item.createdAt,
+            }));
         }
 
-        // If no list exists, return empty array
         return [];
     } catch (err) {
         console.error("Error in getProducts:", err);
@@ -67,94 +66,69 @@ export async function getProducts() {
 
 export async function getAllProductNames() {
     try {
-        // Return unique product names from the product table (historical + current)
-        const items = await prisma.product.findMany({ select: { name: true }, orderBy: { name: 'asc' } });
-        const unique = Array.from(new Set(items.map((p: any) => p.name)));
-        return unique;
+        const items = await prisma.catalogProduct.findMany({
+            select: { name: true },
+            orderBy: { name: 'asc' }
+        });
+        return items.map(p => p.name);
     } catch (err) {
         console.error("Error in getAllProductNames:", err);
         throw err;
     }
 }
 
-
-function determineCategory(name: string): string {
+function determineCategoryName(name: string): string {
     const lower = name.toLowerCase();
-
     const categories: Record<string, string[]> = {
-        "Essenciais": [
-            "feijão", "feijao", "arroz", "açúcar", "acucar", "óleo", "oleo",
-            "macarrão", "macarrao", "café", "cafe", "sal", "farinha", "biscoito",
-            "bolacha", "molho", "extrato", "milho", "ervilha", "maionese", "ketchup", "mostarda",
-            "vinagre", "azeite", "pipoca", "gelatina", "leite condensado", "creme de leite",
-            "achocolatado", "nescau", "toddy", "chá", "cha"
-        ],
-        "Bebidas": [
-            "água", "agua", "suco", "refrigerante", "coca", "guaraná", "guarana",
-            "cerveja", "vinho", "energético", "energetico", "coco", "chá gelado"
-        ],
-        "Hortifruti": [
-            "fruta", "legume", "banana", "maçã", "maca", "batata", "cebola",
-            "tomate", "alface", "alho", "cenoura", "abóbora", "abobora", "chuchu",
-            "limão", "limao", "laranja", "pêra", "pera", "melancia", "mamão", "mamao",
-            "abacaxi", "couve", "brócolis", "brocolis", "pimentão", "pimentao", "abobrinha"
-        ],
-        "Carnes & Aves": [
-            "carne", "frango", "alcatra", "filé", "file", "costela", "coxa", "sobrecoxa",
-            "salsicha", "linguiça", "linguica", "peixe", "bacon", "bife", "hambúrguer", "hamburguer",
-            "patinho", "coxão", "coxao", "maminha"
-        ],
-        "Frios & Laticínios": [
-            "leite", "manteiga", "queijo", "presunto", "iogurte", "ovo", "requeijão",
-            "requeijao", "margarina", "mortadela", "salame", "peru"
-        ],
-        "Padaria": [
-            "pão", "pao", "bisnaga", "bolo", "rosca", "torrada"
-        ],
-        "Limpeza": [
-            "sabão", "sabao", "amaciante", "desinfetante", "pano", "detergente",
-            "vash", "água sanitária", "agua sanitaria", "esponja", "limpa vidro",
-            "desengordurante", "lustra móveis", "lustra moveis", "lixo", "vassoura", "rodo",
-            "lava roupa", "lava roupas líquido", "lava roupas liquido", "sabão líquido", "sabao liquido"
-        ],
-        "Higiene": [
-            "papel higiênico", "papel higienico", "sabonete", "creme dental", "pasta de dente",
-            "shampoo", "xampu", "condicionador", "desodorante", "escova", "fio dental",
-            "enxaguante", "absorvente", "algodão", "algodao", "lâmina", "lamina", "barbear",
-            "papel toalha", "guardanapo"
-        ],
-        "Pet Shop": [
-            "ração", "racao", "pet", "cão", "cao", "gato", "areia"
-        ]
+        "Essenciais": ["feijão", "feijao", "arroz", "açúcar", "acucar", "óleo", "oleo", "macarrão", "macarrao", "café", "cafe", "sal", "farinha", "biscoito", "bolacha", "molho", "extrato", "milho", "ervilha", "maionese", "ketchup", "mostarda", "vinagre", "azeite", "pipoca", "gelatina", "leite condensado", "creme de leite", "achocolatado", "nescau", "toddy", "chá", "cha"],
+        "Bebidas": ["água", "agua", "suco", "refrigerante", "coca", "guaraná", "guarana", "cerveja", "vinho", "energético", "energetico", "coco", "chá gelado"],
+        "Hortifruti": ["fruta", "legume", "banana", "maçã", "maca", "batata", "cebola", "tomate", "alface", "alho", "cenoura", "abóbora", "abobora", "chuchu", "limão", "limao", "laranja", "pêra", "pera", "melancia", "mamão", "mamao", "abacaxi", "couve", "brócolis", "brocolis", "pimentão", "pimentao", "abobrinha"],
+        "Carnes & Aves": ["carne", "frango", "alcatra", "filé", "file", "costela", "coxa", "sobrecoxa", "salsicha", "linguiça", "linguica", "peixe", "bacon", "bife", "hambúrguer", "hamburguer", "patinho", "coxão", "coxao", "maminha"],
+        "Frios & Laticínios": ["leite", "manteiga", "queijo", "presunto", "iogurte", "ovo", "requeijão", "requeijao", "margarina", "mortadela", "salame", "peru"],
+        "Padaria": ["pão", "pao", "bisnaga", "bolo", "rosca", "torrada"],
+        "Limpeza": ["sabão", "sabao", "amaciante", "desinfetante", "pano", "detergente", "vash", "água sanitária", "agua sanitaria", "esponja", "limpa vidro", "desengordurante", "lustra móveis", "lustra moveis", "lixo", "vassoura", "rodo", "lava roupa", "lava roupas líquido", "lava roupas liquido", "sabão líquido", "sabao liquido"],
+        "Higiene": ["papel higiênico", "papel higienico", "sabonete", "creme dental", "pasta de dente", "shampoo", "xampu", "condicionador", "desodorante", "escova", "fio dental", "enxaguante", "absorvente", "algodão", "algodao", "lâmina", "lamina", "barbear", "papel toalha", "guardanapo"],
+        "Pet Shop": ["ração", "racao", "pet", "cão", "cao", "gato", "areia"]
     };
 
     for (const [category, keywords] of Object.entries(categories)) {
-        if (keywords.some(k => lower.includes(k))) {
-            return category;
-        }
+        if (keywords.some(k => lower.includes(k))) return category;
     }
-
     return "Outros";
 }
 
 export async function addProduct(data: { name: string; quantity: number }) {
     try {
         const listId = await getCurrentListId();
-        const category = determineCategory(data.name);
+        const catName = determineCategoryName(data.name);
 
-        await prisma.product.create({
-            data: {
+        // 1. Ensure category exists
+        const category = await prisma.category.upsert({
+            where: { name: catName },
+            update: {},
+            create: { name: catName }
+        });
+
+        // 2. Ensure catalog product exists
+        const catalogProduct = await prisma.catalogProduct.upsert({
+            where: { name: data.name },
+            update: { categoryId: category.id },
+            create: {
                 name: data.name,
+                categoryId: category.id
+            }
+        });
+
+        // 3. Add item to shopping list
+        await prisma.shoppingListItem.create({
+            data: {
                 quantity: data.quantity,
                 shoppingListId: listId,
-                category,
+                catalogProductId: catalogProduct.id,
             },
         });
 
-        revalidatePath("/list");
-        revalidatePath("/prices");
-        revalidatePath("/summary");
-        revalidatePath("/");
+        revalidatePaths();
         return { success: true };
     } catch (error) {
         console.error("Add product error:", error);
@@ -162,9 +136,9 @@ export async function addProduct(data: { name: string; quantity: number }) {
     }
 }
 
-export async function updateProduct(id: string, data: Partial<{ name: string; quantity: number; unitPrice: number; checked: boolean }>) {
-    const current = await prisma.product.findUnique({ where: { id } });
-    if (!current) throw new Error("Product not found");
+export async function updateProduct(id: string, data: Partial<{ quantity: number; unitPrice: number; checked: boolean; unit: any }>) {
+    const current = await prisma.shoppingListItem.findUnique({ where: { id } });
+    if (!current) throw new Error("Item not found");
 
     const quantity = data.quantity ?? current.quantity;
     const unitPrice = data.unitPrice !== undefined ? data.unitPrice : current.unitPrice;
@@ -174,68 +148,32 @@ export async function updateProduct(id: string, data: Partial<{ name: string; qu
         totalPrice = quantity * unitPrice;
     }
 
-    await prisma.product.update({
+    await prisma.shoppingListItem.update({
         where: { id },
         data: {
             ...data,
             totalPrice,
         },
     });
-    revalidatePath("/list");
-    revalidatePath("/prices");
-    revalidatePath("/summary");
-    revalidatePath("/");
+    revalidatePaths();
 }
 
 export async function deleteProduct(id: string) {
     try {
-        // Find product before deleting
-        const product = await prisma.product.findUnique({ where: { id } });
-
-        if (!product) {
-            return { success: false, error: "Produto não encontrado" };
-        }
-
-        // Delete the product itself
-        await prisma.product.delete({ where: { id } });
-
-        // If there are no other product rows with the same name, remove the catalog entry
-        // (but keep price history - it should persist even when product is removed from list)
-        try {
-            const others = await prisma.product.count({
-                where: {
-                    name: {
-                        equals: product.name,
-                        mode: 'insensitive',
-                    },
-                    id: { not: id },
-                },
-            });
-
-            if (others === 0) {
-                await prisma.catalogProduct.deleteMany({
-                    where: {
-                        name: {
-                            equals: product.name,
-                            mode: 'insensitive',
-                        },
-                    },
-                });
-            }
-        } catch (err) {
-            console.error('Error deleting catalog product for', product.name, err);
-            // Don't throw here, product was already deleted
-        }
-
-        revalidatePath("/list");
-        revalidatePath("/prices");
-        revalidatePath("/summary");
-        revalidatePath("/");
+        await prisma.shoppingListItem.delete({ where: { id } });
+        revalidatePaths();
         return { success: true };
     } catch (error: any) {
         console.error("Error in deleteProduct:", error);
         return { success: false, error: error?.message || "Erro ao deletar produto" };
     }
-    // removed cache revalidation; pages read directly from DB
+}
+
+function revalidatePaths() {
+    revalidatePath("/list");
+    revalidatePath("/prices");
+    revalidatePath("/summary");
+    revalidatePath("/history");
+    revalidatePath("/");
 }
 // cache revalidation removed — we force components/pages to read from DB

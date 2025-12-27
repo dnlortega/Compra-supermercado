@@ -50,7 +50,7 @@ export default function RootLayout({
             </main>
             <BottomNav />
           </div>
-          <Toaster />
+          <Toaster position="top-center" />
         </ThemeProvider>
       </body>
     </html>

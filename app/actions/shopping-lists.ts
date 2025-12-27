@@ -7,7 +7,11 @@ export async function getOpenList() {
     return await prisma.shoppingList.findFirst({
         where: { status: "OPEN" },
         orderBy: { createdAt: "desc" },
-        include: { products: true },
+        include: {
+            items: {
+                include: { catalogProduct: true }
+            }
+        },
     });
 }
 
@@ -30,7 +34,11 @@ export async function listShoppingLists(filter?: { status?: string; take?: numbe
 
     const lists = await prisma.shoppingList.findMany({
         where: Object.keys(where).length ? where : undefined,
-        include: { products: true },
+        include: {
+            items: {
+                include: { catalogProduct: true }
+            }
+        },
         orderBy: { date: 'desc' },
         take: filter?.take || 200,
     });
@@ -39,7 +47,14 @@ export async function listShoppingLists(filter?: { status?: string; take?: numbe
 }
 
 export async function getShoppingListById(id: string) {
-    return await prisma.shoppingList.findUnique({ where: { id }, include: { products: true } });
+    return await prisma.shoppingList.findUnique({
+        where: { id },
+        include: {
+            items: {
+                include: { catalogProduct: true }
+            }
+        }
+    });
 }
 
 export async function createShoppingList(data: { name?: string; date?: Date; status?: string }) {

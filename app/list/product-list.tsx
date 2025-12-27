@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import CreatedEntriesModal from "@/components/created-entries-modal";
+
 import { Trash2, Edit2, Minus, Plus } from "lucide-react";
 import { updateProduct } from "@/app/actions/products";
 import { toast } from "sonner";
@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useRouter } from "next/navigation";
 
 interface Product {
     id: string;
@@ -68,8 +69,8 @@ function ProductItem({ product }: { product: Product }) {
     const [editName, setEditName] = useState(product.name);
     const [editQty, setEditQty] = useState(product.quantity);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [modalOpen, setModalOpen] = useState(false);
-    const [createdEntries, setCreatedEntries] = useState<any[]>([]);
+
+    const router = useRouter();
 
     const handleDeleteClick = () => {
         setDeleteDialogOpen(true);
@@ -82,24 +83,19 @@ function ProductItem({ product }: { product: Product }) {
             const response = await fetch(`/api/product/${product.id}`, {
                 method: 'DELETE',
             });
-            
+
             const data = await response.json();
-            
+
             if (response.ok && data.success) {
                 toast.success("Produto removido");
-                // Use requestAnimationFrame to defer reload for better performance
-                requestAnimationFrame(() => {
-                    window.location.reload();
-                });
+                router.refresh();
             } else {
                 toast.error(data?.error || "Erro ao remover produto");
-                setDeleteDialogOpen(true); // Reopen dialog if error
                 setLoading(false);
             }
         } catch (error) {
             console.error("Error deleting product:", error);
             toast.error("Erro ao remover produto");
-            setDeleteDialogOpen(true); // Reopen dialog if error
             setLoading(false);
         }
     };
@@ -110,9 +106,7 @@ function ProductItem({ product }: { product: Product }) {
             await updateProduct(product.id, { name: editName, quantity: editQty });
             toast.success("Produto atualizado");
             setIsEditing(false);
-            requestAnimationFrame(() => {
-                window.location.reload();
-            });
+            router.refresh();
         } catch {
             toast.error("Erro ao atualizar");
             setLoading(false);
@@ -122,9 +116,7 @@ function ProductItem({ product }: { product: Product }) {
     const increment = async () => {
         try {
             await updateProduct(product.id, { quantity: product.quantity + 1 });
-            requestAnimationFrame(() => {
-                window.location.reload();
-            });
+            router.refresh();
         } catch { }
     }
 
@@ -132,9 +124,7 @@ function ProductItem({ product }: { product: Product }) {
         if (product.quantity <= 1) return;
         try {
             await updateProduct(product.id, { quantity: product.quantity - 1 });
-            requestAnimationFrame(() => {
-                window.location.reload();
-            });
+            router.refresh();
         } catch { }
     }
 
@@ -195,37 +185,11 @@ function ProductItem({ product }: { product: Product }) {
                         </DialogContent>
                     </Dialog>
 
-                    <Button variant="ghost" size="icon" onClick={async () => {
-                        try {
-                            const res = await fetch(`/api/copy-product/${product.id}`, { method: 'POST' });
-                            const data = await res.json();
-                            if (!res.ok) {
-                                toast.error(data?.error || 'Erro ao copiar para histórico');
-                                return;
-                            }
-                            // API returns created entry
-                            const entry = data?.result;
-                            if (entry) {
-                                setCreatedEntries([entry]);
-                                setModalOpen(true);
-                            }
-                            toast.success('Copiado para histórico');
-                        } catch (e) {
-                            console.error(e);
-                            toast.error('Erro ao copiar para histórico');
-                        }
-                    }} title="Copiar para histórico">
-                        <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M12 3v4m5 4v6a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-6" />
-                        </svg>
-                    </Button>
-
                     <Button variant="ghost" size="icon" onClick={handleDeleteClick} disabled={loading}>
                         <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
                 </div>
             </div>
-                <CreatedEntriesModal open={modalOpen} entries={createdEntries} onOpenChange={setModalOpen} />
 
             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <AlertDialogContent>

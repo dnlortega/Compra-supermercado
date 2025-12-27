@@ -6,9 +6,6 @@ import { ptBR } from "date-fns/locale";
 
 export async function getHistory() {
     try {
-        // Attempt to aggregate if ShoppingList exists
-        // We use 'any' casting to avoid build errors if the client isn't fully updated in the IDE context
-        // but the runtime might support it if the DB is updated.
         const lists = await prisma.shoppingList.findMany({
             where: {
                 status: "COMPLETED",
@@ -17,7 +14,7 @@ export async function getHistory() {
                 date: "desc",
             },
             include: {
-                products: true,
+                items: true,
             },
         });
 
@@ -34,20 +31,19 @@ export async function getHistory() {
             grouped[monthKey].push({
                 id: list.id,
                 date: list.date,
-                // If total is 0, maybe calculate from products? But usage suggests we store it.
-                total: list.total || list.products.reduce((acc: number, p: any) => acc + (p.totalPrice || 0), 0),
-                itemCount: list.products.length,
+                total: list.total || list.items.reduce((acc: number, item: any) => acc + (item.totalPrice || 0), 0),
+                itemCount: list.items.length,
                 name: list.name,
             });
         }
 
-        // Convert to array
         return Object.entries(grouped).map(([month, lists]) => ({
             month,
             lists,
         }));
 
     } catch (_error) {
+        console.error("Error in getHistory:", _error);
         return [];
     }
 }

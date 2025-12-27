@@ -7,60 +7,110 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Unit {
+  UN
+  KG
+  G
+  L
+  ML
+  PKG
+}
 
 model ShoppingList {
-  id        String    @id @default(uuid())
+  id        String             @id @default(uuid())
   name      String?
-  date      DateTime  @default(now())
-  status    String    @default("OPEN") // OPEN, COMPLETED
-  total     Float     @default(0)
-  products  Product[]
+  date      DateTime           @default(now())
+  status    String             @default("OPEN") // OPEN, COMPLETED
+  total     Float              @default(0)
+  items     ShoppingListItem[]
   
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @default(now()) @map("updated_at")
+  createdAt DateTime           @default(now()) @map("created_at")
+  updatedAt DateTime           @updatedAt @map("updated_at")
 
+  @@index([status])
+  @@index([date(sort: Desc)])
   @@map("shopping_lists")
 }
 
-model Product {
-  id             String        @id @default(uuid())
-  name           String
-  quantity       Int
-  unitPrice      Float?        @map("unit_price")
-  totalPrice     Float?        @map("total_price")
-  checked        Boolean       @default(false)
-  category       String        @default("Outros")
+model ShoppingListItem {
+  id               String         @id @default(uuid())
+  quantity         Float
+  unit             Unit           @default(UN)
+  unitPrice        Float?         @map("unit_price")
+  totalPrice       Float?         @map("total_price")
+  checked          Boolean        @default(false)
   
-  shoppingListId String?       @map("shopping_list_id")
-  shoppingList   ShoppingList? @relation(fields: [shoppingListId], references: [id], onDelete: Cascade)
+  shoppingListId   String         @map("shopping_list_id")
+  shoppingList     ShoppingList   @relation(fields: [shoppingListId], references: [id], onDelete: Cascade)
+  
+  catalogProductId String         @map("catalog_product_id")
+  catalogProduct   CatalogProduct @relation(fields: [catalogProductId], references: [id])
 
-  createdAt      DateTime      @default(now()) @map("created_at")
-  updatedAt      DateTime      @default(now()) @map("updated_at")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
 
-  @@map("products")
+  @@index([shoppingListId])
+  @@index([catalogProductId])
+  @@index([checked])
+  @@map("shopping_list_items")
 }
 
-model PriceHistory {
-  id            String   @id @default(uuid())
-  productName   String   @map("product_name")
-  unitPrice     Float    @map("unit_price")
-  storeName     String?  @map("store_name")
-  purchaseDate  DateTime @default(now()) @map("purchase_date")
-  
-  createdAt     DateTime @default(now()) @map("created_at")
+model Category {
+  id        String           @id @default(uuid())
+  name      String           @unique
+  color     String?
+  icon      String?
+  products  CatalogProduct[]
 
-  @@map("price_history")
-  @@index([productName])
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+
+  @@map("categories")
 }
 
 model CatalogProduct {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  category  String   @default("Outros")
+  id                String             @id @default(uuid())
+  name              String             @unique
+  defaultUnit       Unit               @default(UN) @map("default_unit")
   
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  categoryId        String?            @map("category_id")
+  category          Category?          @relation(fields: [categoryId], references: [id])
+  
+  shoppingListItems ShoppingListItem[]
+  priceHistory      PriceHistory[]
 
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+
+  @@index([categoryId])
   @@map("catalog_products")
 }
 
+model Store {
+  id           String         @id @default(uuid())
+  name         String         @unique
+  address      String?
+  priceHistory PriceHistory[]
+
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  @@map("stores")
+}
+
+model PriceHistory {
+  id               String         @id @default(uuid())
+  unitPrice        Float          @map("unit_price")
+  purchaseDate     DateTime       @default(now()) @map("purchase_date")
+  
+  catalogProductId String         @map("catalog_product_id")
+  catalogProduct   CatalogProduct @relation(fields: [catalogProductId], references: [id], onDelete: Cascade)
+  
+  storeId          String?        @map("store_id")
+  store            Store?         @relation(fields: [storeId], references: [id])
+
+  createdAt        DateTime       @default(now()) @map("created_at")
+
+  @@index([catalogProductId, purchaseDate(sort: Desc)])
+  @@map("price_history")
+}

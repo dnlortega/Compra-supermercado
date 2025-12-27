@@ -2,13 +2,14 @@
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-// no cache revalidation — always rely on DB
 
 export async function exportAllHistory() {
     try {
         const lists = await prisma.shoppingList.findMany({
             include: {
-                products: true,
+                items: {
+                    include: { catalogProduct: true }
+                },
             },
             orderBy: {
                 date: "desc",
@@ -26,7 +27,9 @@ export async function exportSingleList(id: string) {
         const list = await prisma.shoppingList.findUnique({
             where: { id },
             include: {
-                products: true,
+                items: {
+                    include: { catalogProduct: true }
+                },
             },
         });
 
@@ -49,35 +52,56 @@ export async function importData(jsonData: string) {
         let importedCount = 0;
 
         for (const listData of lists) {
-            // Check if it's a valid list object
-            if (!listData.products) continue;
+            const products = listData.products || (listData.items?.map((item: any) => ({ ...item, ...item.catalogProduct })));
+            if (!products) continue;
 
-            const { products, id: _id, createdAt: _c, updatedAt: _u, ...listInfo } = listData;
+            const { id: _id, createdAt: _c, updatedAt: _u, items: _i, products: _p, ...listInfo } = listData;
 
-            // Create new list
+            // 1. Create List
             const newList = await prisma.shoppingList.create({
                 data: {
                     ...listInfo,
                     date: new Date(listInfo.date),
                     total: parseFloat(listInfo.total) || 0,
-                    products: {
-                        create: products.map((p: any) => {
-                            const { id: _pid, shoppingListId: _slid, createdAt: _pc, updatedAt: _pu, ...productInfo } = p;
-                            return {
-                                ...productInfo,
-                                unitPrice: productInfo.unitPrice ? parseFloat(productInfo.unitPrice) : null,
-                                totalPrice: productInfo.totalPrice ? parseFloat(productInfo.totalPrice) : null,
-                                quantity: parseInt(productInfo.quantity) || 1
-                            };
-                        }),
-                    },
+                    status: listInfo.status || "COMPLETED"
                 },
             });
+
+            // 2. Create items with catalog linkage
+            for (const p of products) {
+                const catName = p.category || "Outros";
+
+                // Ensure Category
+                const category = await prisma.category.upsert({
+                    where: { name: catName },
+                    update: {},
+                    create: { name: catName }
+                });
+
+                // Ensure CatalogProduct
+                const catalogProduct = await prisma.catalogProduct.upsert({
+                    where: { name: p.name },
+                    update: { categoryId: category.id },
+                    create: { name: p.name, categoryId: category.id }
+                });
+
+                // Create Item
+                await prisma.shoppingListItem.create({
+                    data: {
+                        quantity: parseFloat(p.quantity) || 1,
+                        unitPrice: p.unitPrice ? parseFloat(p.unitPrice) : null,
+                        totalPrice: p.totalPrice ? parseFloat(p.totalPrice) : null,
+                        unit: p.unit || "UN",
+                        checked: p.checked || false,
+                        shoppingListId: newList.id,
+                        catalogProductId: catalogProduct.id
+                    }
+                });
+            }
 
             importedCount++;
         }
 
-        // removed cache revalidation; pages will read from DB directly
         revalidatePath("/");
         revalidatePath("/list");
         revalidatePath("/history");
