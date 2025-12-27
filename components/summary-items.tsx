@@ -69,9 +69,9 @@ export function SummaryItems({ products }: { products: Product[] }) {
                                             const response = await fetch(`/api/product/${item.id}`, {
                                                 method: 'DELETE',
                                             });
-                                            
+
                                             const data = await response.json();
-                                            
+
                                             if (response.ok && data.success) {
                                                 toast.success("Produto removido");
                                                 window.location.reload();
@@ -87,7 +87,7 @@ export function SummaryItems({ products }: { products: Product[] }) {
                                     </Button>
                                 </TableCell>
                                 <TableCell className="text-right">{item.displayQuantity}</TableCell>
-                                <TableCell className="text-right">{item.unitPrice ? formatCurrency(item.unitPrice) : "-"}</TableCell>
+                                <TableCell className="text-right">{item.unitPrice !== null ? formatCurrency(item.unitPrice) : "-"}</TableCell>
                                 <TableCell className="text-right font-bold">{formatCurrency(item.displayTotal)}</TableCell>
                                 <TableCell className="text-center">
                                     <Button

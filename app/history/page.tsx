@@ -241,7 +241,7 @@ export default function HistoryPage() {
                                                                 {new Intl.NumberFormat("pt-BR", {
                                                                     style: "currency",
                                                                     currency: "BRL",
-                                                                }).format(list.total)}
+                                                                }).format(list.total ?? 0)}
                                                             </div>
                                                         </div>
                                                         <ChevronRight className="h-5 w-5 text-muted-foreground" />

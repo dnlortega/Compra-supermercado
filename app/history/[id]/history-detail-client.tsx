@@ -523,7 +523,7 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
                                                 <>
                                                     <div className="flex items-center gap-2">
                                                         <p className="text-sm text-muted-foreground">
-                                                            {product.unitPrice ? formatCurrency(product.unitPrice) : "-"}
+                                                            {product.unitPrice !== null ? formatCurrency(product.unitPrice) : "-"}
                                                         </p>
                                                         <Button
                                                             size="icon"
@@ -535,7 +535,7 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
                                                         </Button>
                                                     </div>
                                                     <p className="font-bold">
-                                                        {product.totalPrice ? formatCurrency(product.totalPrice) : "-"}
+                                                        {product.totalPrice !== null ? formatCurrency(product.totalPrice) : "-"}
                                                     </p>
                                                 </>
                                             )}
