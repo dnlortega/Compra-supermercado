@@ -19,6 +19,8 @@ export async function updateShoppingListDate(id: string, dateStr: string) {
         data: { date },
     });
     revalidatePath("/list");
+    revalidatePath("/prices");
+    revalidatePath("/summary");
     revalidatePath("/");
 }
 
@@ -44,6 +46,8 @@ export async function createShoppingList(data: { name?: string; date?: Date; sta
     const res = await prisma.shoppingList.create({ data });
     revalidatePath("/");
     revalidatePath("/list");
+    revalidatePath("/prices");
+    revalidatePath("/summary");
     revalidatePath("/history");
     return res;
 }
@@ -52,6 +56,8 @@ export async function updateShoppingList(id: string, data: { name?: string; date
     const res = await prisma.shoppingList.update({ where: { id }, data });
     revalidatePath("/");
     revalidatePath("/list");
+    revalidatePath("/prices");
+    revalidatePath("/summary");
     revalidatePath("/history");
     return res;
 }
@@ -61,6 +67,8 @@ export async function deleteShoppingList(id: string) {
     const res = await prisma.shoppingList.delete({ where: { id } });
     revalidatePath("/");
     revalidatePath("/list");
+    revalidatePath("/prices");
+    revalidatePath("/summary");
     revalidatePath("/history");
     return res;
 }

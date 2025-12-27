@@ -152,6 +152,8 @@ export async function addProduct(data: { name: string; quantity: number }) {
         });
 
         revalidatePath("/list");
+        revalidatePath("/prices");
+        revalidatePath("/summary");
         revalidatePath("/");
         return { success: true };
     } catch (error) {
@@ -180,6 +182,8 @@ export async function updateProduct(id: string, data: Partial<{ name: string; qu
         },
     });
     revalidatePath("/list");
+    revalidatePath("/prices");
+    revalidatePath("/summary");
     revalidatePath("/");
 }
 
@@ -224,6 +228,8 @@ export async function deleteProduct(id: string) {
         }
 
         revalidatePath("/list");
+        revalidatePath("/prices");
+        revalidatePath("/summary");
         revalidatePath("/");
         return { success: true };
     } catch (error: any) {

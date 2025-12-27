@@ -76,6 +76,8 @@ export async function DELETE(
 
         revalidatePath("/");
         revalidatePath("/list");
+        revalidatePath("/prices");
+        revalidatePath("/summary");
         return NextResponse.json({ success: true });
     } catch (error: any) {
         console.error("Error deleting product:", error);
