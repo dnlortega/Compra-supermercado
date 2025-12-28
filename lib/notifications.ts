@@ -2,7 +2,7 @@
  * Request permission for browser notifications
  */
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
-    if (!("Notification" in window)) {
+    if (typeof window === "undefined" || !("Notification" in window)) {
         console.log("This browser does not support notifications");
         return "denied";
     }
@@ -23,7 +23,7 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
  * Show a notification about pending shopping items
  */
 export function showPendingItemsNotification(itemCount: number) {
-    if (!("Notification" in window)) {
+    if (typeof window === "undefined" || !("Notification" in window)) {
         return;
     }
 
@@ -57,14 +57,14 @@ export function showPendingItemsNotification(itemCount: number) {
  * Check if notifications are supported
  */
 export function areNotificationsSupported(): boolean {
-    return "Notification" in window;
+    return typeof window !== "undefined" && "Notification" in window;
 }
 
 /**
  * Get current notification permission status
  */
 export function getNotificationPermission(): NotificationPermission {
-    if (!("Notification" in window)) {
+    if (typeof window === "undefined" || !("Notification" in window)) {
         return "denied";
     }
     return Notification.permission;
