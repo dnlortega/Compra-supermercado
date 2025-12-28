@@ -10,6 +10,7 @@ import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { requireUser } from "@/lib/session";
 import Image from "next/image";
+import { UserGreeting } from "@/components/user-greeting";
 
 export default async function Home() {
   const user = await requireUser();
@@ -104,24 +105,7 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col gap-6 p-4 max-w-2xl mx-auto pb-24 animate-in fade-in duration-700">
-      <header className="flex items-center justify-between pb-4 border-b">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Olá, {firstName} 👋</h1>
-          <p className="text-sm text-muted-foreground uppercase">
-            {format(now, "EEEE, dd 'de' MMMM", { locale: ptBR })}
-          </p>
-        </div>
-        {user.image && (
-          <div className="relative size-12 overflow-hidden rounded-full border-2 border-primary/20 shadow-md">
-            <Image
-              src={user.image}
-              alt={user.name || "Perfil"}
-              fill
-              className="object-cover"
-            />
-          </div>
-        )}
-      </header>
+      <UserGreeting user={user} />
 
       <section className="grid gap-4 sm:grid-cols-2">
         <Card className="bg-primary/5 border-primary/10">
