@@ -6,6 +6,8 @@ import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Check, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { updateProduct } from "@/app/actions/products";
 
 interface Product {
     id: string;
@@ -16,6 +18,7 @@ interface Product {
 }
 
 export function SummaryItems({ products }: { products: Product[] }) {
+    const router = useRouter();
     const flattenedItems = products.flatMap((product) => {
         const items = [];
         const unitPrice = product.unitPrice ?? 0;
@@ -24,19 +27,64 @@ export function SummaryItems({ products }: { products: Product[] }) {
                 ...product,
                 displayQuantity: 1,
                 displayTotal: unitPrice,
-                unitKey: `${product.id}-${i}`
+                unitKey: `${product.id}-${i}`,
+                itemIndex: i
             });
         }
         return items;
     });
 
     const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+    const [removingItems, setRemovingItems] = useState<Record<string, boolean>>({});
 
-    const toggleCheck = (unitKey: string) => {
-        setCheckedItems(prev => ({
-            ...prev,
-            [unitKey]: !prev[unitKey]
-        }));
+    const toggleCheck = async (item: typeof flattenedItems[0]) => {
+        const unitKey = item.unitKey;
+        const isCurrentlyChecked = checkedItems[unitKey];
+        
+        // Se está marcando como checked, vamos remover 1 unidade do produto
+        if (!isCurrentlyChecked) {
+            setRemovingItems(prev => ({ ...prev, [unitKey]: true }));
+            try {
+                // Buscar o produto atual para ver a quantidade
+                const productItems = flattenedItems.filter(p => p.id === item.id);
+                const currentQuantity = productItems.length;
+                
+                if (currentQuantity <= 1) {
+                    // Último item, remove o produto completamente
+                    const response = await fetch(`/api/product/${item.id}`, {
+                        method: 'DELETE',
+                    });
+                    const data = await response.json();
+                    if (response.ok && data.success) {
+                        toast.success("Produto removido");
+                        router.refresh();
+                        return;
+                    } else {
+                        toast.error(data?.error || "Erro ao remover produto");
+                    }
+                } else {
+                    // Diminui a quantidade em 1
+                    await updateProduct(item.id, { quantity: currentQuantity - 1 });
+                    toast.success("Item removido");
+                    router.refresh();
+                }
+            } catch (error) {
+                console.error("Error removing product:", error);
+                toast.error("Erro ao remover produto");
+            } finally {
+                setRemovingItems(prev => {
+                    const newState = { ...prev };
+                    delete newState[unitKey];
+                    return newState;
+                });
+            }
+        } else {
+            // Desmarcando - apenas atualiza o estado local (não faz nada, pois já foi removido)
+            setCheckedItems(prev => ({
+                ...prev,
+                [unitKey]: false
+            }));
+        }
     };
 
     return (
@@ -56,6 +104,7 @@ export function SummaryItems({ products }: { products: Product[] }) {
                 <TableBody>
                     {flattenedItems.map((item, index) => {
                         const isChecked = checkedItems[item.unitKey];
+                        const isRemoving = removingItems[item.unitKey];
                         return (
                             <TableRow
                                 key={item.unitKey}
@@ -64,25 +113,30 @@ export function SummaryItems({ products }: { products: Product[] }) {
                                 <TableCell className="text-muted-foreground text-xs font-mono">{index + 1}</TableCell>
                                 <TableCell className="font-medium">{item.name}</TableCell>
                                 <TableCell className="text-center">
-                                    <Button variant="ghost" size="icon" onClick={async () => {
-                                        try {
-                                            const response = await fetch(`/api/product/${item.id}`, {
-                                                method: 'DELETE',
-                                            });
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        onClick={async () => {
+                                            try {
+                                                const response = await fetch(`/api/product/${item.id}`, {
+                                                    method: 'DELETE',
+                                                });
 
-                                            const data = await response.json();
+                                                const data = await response.json();
 
-                                            if (response.ok && data.success) {
-                                                toast.success("Produto removido");
-                                                window.location.reload();
-                                            } else {
-                                                toast.error(data?.error || "Erro ao remover produto");
+                                                if (response.ok && data.success) {
+                                                    toast.success("Produto removido");
+                                                    router.refresh();
+                                                } else {
+                                                    toast.error(data?.error || "Erro ao remover produto");
+                                                }
+                                            } catch (e) {
+                                                console.error("Error deleting product:", e);
+                                                toast.error("Erro ao remover produto");
                                             }
-                                        } catch (e) {
-                                            console.error("Error deleting product:", e);
-                                            toast.error("Erro ao remover produto");
-                                        }
-                                    }}>
+                                        }}
+                                        disabled={isRemoving}
+                                    >
                                         <Trash2 className="h-4 w-4 text-red-500" />
                                     </Button>
                                 </TableCell>
@@ -94,7 +148,8 @@ export function SummaryItems({ products }: { products: Product[] }) {
                                         variant={isChecked ? "secondary" : "outline"}
                                         size="icon"
                                         className={`h-7 w-7 rounded-full border-2 ${isChecked ? 'bg-green-500/20 text-green-600 border-green-500/50 hover:bg-green-500/30' : 'hover:border-green-500 hover:text-green-600'}`}
-                                        onClick={() => toggleCheck(item.unitKey)}
+                                        onClick={() => toggleCheck(item)}
+                                        disabled={isRemoving}
                                     >
                                         <Check className={`h-4 w-4 ${isChecked ? 'opacity-100' : 'opacity-20'}`} />
                                     </Button>

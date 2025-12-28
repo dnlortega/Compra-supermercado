@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { addProduct } from "@/app/actions/products";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { getAllProductNames } from "@/app/actions/products";
 
@@ -16,8 +17,10 @@ export default function AddProductForm() {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [catalog, setCatalog] = useState<any[]>([]);
     const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
+    const [errors, setErrors] = useState<{ name?: string; quantity?: string }>({});
     const inputRef = useRef<HTMLInputElement>(null);
     const suggestionsRef = useRef<HTMLDivElement>(null);
+    const router = useRouter();
 
     useEffect(() => {
         const loadNames = async () => {
@@ -67,25 +70,48 @@ export default function AddProductForm() {
         inputRef.current?.focus();
     };
 
+    const validateForm = () => {
+        const newErrors: { name?: string; quantity?: string } = {};
+        
+        if (!name.trim()) {
+            newErrors.name = "O nome do produto é obrigatório";
+        }
+        
+        if (!quantity || quantity < 1) {
+            newErrors.quantity = "A quantidade deve ser maior que zero";
+        }
+        
+        if (isNaN(quantity) || quantity <= 0) {
+            newErrors.quantity = "A quantidade deve ser um número válido maior que zero";
+        }
+        
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleSubmit = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        if (!name.trim()) return;
+        
+        if (!validateForm()) {
+            if (errors.name) toast.error(errors.name);
+            if (errors.quantity) toast.error(errors.quantity);
+            return;
+        }
 
         setLoading(true);
+        setErrors({});
         try {
-            const result = await addProduct({ name, quantity });
+            const result = await addProduct({ name: name.trim(), quantity });
             if (result && !result.success) {
                 toast.error(result.error || "Erro ao adicionar produto");
+                setLoading(false);
                 return;
             }
             setName("");
             setQuantity(1);
             setShowSuggestions(false);
-                toast.success("Produto adicionado!");
-                // Use requestAnimationFrame to defer reload for better performance
-                requestAnimationFrame(() => {
-                    window.location.reload();
-                });
+            toast.success("Produto adicionado!");
+            router.refresh();
         } catch (error) {
             console.error(error);
             toast.error("Erro ao adicionar produto");
@@ -103,7 +129,10 @@ export default function AddProductForm() {
                         ref={inputRef}
                         placeholder="Ex: Arroz 5kg"
                         value={name}
-                        onChange={(e) => handleInputChange(e.target.value)}
+                        onChange={(e) => {
+                            handleInputChange(e.target.value);
+                            if (errors.name) setErrors(prev => ({ ...prev, name: undefined }));
+                        }}
                         onFocus={() => {
                             if (name.trim().length > 0 && filteredSuggestions.length > 0) {
                                 setShowSuggestions(true);
@@ -114,7 +143,11 @@ export default function AddProductForm() {
                         spellCheck="true"
                         autoCorrect="on"
                         autoCapitalize="sentences"
+                        className={errors.name ? "border-red-500" : ""}
                     />
+                    {errors.name && (
+                        <p className="text-xs text-red-500 mt-1">{errors.name}</p>
+                    )}
 
                     {showSuggestions && filteredSuggestions.length > 0 && (
                         <div
@@ -140,9 +173,17 @@ export default function AddProductForm() {
                         type="number"
                         min={1}
                         value={quantity}
-                        onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                        onChange={(e) => {
+                            const value = parseInt(e.target.value) || 0;
+                            setQuantity(value);
+                            if (errors.quantity) setErrors(prev => ({ ...prev, quantity: undefined }));
+                        }}
                         disabled={loading}
+                        className={errors.quantity ? "border-red-500" : ""}
                     />
+                    {errors.quantity && (
+                        <p className="text-xs text-red-500 mt-1">{errors.quantity}</p>
+                    )}
                 </div>
                 <Button type="submit" loading={loading}>
                     <Plus className="w-4 h-4 mr-2" />

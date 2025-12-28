@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import ImportOpenListButton from "@/components/import-open-list-button";
+import { ListNameEditor } from "@/components/list-name-editor";
 
 export default async function ListPage() {
     const products = await getProducts();
@@ -29,7 +30,7 @@ export default async function ListPage() {
 
             <AddProductForm />
 
-
+            <ListNameEditor />
 
             <div className="mt-8">
                 <h2 className="text-xl font-semibold mb-4">Itens ({products.length})</h2>

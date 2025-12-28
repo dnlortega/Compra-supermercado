@@ -8,12 +8,14 @@ import { shareDataAccess, revokeSharedAccess, getPeopleIHaveSharedWith, getPeopl
 import { toast } from "sonner";
 import { UserPlus, UserMinus, Shield, ShieldAlert, ArrowRightLeft, Users } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function SharingSection() {
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
     const [myShares, setMyShares] = useState<any[]>([]);
     const [sharesWithMe, setSharesWithMe] = useState<any[]>([]);
+    const router = useRouter();
 
     const loadShares = async () => {
         try {
@@ -34,12 +36,21 @@ export default function SharingSection() {
 
     const handleShare = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!email.trim()) {
+            toast.error("Por favor, insira um e-mail válido");
+            return;
+        }
         setLoading(true);
         try {
-            await shareDataAccess(email);
-            toast.success("Dados compartilhados com sucesso!");
-            setEmail("");
-            loadShares();
+            const result = await shareDataAccess(email);
+            if (result && result.success) {
+                toast.success("Dados compartilhados com sucesso!");
+                setEmail("");
+                await loadShares();
+                router.refresh();
+            } else {
+                toast.error("Erro ao compartilhar dados");
+            }
         } catch (error: any) {
             toast.error(error.message || "Erro ao compartilhar");
         } finally {
@@ -49,11 +60,16 @@ export default function SharingSection() {
 
     const handleRevoke = async (userId: string) => {
         try {
-            await revokeSharedAccess(userId);
-            toast.success("Acesso removido");
-            loadShares();
-        } catch (error) {
-            toast.error("Erro ao remover acesso");
+            const result = await revokeSharedAccess(userId);
+            if (result && result.success) {
+                toast.success("Acesso removido");
+                await loadShares();
+                router.refresh();
+            } else {
+                toast.error("Erro ao remover acesso");
+            }
+        } catch (error: any) {
+            toast.error(error.message || "Erro ao remover acesso");
         }
     };
 

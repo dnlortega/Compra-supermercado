@@ -180,11 +180,13 @@ export function UserGreeting({ user }: UserGreetingProps) {
         else if (hour < 18) setGreeting("Boa tarde");
         else setGreeting("Boa noite");
 
-        // 2. Set Verse (unique per user per day)
+        // 2. Set Verse (random each time, but consistent per day per user)
         const dayOfYear = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86400000);
         // Create a simple hash from user ID
         const userHash = user.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const verseIndex = (dayOfYear + userHash) % BIBLE_VERSES.length;
+        // Use a combination of day, user hash, and hour to get different verses
+        const hour = now.getHours();
+        const verseIndex = (dayOfYear + userHash + hour) % BIBLE_VERSES.length;
         setVerse(BIBLE_VERSES[verseIndex]);
 
         // 3. Get Weather
@@ -249,7 +251,7 @@ export function UserGreeting({ user }: UserGreetingProps) {
                 {user.image && (
                     <div className="relative group">
                         {/* Google Animation Ring */}
-                        <div className="absolute -inset-1 bg-gradient-to-tr from-[#4285F4] via-[#EA4335] to-[#FBBC05] rounded-full opacity-75 blur-sm group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-spin-slow"></div>
+                        <div className="absolute -inset-1 bg-gradient-to-tr from-[#4285F4] via-[#EA4335] to-[#FBBC05] rounded-full opacity-75 blur-sm group-hover:opacity-100 transition duration-[1250ms] group-hover:duration-[250ms] animate-spin-slow"></div>
 
                         <div className="relative size-14 overflow-hidden rounded-full border-2 border-background shadow-xl">
                             <Image

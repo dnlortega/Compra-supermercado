@@ -5,10 +5,12 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingBag, Calendar, ChevronDown, ChevronUp, ChevronRight, Trash2, Download, Upload } from "lucide-react";
+import { ShoppingBag, Calendar, ChevronDown, ChevronUp, ChevronRight, Trash2, Download, Upload, RotateCcw } from "lucide-react";
 import { getHistory } from "@/app/actions/history";
 import { exportAllHistory, importData } from "@/app/actions/export-import";
+import { reopenShoppingList } from "@/app/actions/shopping-lists";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
@@ -34,6 +36,7 @@ type HistoryItem = {
 };
 
 export default function HistoryPage() {
+    const router = useRouter();
     const [history, setHistory] = useState<HistoryItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedMonths, setExpandedMonths] = useState<Record<string, boolean>>({});
@@ -131,6 +134,21 @@ export default function HistoryPage() {
         reader.readAsText(file);
         // Reset input
         e.target.value = "";
+    };
+
+    const handleReopen = async (listId: string, e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+            await reopenShoppingList(listId);
+            toast.success("Lista reaberta com sucesso! Redirecionando...");
+            setTimeout(() => {
+                router.push("/list");
+            }, 1000);
+        } catch (error: any) {
+            console.error("Error reopening list:", error);
+            toast.error(error.message || "Erro ao reabrir lista");
+        }
     };
 
     if (loading) return <div className="p-8 text-center">Carregando histórico...</div>;
@@ -249,14 +267,25 @@ export default function HistoryPage() {
                                                 </CardContent>
                                             </Card>
                                         </Link>
-                                        <Button
-                                            variant="destructive"
-                                            size="icon"
-                                            className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                                            onClick={(e) => handleDeleteClick(list.id, e)}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-1">
+                                            <Button
+                                                variant="outline"
+                                                size="icon"
+                                                className="bg-background"
+                                                onClick={(e) => handleReopen(list.id, e)}
+                                                title="Reabrir esta lista (criar cópia)"
+                                            >
+                                                <RotateCcw className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="destructive"
+                                                size="icon"
+                                                onClick={(e) => handleDeleteClick(list.id, e)}
+                                                title="Excluir lista"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

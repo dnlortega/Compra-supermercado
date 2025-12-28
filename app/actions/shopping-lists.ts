@@ -129,3 +129,48 @@ export async function deleteShoppingList(id: string) {
     revalidatePath("/history");
     return res;
 }
+
+export async function reopenShoppingList(id: string) {
+    const user = await requireUser();
+    const accessibleIds = await getAccessibleUserIds();
+
+    const list = await prisma.shoppingList.findUnique({
+        where: { id },
+        include: {
+            items: {
+                include: {
+                    catalogProduct: true
+                }
+            }
+        }
+    });
+    
+    if (!list || !accessibleIds.includes(list.userId as string)) throw new Error("Unauthorized");
+
+    // Create a new list with the same items
+    const newList = await prisma.shoppingList.create({
+        data: {
+            name: list.name ? `${list.name} (Cópia)` : null,
+            status: "OPEN",
+            date: new Date(),
+            userId: user.id,
+            items: {
+                create: list.items.map(item => ({
+                    quantity: item.quantity,
+                    unit: item.unit,
+                    unitPrice: null, // Reset prices
+                    totalPrice: null,
+                    checked: false, // Reset checked status
+                    catalogProductId: item.catalogProductId,
+                }))
+            }
+        }
+    });
+
+    revalidatePath("/");
+    revalidatePath("/list");
+    revalidatePath("/prices");
+    revalidatePath("/summary");
+    revalidatePath("/history");
+    return newList;
+}

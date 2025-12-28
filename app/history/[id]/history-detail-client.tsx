@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Edit2, Save, X, Trash2, Plus, Download } from "lucide-react";
+import { ArrowLeft, Edit2, Save, X, Trash2, Plus, Download, RotateCcw } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { exportSingleList } from "@/app/actions/export-import";
+import { reopenShoppingList } from "@/app/actions/shopping-lists";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -174,6 +175,20 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
             }
         } catch (error) {
             toast.error("Erro ao exportar dados");
+        }
+    };
+
+    const handleReopen = async () => {
+        if (!list) return;
+        try {
+            await reopenShoppingList(listId);
+            toast.success("Lista reaberta com sucesso! Redirecionando...");
+            setTimeout(() => {
+                router.push("/list");
+            }, 1000);
+        } catch (error: any) {
+            console.error("Error reopening list:", error);
+            toast.error(error.message || "Erro ao reabrir lista");
         }
     };
 
@@ -456,6 +471,14 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={handleReopen}
+                        title="Reabrir esta lista (criar cópia)"
+                    >
+                        <RotateCcw className="h-4 w-4" />
+                    </Button>
                     <Button
                         variant="outline"
                         size="icon"
