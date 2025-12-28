@@ -37,7 +37,7 @@ export async function shareDataAccess(targetEmail: string) {
         });
 
         revalidatePath("/settings");
-        clearAccessibleIdsCache(); // Limpar cache quando há mudanças
+        await clearAccessibleIdsCache(); // Limpar cache quando há mudanças
         return { success: true };
     } catch (error: any) {
         console.error("Error sharing data:", error);
@@ -62,7 +62,7 @@ export async function revokeSharedAccess(targetUserId: string) {
         });
 
         revalidatePath("/settings");
-        clearAccessibleIdsCache(); // Limpar cache quando há mudanças
+        await clearAccessibleIdsCache(); // Limpar cache quando há mudanças
         return { success: true };
     } catch (error) {
         console.error("Error revoking access:", error);
@@ -166,6 +166,6 @@ export async function getAccessibleUserIds() {
 /**
  * Limpar cache de accessible user IDs (chamado quando há mudanças no compartilhamento)
  */
-export function clearAccessibleIdsCache() {
+export async function clearAccessibleIdsCache() {
     accessibleIdsCache.clear();
 }
