@@ -2,11 +2,17 @@
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { requireUser } from "@/lib/session";
 
-// Helper to get or create the current open shopping list
+// Helper to get or create the current open shopping list for the logged user
 async function getCurrentListId() {
+    const user = await requireUser();
+
     const list = await prisma.shoppingList.findFirst({
-        where: { status: "OPEN" },
+        where: {
+            status: "OPEN",
+            userId: user.id
+        },
         orderBy: { createdAt: "desc" },
     });
 
@@ -16,6 +22,7 @@ async function getCurrentListId() {
         data: {
             status: "OPEN",
             date: new Date(),
+            userId: user.id
         },
     });
     return newList.id;
@@ -23,9 +30,14 @@ async function getCurrentListId() {
 
 export async function getProducts() {
     try {
-        // Find an open list
+        const user = await requireUser();
+
+        // Find an open list for the user
         const list = await prisma.shoppingList.findFirst({
-            where: { status: "OPEN" },
+            where: {
+                status: "OPEN",
+                userId: user.id
+            },
             orderBy: { createdAt: "desc" },
             include: {
                 items: {
@@ -42,7 +54,6 @@ export async function getProducts() {
         });
 
         if (list) {
-            // Flatten to match expected structure if needed, or return adjusted
             return list.items.map(item => ({
                 id: item.id,
                 name: item.catalogProduct.name,
@@ -66,11 +77,18 @@ export async function getProducts() {
 
 export async function getAllProductNames() {
     try {
+        const user = await requireUser();
         const items = await prisma.catalogProduct.findMany({
+            where: {
+                OR: [
+                    { userId: user.id },
+                    { userId: null } // Global defaults
+                ]
+            },
             select: { name: true },
             orderBy: { name: 'asc' }
         });
-        return items.map(p => p.name);
+        return Array.from(new Set(items.map(p => p.name)));
     } catch (err) {
         console.error("Error in getAllProductNames:", err);
         throw err;
@@ -99,6 +117,7 @@ function determineCategoryName(name: string): string {
 
 export async function addProduct(data: { name: string; quantity: number }) {
     try {
+        const user = await requireUser();
         const listId = await getCurrentListId();
         const catName = determineCategoryName(data.name);
 
@@ -109,13 +128,14 @@ export async function addProduct(data: { name: string; quantity: number }) {
             create: { name: catName }
         });
 
-        // 2. Ensure catalog product exists
+        // 2. Ensure catalog product exists (owned by user or global)
         const catalogProduct = await prisma.catalogProduct.upsert({
             where: { name: data.name },
             update: { categoryId: category.id },
             create: {
                 name: data.name,
-                categoryId: category.id
+                categoryId: category.id,
+                userId: user.id
             }
         });
 
@@ -137,31 +157,39 @@ export async function addProduct(data: { name: string; quantity: number }) {
 }
 
 export async function updateProduct(id: string, data: Partial<{ name: string; quantity: number; unitPrice: number; checked: boolean; unit: any }>) {
+    const user = await requireUser();
+
     const current = await prisma.shoppingListItem.findUnique({
         where: { id },
-        include: { catalogProduct: true }
+        include: {
+            catalogProduct: true,
+            shoppingList: true
+        }
     });
 
     if (!current) throw new Error("Item not found");
+    // Verify ownership
+    if (current.shoppingList.userId !== user.id) throw new Error("Unauthorized");
 
     let catalogProductId = current.catalogProductId;
 
-    // If name changed, we need to link to a different catalog product
     if (data.name && data.name !== current.catalogProduct.name) {
         const categoryName = determineCategoryName(data.name);
 
-        // Ensure category
         const category = await prisma.category.upsert({
             where: { name: categoryName },
             update: {},
             create: { name: categoryName }
         });
 
-        // Ensure catalog product
         const cp = await prisma.catalogProduct.upsert({
             where: { name: data.name },
             update: { categoryId: category.id },
-            create: { name: data.name, categoryId: category.id }
+            create: {
+                name: data.name,
+                categoryId: category.id,
+                userId: user.id
+            }
         });
         catalogProductId = cp.id;
     }
@@ -193,6 +221,15 @@ export async function updateProduct(id: string, data: Partial<{ name: string; qu
 
 export async function deleteProduct(id: string) {
     try {
+        const user = await requireUser();
+        const item = await prisma.shoppingListItem.findUnique({
+            where: { id },
+            include: { shoppingList: true }
+        });
+
+        if (!item) throw new Error("Item not found");
+        if (item.shoppingList.userId !== user.id) throw new Error("Unauthorized");
+
         await prisma.shoppingListItem.delete({ where: { id } });
         revalidatePaths();
         return { success: true };
@@ -209,4 +246,3 @@ function revalidatePaths() {
     revalidatePath("/history");
     revalidatePath("/");
 }
-// cache revalidation removed — we force components/pages to read from DB

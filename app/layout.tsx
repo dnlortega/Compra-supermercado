@@ -20,6 +20,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Info } from "lucide-react";
 import Image from "next/image";
+import { SessionProvider } from "@/components/session-provider";
+import { UserButton } from "@/components/user-button";
 
 export const metadata: Metadata = {
   title: "Controle de Supermercado",
@@ -36,43 +38,49 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <div className="flex flex-col min-h-screen">
-            <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <div className="container flex h-14 items-center justify-between px-4">
-                <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
-                  <div className="relative size-8 overflow-hidden rounded-lg border bg-white p-0.5 shadow-sm">
-                    <Image
-                      src="/logo.png"
-                      alt="Logo"
-                      fill
-                      className="object-contain"
-                      priority
-                    />
+        <SessionProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <div className="flex flex-col min-h-screen">
+              <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                <div className="container flex h-14 items-center justify-between px-4">
+                  <div className="flex items-center gap-2">
+                    <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+                      <div className="relative size-8 overflow-hidden rounded-lg border bg-white p-0.5 shadow-sm">
+                        <Image
+                          src="/logo.png"
+                          alt="Logo"
+                          fill
+                          className="object-contain"
+                          priority
+                        />
+                      </div>
+                    </Link>
+                    <div className="w-px h-6 bg-border mx-1" /> {/* Divisor sutil */}
+                    <UserButton />
                   </div>
-                </Link>
-                <div className="flex items-center gap-1">
-                  <Link href="/about">
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary transition-colors">
-                      <Info className="h-5 w-5" />
-                    </Button>
-                  </Link>
-                  <ThemeToggle />
+                  <div className="flex items-center gap-1">
+                    <Link href="/about">
+                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary transition-colors">
+                        <Info className="h-5 w-5" />
+                      </Button>
+                    </Link>
+                    <ThemeToggle />
+                  </div>
                 </div>
-              </div>
-            </header>
-            <main className="flex-1 pb-20">
-              {children}
-            </main>
-            <BottomNav />
-          </div>
-          <Toaster position="top-center" />
-        </ThemeProvider>
+              </header>
+              <main className="flex-1 pb-20">
+                {children}
+              </main>
+              <BottomNav />
+            </div>
+            <Toaster position="top-center" />
+          </ThemeProvider>
+        </SessionProvider>
       </body>
     </html>
   );

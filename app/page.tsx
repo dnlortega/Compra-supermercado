@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PlusCircle, ShoppingCart, TrendingUp, Calendar, ChevronRight, History } from "lucide-react";
+import { PlusCircle, ShoppingCart, TrendingUp, Calendar, ChevronRight, History, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/db";
@@ -7,8 +7,14 @@ import { formatCurrency } from "@/lib/utils";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
+import { requireUser } from "@/lib/session";
+import Image from "next/image";
 
 export default async function Home() {
+  const user = await requireUser();
+  const firstName = user.name?.split(" ")[0] || "Usuário";
+  const isAdmin = user.email === "dnlortega@gmail.com";
+
   const now = new Date();
   const firstDayOfMonth = startOfMonth(now);
   const lastDayOfMonth = endOfMonth(now);
@@ -22,10 +28,12 @@ export default async function Home() {
   let pendingItems = 0;
   let recentPurchases: any[] = [];
   let percentageChange = 0;
+  let allUsers: any[] = [];
 
   try {
     const currentMonthLists = await prisma.shoppingList.findMany({
       where: {
+        userId: user.id,
         status: "COMPLETED",
         date: {
           gte: firstDayOfMonth,
@@ -38,6 +46,7 @@ export default async function Home() {
     // 2. Get total spent last month for comparison
     const lastMonthLists = await prisma.shoppingList.findMany({
       where: {
+        userId: user.id,
         status: "COMPLETED",
         date: {
           gte: firstDayLastMonth,
@@ -53,17 +62,35 @@ export default async function Home() {
 
     // 3. Get pending items count in open list
     const openList = await prisma.shoppingList.findFirst({
-      where: { status: "OPEN" },
+      where: {
+        userId: user.id,
+        status: "OPEN"
+      },
       include: { _count: { select: { items: true } } },
     });
     pendingItems = openList?._count?.items || 0;
 
     // 4. Get recent purchases (last 3)
     recentPurchases = await prisma.shoppingList.findMany({
-      where: { status: "COMPLETED" },
+      where: {
+        userId: user.id,
+        status: "COMPLETED"
+      },
       orderBy: { date: "desc" },
       take: 3,
     });
+
+    // 5. Admin data
+    if (isAdmin) {
+      allUsers = await prisma.user.findMany({
+        orderBy: { name: 'asc' },
+        include: {
+          _count: {
+            select: { shoppingLists: true }
+          }
+        }
+      });
+    }
 
   } catch (error) {
     console.error("Failed to fetch dashboard data:", error);
@@ -74,11 +101,21 @@ export default async function Home() {
     <div className="flex flex-col gap-6 p-4 max-w-2xl mx-auto pb-24 animate-in fade-in duration-700">
       <header className="flex items-center justify-between pb-4 border-b">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Olá, Daniel 👋</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Olá, {firstName} 👋</h1>
           <p className="text-sm text-muted-foreground uppercase">
             {format(now, "EEEE, dd 'de' MMMM", { locale: ptBR })}
           </p>
         </div>
+        {user.image && (
+          <div className="relative size-12 overflow-hidden rounded-full border-2 border-primary/20 shadow-md">
+            <Image
+              src={user.image}
+              alt={user.name || "Perfil"}
+              fill
+              className="object-cover"
+            />
+          </div>
+        )}
       </header>
 
       <section className="grid gap-4 sm:grid-cols-2">
@@ -171,6 +208,41 @@ export default async function Home() {
           </div>
         )}
       </section>
+      {isAdmin && allUsers.length > 0 && (
+        <section className="space-y-4 pt-4 border-t border-dashed">
+          <div className="flex items-center gap-2 ml-1">
+            <Users className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Usuários do Sistema</h2>
+            <Badge variant="outline" className="ml-auto bg-primary/5 text-primary border-primary/20">ADMIN</Badge>
+          </div>
+
+          <div className="grid gap-3">
+            {allUsers.map((u) => (
+              <div key={u.id} className="flex items-center justify-between p-3 rounded-xl bg-accent/30 border border-primary/5">
+                <div className="flex items-center gap-3">
+                  <div className="relative size-10 overflow-hidden rounded-full border shadow-sm">
+                    {u.image ? (
+                      <Image src={u.image} alt={u.name || "Avatar"} fill className="object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-muted uppercase text-xs font-bold">
+                        {u.name?.charAt(0) || u.email?.charAt(0) || "?"}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold leading-none">{u.name}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{u.email}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs font-bold uppercase text-muted-foreground tracking-tighter">Listas</div>
+                  <div className="text-lg font-black text-primary leading-none">{u._count.shoppingLists}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
