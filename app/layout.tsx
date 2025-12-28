@@ -16,10 +16,10 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { BottomNav } from "@/components/bottom-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
-
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Info } from "lucide-react";
+import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "Controle de Supermercado",
@@ -45,7 +45,20 @@ export default function RootLayout({
           <div className="flex flex-col min-h-screen">
             <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
               <div className="container flex h-14 items-center justify-between px-4">
-                <h1 className="text-lg font-semibold tracking-tight">Compra Supermercado</h1>
+                <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+                  <div className="relative size-8 overflow-hidden rounded-lg border bg-white p-0.5 shadow-sm">
+                    <Image
+                      src="/logo.png"
+                      alt="Logo"
+                      fill
+                      className="object-contain"
+                      priority
+                    />
+                  </div>
+                  <h1 className="text-lg font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                    Compra Supermercado
+                  </h1>
+                </Link>
                 <div className="flex items-center gap-1">
                   <Link href="/about">
                     <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary transition-colors">

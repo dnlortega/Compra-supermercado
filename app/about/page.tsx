@@ -16,14 +16,24 @@ import {
     LayoutDashboard
 } from "lucide-react";
 
+import Image from "next/image";
+
 export default function AboutPage() {
     return (
         <div className="container mx-auto p-4 max-w-3xl pb-24 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="mb-10 text-center">
-                <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-primary/10 mb-4">
-                    <Info className="h-10 w-10 text-primary" />
+                <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-primary/10 mb-4 shadow-inner">
+                    <Image
+                        src="/logo.png"
+                        alt="App Logo"
+                        width={60}
+                        height={60}
+                        className="rounded-xl object-contain shadow-sm"
+                    />
                 </div>
-                <h1 className="text-4xl font-black tracking-tight mb-2">Compra Supermercado</h1>
+                <h1 className="text-4xl font-black tracking-tight mb-2 bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent">
+                    Compra Supermercado
+                </h1>
                 <p className="text-muted-foreground text-lg max-w-xl mx-auto">
                     Uma plataforma inteligente e robusta projetada para simplificar a gestão de compras domésticas, controlar gastos e analisar variações de preços.
                 </p>
