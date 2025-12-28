@@ -24,14 +24,30 @@ import { SessionProvider } from "@/components/session-provider";
 import { UserButton } from "@/components/user-button";
 
 export const metadata: Metadata = {
-  title: "Controle de Supermercado",
-  description: "App para controle de compras",
+  title: "Compra Supermercado - Gerenciador de Listas de Compras",
+  description: "App inteligente para controle de compras de supermercado. Organize suas listas, acompanhe gastos e compartilhe com a família.",
   manifest: "/manifest.json",
   themeColor: "#4285F4",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Compras",
+  },
+  openGraph: {
+    title: "Compra Supermercado",
+    description: "Gerenciador inteligente de listas de compras",
+    type: "website",
+    locale: "pt_BR",
+    siteName: "Compra Supermercado",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Compra Supermercado",
+    description: "Gerenciador inteligente de listas de compras",
+  },
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
   },
 };
 

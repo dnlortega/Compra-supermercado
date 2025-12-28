@@ -30,8 +30,8 @@ export function showPendingItemsNotification(itemCount: number) {
     if (Notification.permission === "granted") {
         const notification = new Notification("Lista de Compras Pendente 🛒", {
             body: `Você tem ${itemCount} ${itemCount === 1 ? "item pendente" : "itens pendentes"} na sua lista de compras!`,
-            icon: "/icon-192x192.png",
-            badge: "/icon-192x192.png",
+            icon: "/logo.png",
+            badge: "/logo.png",
             tag: "pending-items",
             requireInteraction: false,
             data: {
