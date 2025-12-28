@@ -2,39 +2,52 @@
 
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShoppingCart } from "lucide-react";
 import Image from "next/image";
 
 export default function LoginPage() {
     return (
-        <div className="flex min-h-screen items-center justify-center p-4 bg-accent/10">
-            <Card className="w-full max-w-md border-none shadow-2xl animate-in fade-in zoom-in duration-500">
-                <CardHeader className="text-center pb-8">
-                    <div className="flex justify-center mb-6">
-                        <div className="relative size-20 overflow-hidden rounded-2xl border bg-white p-2 shadow-xl">
-                            <Image
-                                src="/logo.png"
-                                alt="Logo"
-                                fill
-                                className="object-contain"
-                                priority
-                            />
-                        </div>
+        <div className="fixed inset-0 flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 overflow-hidden">
+            {/* Elegant Background Accents */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] size-[600px] bg-primary/5 rounded-full blur-[100px]" />
+                <div className="absolute bottom-[-10%] right-[-10%] size-[600px] bg-secondary/5 rounded-full blur-[100px]" />
+            </div>
+
+            <div className="relative z-10 w-full max-w-[360px] flex flex-col items-center animate-in fade-in zoom-in duration-1000">
+                {/* Minimalist Logo Section */}
+                <div className="mb-10 text-center">
+                    <div className="inline-block relative p-4 rounded-3xl bg-white dark:bg-zinc-900 shadow-2xl shadow-zinc-200/50 dark:shadow-black/50 border border-zinc-100 dark:border-zinc-800 transform rotate-[-2deg] hover:rotate-0 transition-transform duration-500">
+                        <Image
+                            src="/logo.png"
+                            alt="Logo"
+                            width={64}
+                            height={64}
+                            className="object-contain"
+                            priority
+                        />
                     </div>
-                    <CardTitle className="text-3xl font-black tracking-tight">Bem-vindo</CardTitle>
-                    <CardDescription className="text-base mt-2">
-                        Organize suas compras de forma inteligente e acompanhe seus gastos.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+                </div>
+
+                {/* Content Section */}
+                <div className="text-center mb-12">
+                    <h1 className="text-3xl font-black tracking-tight mb-3 text-zinc-900 dark:text-white uppercase italic">
+                        Minha Compra
+                    </h1>
+                    <div className="h-1 w-12 bg-primary mx-auto rounded-full mb-4" />
+                    <p className="text-sm text-zinc-400 dark:text-zinc-500 font-medium tracking-wide">
+                        Gestão inteligente de compras.
+                    </p>
+                </div>
+
+                {/* Action Section */}
+                <div className="w-full">
                     <Button
                         variant="default"
                         size="lg"
-                        className="w-full h-14 text-base font-bold gap-3 rounded-xl shadow-lg hover:shadow-primary/20 transition-all"
+                        className="group w-full h-[70px] bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-100 dark:text-black text-white text-lg font-bold gap-4 rounded-3xl shadow-2xl transition-all active:scale-95 flex items-center justify-center border-none"
                         onClick={() => signIn("google", { redirectTo: "/" })}
                     >
-                        <svg className="h-5 w-5" viewBox="0 0 24 24">
+                        <svg className="size-6 bg-white rounded-md p-1" viewBox="0 0 24 24">
                             <path
                                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                                 fill="#4285F4"
@@ -52,13 +65,19 @@ export default function LoginPage() {
                                 fill="#EA4335"
                             />
                         </svg>
-                        Entrar com Google
+                        <span>Entrar com Google</span>
                     </Button>
-                    <p className="text-center text-xs text-muted-foreground mt-6 px-8 leading-relaxed">
-                        Ao entrar, você concorda em manter sua lista de compras sincronizada com segurança.
-                    </p>
-                </CardContent>
-            </Card>
+                </div>
+
+                {/* Subtle Branding */}
+                <div className="mt-16 flex items-center gap-2 opacity-30">
+                    <div className="h-px w-4 bg-zinc-400" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+                        Smart Analytics
+                    </span>
+                    <div className="h-px w-4 bg-zinc-400" />
+                </div>
+            </div>
         </div>
     );
 }
