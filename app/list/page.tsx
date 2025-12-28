@@ -1,5 +1,6 @@
 import { getProducts } from "@/app/actions/products";
 export const dynamic = "force-dynamic";
+export const revalidate = 30; // Revalidar a cada 30 segundos
 import AddProductForm from "./add-product-form";
 import ProductList from "./product-list";
 import Link from "next/link";

@@ -37,6 +37,7 @@ export async function shareDataAccess(targetEmail: string) {
         });
 
         revalidatePath("/settings");
+        clearAccessibleIdsCache(); // Limpar cache quando há mudanças
         return { success: true };
     } catch (error: any) {
         console.error("Error sharing data:", error);
@@ -61,6 +62,7 @@ export async function revokeSharedAccess(targetUserId: string) {
         });
 
         revalidatePath("/settings");
+        clearAccessibleIdsCache(); // Limpar cache quando há mudanças
         return { success: true };
     } catch (error) {
         console.error("Error revoking access:", error);
@@ -118,6 +120,10 @@ export async function getPeopleSharingWithMe() {
     }
 }
 
+// Cache para accessible user IDs (cache por 1 minuto)
+const accessibleIdsCache = new Map<string, { data: string[], timestamp: number }>();
+const ACCESSIBLE_IDS_CACHE_TTL = 60 * 1000; // 1 minuto
+
 /**
  * Helper to get all user IDs that the current user has access to
  * (My own ID + IDs of everyone sharing with me)
@@ -125,13 +131,26 @@ export async function getPeopleSharingWithMe() {
 export async function getAccessibleUserIds() {
     try {
         const user = await requireUser();
+        const cacheKey = `accessibleIds_${user.id}`;
+        const cached = accessibleIdsCache.get(cacheKey);
+        
+        // Verificar cache
+        if (cached && Date.now() - cached.timestamp < ACCESSIBLE_IDS_CACHE_TTL) {
+            return cached.data;
+        }
+
         // Defensive check: handle cases where DB tables are not yet created
         const sharingWithMe = await prisma.sharedAccess.findMany({
             where: { sharedToId: user.id },
             select: { sharedById: true },
         });
 
-        return [user.id, ...sharingWithMe.map(s => s.sharedById)];
+        const result = [user.id, ...sharingWithMe.map(s => s.sharedById)];
+        
+        // Salvar no cache
+        accessibleIdsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+        
+        return result;
     } catch (error) {
         console.error("Shared access data not available yet:", error);
         // Fallback: return just the current user if tables missing
@@ -142,4 +161,11 @@ export async function getAccessibleUserIds() {
             return [];
         }
     }
+}
+
+/**
+ * Limpar cache de accessible user IDs (chamado quando há mudanças no compartilhamento)
+ */
+export function clearAccessibleIdsCache() {
+    accessibleIdsCache.clear();
 }

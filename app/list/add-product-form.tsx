@@ -23,11 +23,19 @@ export default function AddProductForm() {
     const router = useRouter();
 
     useEffect(() => {
+        let mounted = true;
         const loadNames = async () => {
-            const data = await getAllProductNames() as string[];
-            setCatalog(data.map((n) => ({ name: n })));
+            try {
+                const data = await getAllProductNames() as string[];
+                if (mounted) {
+                    setCatalog(data.map((n) => ({ name: n })));
+                }
+            } catch (error) {
+                console.error("Error loading product names:", error);
+            }
         };
         loadNames();
+        return () => { mounted = false; };
     }, []);
 
     useEffect(() => {

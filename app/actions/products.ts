@@ -36,18 +36,32 @@ export async function getProducts() {
         const accessibleIds = await getAccessibleUserIds();
 
         // Find an open list among accessible user IDs
+        // Otimizado: usando select ao invés de include para melhor performance
         const list = await prisma.shoppingList.findFirst({
             where: {
                 status: "OPEN",
                 userId: { in: accessibleIds }
             },
             orderBy: { createdAt: "desc" },
-            include: {
+            select: {
                 items: {
-                    include: {
+                    select: {
+                        id: true,
+                        quantity: true,
+                        unit: true,
+                        unitPrice: true,
+                        totalPrice: true,
+                        checked: true,
+                        catalogProductId: true,
+                        createdAt: true,
                         catalogProduct: {
-                            include: {
-                                category: true
+                            select: {
+                                name: true,
+                                category: {
+                                    select: {
+                                        name: true
+                                    }
+                                }
                             }
                         }
                     },
@@ -78,9 +92,21 @@ export async function getProducts() {
     }
 }
 
+// Cache para nomes de produtos (cache por 5 minutos)
+const productNamesCache = new Map<string, { data: string[], timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
 export async function getAllProductNames() {
     try {
         const user = await requireUser();
+        const cacheKey = `productNames_${user.id}`;
+        const cached = productNamesCache.get(cacheKey);
+        
+        // Verificar cache
+        if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+            return cached.data;
+        }
+
         const accessibleIds = await getAccessibleUserIds();
         const items = await prisma.catalogProduct.findMany({
             where: {
@@ -92,7 +118,12 @@ export async function getAllProductNames() {
             select: { name: true },
             orderBy: { name: 'asc' }
         });
-        return Array.from(new Set(items.map(p => p.name)));
+        const result = Array.from(new Set(items.map(p => p.name)));
+        
+        // Salvar no cache
+        productNamesCache.set(cacheKey, { data: result, timestamp: Date.now() });
+        
+        return result;
     } catch (err) {
         console.error("Error in getAllProductNames:", err);
         throw err;
@@ -251,4 +282,7 @@ function revalidatePaths() {
     revalidatePath("/summary");
     revalidatePath("/history");
     revalidatePath("/");
+    
+    // Limpar cache de nomes de produtos quando produtos são modificados
+    productNamesCache.clear();
 }

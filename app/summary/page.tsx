@@ -1,5 +1,6 @@
 import { getProducts } from "@/app/actions/products";
 export const dynamic = "force-dynamic";
+export const revalidate = 30; // Revalidar a cada 30 segundos
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, List } from "lucide-react";

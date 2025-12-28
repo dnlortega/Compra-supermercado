@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 
 import { Trash2, Edit2, Minus, Plus } from "lucide-react";
@@ -37,14 +37,20 @@ interface Product {
 }
 
 export default function ProductList({ initialProducts }: { initialProducts: Product[] }) {
-    const groupedProducts = initialProducts.reduce((acc, product) => {
-        const category = product.category || "Outros";
-        if (!acc[category]) acc[category] = [];
-        acc[category].push(product);
-        return acc;
-    }, {} as Record<string, Product[]>);
-
-    const categories = Object.keys(groupedProducts).sort();
+    // Memoizar agrupamento de produtos para evitar recálculos desnecessários
+    const { groupedProducts, categories } = useMemo(() => {
+        const grouped = initialProducts.reduce((acc, product) => {
+            const category = product.category || "Outros";
+            if (!acc[category]) acc[category] = [];
+            acc[category].push(product);
+            return acc;
+        }, {} as Record<string, Product[]>);
+        
+        return {
+            groupedProducts: grouped,
+            categories: Object.keys(grouped).sort()
+        };
+    }, [initialProducts]);
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
