@@ -20,7 +20,14 @@ export default function PriceHistoryAdminPage() {
         setLoading(true);
         try {
             const data = await listPriceHistory({ productName: filter, take: 500 });
-            setEntries(data || []);
+            // Map the data to include productName from catalogProduct
+            const mappedEntries = (data || []).map((entry: any) => ({
+                id: entry.id,
+                productName: entry.catalogProduct?.name || 'Produto sem nome',
+                unitPrice: entry.unitPrice,
+                purchaseDate: entry.purchaseDate,
+            }));
+            setEntries(mappedEntries);
         } catch (e) {
             console.error(e);
             toast.error("Erro ao carregar histórico de preços");

@@ -47,7 +47,11 @@ export default function ImportFileToPriceHistoryButton() {
                 return;
             }
             const count = Array.isArray(data.created) ? data.created.length : data.createdCount || 0;
-            toast.success(`Importado ${count} registros para Histórico de Preços`);
+            if (count > 0) {
+                toast.success(`Importado ${count} registro(s) para Histórico de Preços`);
+            } else {
+                toast.warning("Nenhum registro foi importado. Verifique se os produtos têm preços válidos.");
+            }
             try {
                 window.dispatchEvent(new CustomEvent('price-history-imported', { detail: { count } }));
             } catch (e) {

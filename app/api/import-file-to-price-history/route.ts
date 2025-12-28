@@ -21,11 +21,39 @@ export async function POST(req: Request) {
 
         for (const p of body.products) {
             try {
-                const name = String(p.name || p.productName || '').trim();
-                if (!name) continue;
+                // Try multiple possible field names for product name
+                const name = String(
+                    p.name || 
+                    p.productName || 
+                    p.catalogProduct?.name ||
+                    p.catalogProduct?.name ||
+                    ''
+                ).trim();
+                
+                if (!name) {
+                    console.warn('Produto sem nome ignorado:', p);
+                    continue;
+                }
 
-                const unitPrice = typeof p.unitPrice === 'number' ? p.unitPrice : (p.totalPrice && p.quantity ? Number(p.totalPrice) / Number(p.quantity) : 0);
-                const purchaseDate = p.purchaseDate ? new Date(p.purchaseDate) : (shoppingDate || (p.createdAt ? new Date(p.createdAt) : undefined));
+                // Calculate unitPrice from various possible fields
+                let unitPrice = 0;
+                if (typeof p.unitPrice === 'number' && p.unitPrice > 0) {
+                    unitPrice = p.unitPrice;
+                } else if (p.totalPrice && p.quantity && Number(p.quantity) > 0) {
+                    unitPrice = Number(p.totalPrice) / Number(p.quantity);
+                } else if (typeof p.unitPrice === 'string') {
+                    unitPrice = parseFloat(p.unitPrice) || 0;
+                }
+                
+                // Skip if no valid price
+                if (!unitPrice || unitPrice <= 0) {
+                    console.warn(`Produto "${name}" ignorado: preço inválido (unitPrice: ${p.unitPrice}, totalPrice: ${p.totalPrice}, quantity: ${p.quantity})`);
+                    continue;
+                }
+
+                const purchaseDate = p.purchaseDate 
+                    ? new Date(p.purchaseDate) 
+                    : (shoppingDate || (p.createdAt ? new Date(p.createdAt) : undefined));
 
                 // 1. Ensure CatalogProduct exists (linked to user)
                 const cp = await prisma.catalogProduct.upsert({
@@ -53,19 +81,32 @@ export async function POST(req: Request) {
                 const entry = await prisma.priceHistory.create({
                     data: {
                         catalogProductId: cp.id,
-                        unitPrice: Number(unitPrice || 0),
+                        unitPrice: Number(unitPrice),
                         purchaseDate: purchaseDate || new Date(),
                         storeId,
                         userId
                     },
                 });
-                created.push(entry);
-            } catch (innerErr) {
-                console.error('Erro ao importar item de histórico', p, innerErr);
+                created.push({
+                    id: entry.id,
+                    productName: name,
+                    unitPrice: entry.unitPrice,
+                    purchaseDate: entry.purchaseDate
+                });
+            } catch (innerErr: any) {
+                console.error('Erro ao importar item de histórico', {
+                    product: p,
+                    error: innerErr?.message || String(innerErr),
+                    stack: innerErr?.stack
+                });
             }
         }
 
-        return NextResponse.json({ success: true, createdCount: created.length });
+        return NextResponse.json({ 
+            success: true, 
+            createdCount: created.length,
+            created: created
+        });
     } catch (err: any) {
         console.error('import-file-to-price-history error', err);
         return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
