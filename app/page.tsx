@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { requireUser } from "@/lib/session";
 import Image from "next/image";
 import { UserGreeting } from "@/components/user-greeting";
+import { NotificationManager } from "@/components/notification-manager";
 
 export default async function Home() {
   const user = await requireUser();
@@ -106,6 +107,8 @@ export default async function Home() {
   return (
     <div className="flex flex-col gap-6 p-4 max-w-2xl mx-auto pb-24 animate-in fade-in duration-700">
       <UserGreeting user={user} />
+
+      {pendingItems > 0 && <NotificationManager pendingItemsCount={pendingItems} />}
 
       <section className="grid gap-4 sm:grid-cols-2">
         <Card className="bg-primary/5 border-primary/10">

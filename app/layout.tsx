@@ -26,6 +26,13 @@ import { UserButton } from "@/components/user-button";
 export const metadata: Metadata = {
   title: "Controle de Supermercado",
   description: "App para controle de compras",
+  manifest: "/manifest.json",
+  themeColor: "#4285F4",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Compras",
+  },
 };
 
 import { auth } from "@/auth";
