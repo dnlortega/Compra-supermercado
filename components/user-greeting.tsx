@@ -8,8 +8,8 @@ import Image from "next/image";
 
 interface UserGreetingProps {
     user: {
-        name: string | null;
-        image: string | null;
+        name?: string | null;
+        image?: string | null;
     };
 }
 
