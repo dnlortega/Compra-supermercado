@@ -4,15 +4,17 @@ import { prisma } from "@/lib/db";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { requireUser } from "@/lib/session";
+import { getAccessibleUserIds } from "./sharing";
 
 export async function getHistory() {
     try {
         const user = await requireUser();
+        const accessibleIds = await getAccessibleUserIds();
 
         const lists = await prisma.shoppingList.findMany({
             where: {
                 status: "COMPLETED",
-                userId: user.id
+                userId: { in: accessibleIds }
             },
             orderBy: {
                 date: "desc",

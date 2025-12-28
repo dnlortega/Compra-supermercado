@@ -3,13 +3,15 @@
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/session";
+import { getAccessibleUserIds } from "./sharing";
 
 export async function getOpenList() {
     const user = await requireUser();
+    const accessibleIds = await getAccessibleUserIds();
     return await prisma.shoppingList.findFirst({
         where: {
             status: "OPEN",
-            userId: user.id
+            userId: { in: accessibleIds }
         },
         orderBy: { createdAt: "desc" },
         include: {
@@ -22,10 +24,11 @@ export async function getOpenList() {
 
 export async function updateShoppingListDate(id: string, dateStr: string) {
     const user = await requireUser();
+    const accessibleIds = await getAccessibleUserIds();
 
-    // Verify ownership
+    // Verify ownership or shared access
     const list = await prisma.shoppingList.findUnique({ where: { id } });
-    if (!list || list.userId !== user.id) throw new Error("Unauthorized");
+    if (!list || !accessibleIds.includes(list.userId as string)) throw new Error("Unauthorized");
 
     // Normalize to noon UTC to avoid timezone shifts
     const date = new Date(`${dateStr}T12:00:00Z`);
@@ -41,8 +44,9 @@ export async function updateShoppingListDate(id: string, dateStr: string) {
 
 export async function listShoppingLists(filter?: { status?: string; take?: number }) {
     const user = await requireUser();
+    const accessibleIds = await getAccessibleUserIds();
 
-    const where: any = { userId: user.id };
+    const where: any = { userId: { in: accessibleIds } };
     if (filter?.status) where.status = filter.status;
 
     const lists = await prisma.shoppingList.findMany({
@@ -61,6 +65,7 @@ export async function listShoppingLists(filter?: { status?: string; take?: numbe
 
 export async function getShoppingListById(id: string) {
     const user = await requireUser();
+    const accessibleIds = await getAccessibleUserIds();
     const list = await prisma.shoppingList.findUnique({
         where: { id },
         include: {
@@ -70,7 +75,7 @@ export async function getShoppingListById(id: string) {
         }
     });
 
-    if (!list || list.userId !== user.id) throw new Error("Unauthorized");
+    if (!list || !accessibleIds.includes(list.userId as string)) throw new Error("Unauthorized");
     return list;
 }
 
@@ -92,9 +97,10 @@ export async function createShoppingList(data: { name?: string; date?: Date; sta
 
 export async function updateShoppingList(id: string, data: { name?: string; date?: Date; status?: string }) {
     const user = await requireUser();
+    const accessibleIds = await getAccessibleUserIds();
 
     const list = await prisma.shoppingList.findUnique({ where: { id } });
-    if (!list || list.userId !== user.id) throw new Error("Unauthorized");
+    if (!list || !accessibleIds.includes(list.userId as string)) throw new Error("Unauthorized");
 
     const res = await prisma.shoppingList.update({
         where: { id },
@@ -110,9 +116,10 @@ export async function updateShoppingList(id: string, data: { name?: string; date
 
 export async function deleteShoppingList(id: string) {
     const user = await requireUser();
+    const accessibleIds = await getAccessibleUserIds();
 
     const list = await prisma.shoppingList.findUnique({ where: { id } });
-    if (!list || list.userId !== user.id) throw new Error("Unauthorized");
+    if (!list || !accessibleIds.includes(list.userId as string)) throw new Error("Unauthorized");
 
     const res = await prisma.shoppingList.delete({ where: { id } });
     revalidatePath("/");

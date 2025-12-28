@@ -83,19 +83,23 @@ export default async function Home() {
 
     // 5. Admin data
     if (isAdmin) {
-      allUsers = await prisma.user.findMany({
-        orderBy: { name: 'asc' },
-        include: {
-          _count: {
-            select: { shoppingLists: true }
+      try {
+        // Double check to prevent crashes if DB schema is out of sync
+        allUsers = await prisma.user.findMany({
+          orderBy: { name: 'asc' },
+          include: {
+            _count: {
+              select: { shoppingLists: true }
+            }
           }
-        }
-      });
+        });
+      } catch (e) {
+        console.error("Dashboard: Database not synced yet. Running in safe mode.");
+        allUsers = [];
+      }
     }
-
   } catch (error) {
-    console.error("Failed to fetch dashboard data:", error);
-    // Continue rendering with default zero values
+    console.error("Dashboard: Global error fetch:", error);
   }
 
   return (

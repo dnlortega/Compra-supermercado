@@ -3,15 +3,17 @@
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/session";
+import { getAccessibleUserIds } from "./sharing";
 
 export async function finishShoppingList(name?: string) {
     const user = await requireUser();
+    const accessibleIds = await getAccessibleUserIds();
 
-    // 1. Find the current open list for the user
+    // 1. Find the current open list among accessible user IDs
     let list = await prisma.shoppingList.findFirst({
         where: {
             status: "OPEN",
-            userId: user.id
+            userId: { in: accessibleIds }
         },
         include: { items: true },
     });

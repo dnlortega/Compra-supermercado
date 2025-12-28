@@ -53,6 +53,7 @@ model User {
   email         String?   @unique
   emailVerified DateTime? @map("email_verified")
   image         String?
+  password      String?
   accounts      Account[]
   sessions      Session[]
   
@@ -62,7 +63,25 @@ model User {
   stores        Store[]
   priceHistory  PriceHistory[]
 
+  // Sharing Relations
+  sharedWith    SharedAccess[] @relation("SharedBy") // Users I shared my data WITH
+  sharedBy      SharedAccess[] @relation("SharedTo") // Users who shared data WITH ME
+
   @@map("users")
+}
+
+model SharedAccess {
+  id           String   @id @default(cuid())
+  sharedById   String   @map("shared_by_id") // The owner of the data
+  sharedToId   String   @map("shared_to_id") // The person receiving access
+  
+  sharedBy     User     @relation("SharedBy", fields: [sharedById], references: [id], onDelete: Cascade)
+  sharedTo     User     @relation("SharedTo", fields: [sharedToId], references: [id], onDelete: Cascade)
+
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@unique([sharedById, sharedToId])
+  @@map("shared_access")
 }
 
 model VerificationToken {

@@ -10,8 +10,9 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { LogOut, User } from "lucide-react"
+import { LogOut, User, Settings } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 
 export function UserButton() {
     const { data: session } = useSession()
@@ -43,6 +44,13 @@ export function UserButton() {
                         </p>
                     </div>
                 </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <Link href="/settings">
+                    <DropdownMenuItem className="cursor-pointer">
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Configurações</span>
+                    </DropdownMenuItem>
+                </Link>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                     className="text-red-500 focus:text-red-500 cursor-pointer"

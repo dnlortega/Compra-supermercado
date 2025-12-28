@@ -3,15 +3,17 @@
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/session";
+import { getAccessibleUserIds } from "./sharing";
 
 // Helper to get or create the current open shopping list for the logged user
 async function getCurrentListId() {
     const user = await requireUser();
+    const accessibleIds = await getAccessibleUserIds();
 
     const list = await prisma.shoppingList.findFirst({
         where: {
             status: "OPEN",
-            userId: user.id
+            userId: { in: accessibleIds }
         },
         orderBy: { createdAt: "desc" },
     });
@@ -31,12 +33,13 @@ async function getCurrentListId() {
 export async function getProducts() {
     try {
         const user = await requireUser();
+        const accessibleIds = await getAccessibleUserIds();
 
-        // Find an open list for the user
+        // Find an open list among accessible user IDs
         const list = await prisma.shoppingList.findFirst({
             where: {
                 status: "OPEN",
-                userId: user.id
+                userId: { in: accessibleIds }
             },
             orderBy: { createdAt: "desc" },
             include: {
@@ -78,10 +81,11 @@ export async function getProducts() {
 export async function getAllProductNames() {
     try {
         const user = await requireUser();
+        const accessibleIds = await getAccessibleUserIds();
         const items = await prisma.catalogProduct.findMany({
             where: {
                 OR: [
-                    { userId: user.id },
+                    { userId: { in: accessibleIds } },
                     { userId: null } // Global defaults
                 ]
             },
@@ -168,8 +172,9 @@ export async function updateProduct(id: string, data: Partial<{ name: string; qu
     });
 
     if (!current) throw new Error("Item not found");
-    // Verify ownership
-    if (current.shoppingList.userId !== user.id) throw new Error("Unauthorized");
+    const accessibleIds = await getAccessibleUserIds();
+    // Verify ownership or shared access
+    if (!accessibleIds.includes(current.shoppingList.userId as string)) throw new Error("Unauthorized");
 
     let catalogProductId = current.catalogProductId;
 
@@ -228,7 +233,8 @@ export async function deleteProduct(id: string) {
         });
 
         if (!item) throw new Error("Item not found");
-        if (item.shoppingList.userId !== user.id) throw new Error("Unauthorized");
+        const accessibleIds = await getAccessibleUserIds();
+        if (!accessibleIds.includes(item.shoppingList.userId as string)) throw new Error("Unauthorized");
 
         await prisma.shoppingListItem.delete({ where: { id } });
         revalidatePaths();

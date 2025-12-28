@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/session";
+import { getAccessibleUserIds } from "./sharing";
 
 async function getOrCreateCatalogProduct(name: string, userId: string) {
     return await prisma.catalogProduct.upsert({
@@ -36,10 +37,11 @@ export async function getPriceHistory(productName: string) {
     });
     if (!cp) return [];
 
+    const accessibleIds = await getAccessibleUserIds();
     const history = await prisma.priceHistory.findMany({
         where: {
             catalogProductId: cp.id,
-            userId: user.id
+            userId: { in: accessibleIds }
         },
         orderBy: { purchaseDate: 'desc' },
         take: 10,
@@ -58,10 +60,11 @@ export async function getLastPrice(productName: string) {
 
     if (!cp) return null;
 
+    const accessibleIds = await getAccessibleUserIds();
     const lastEntry = await prisma.priceHistory.findFirst({
         where: {
             catalogProductId: cp.id,
-            userId: user.id
+            userId: { in: accessibleIds }
         },
         orderBy: { purchaseDate: 'desc' },
     });
@@ -71,8 +74,9 @@ export async function getLastPrice(productName: string) {
 
 export async function listPriceHistory(filter?: { productName?: string; take?: number }) {
     const user = await requireUser();
+    const accessibleIds = await getAccessibleUserIds();
 
-    const where: any = { userId: user.id };
+    const where: any = { userId: { in: accessibleIds } };
     if (filter?.productName) {
         where.catalogProduct = {
             name: { contains: filter.productName, mode: 'insensitive' }
@@ -91,9 +95,10 @@ export async function listPriceHistory(filter?: { productName?: string; take?: n
 
 export async function deletePriceHistoryEntry(id: string) {
     const user = await requireUser();
+    const accessibleIds = await getAccessibleUserIds();
 
     const entry = await prisma.priceHistory.findUnique({ where: { id } });
-    if (!entry || entry.userId !== user.id) throw new Error("Unauthorized");
+    if (!entry || !accessibleIds.includes(entry.userId as string)) throw new Error("Unauthorized");
 
     const res = await prisma.priceHistory.delete({ where: { id } });
     revalidatePath("/prices");
@@ -143,9 +148,10 @@ export async function copyProductToPriceHistory(productId: string) {
 }
 export async function updatePriceHistoryEntry(id: string, data: { productName?: string; unitPrice?: number; purchaseDate?: Date }) {
     const user = await requireUser();
+    const accessibleIds = await getAccessibleUserIds();
 
     const entry = await prisma.priceHistory.findUnique({ where: { id } });
-    if (!entry || entry.userId !== user.id) throw new Error("Unauthorized");
+    if (!entry || !accessibleIds.includes(entry.userId as string)) throw new Error("Unauthorized");
 
     const { productName, ...rest } = data;
     let catalogProductId: string | undefined;
