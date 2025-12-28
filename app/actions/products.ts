@@ -136,9 +136,35 @@ export async function addProduct(data: { name: string; quantity: number }) {
     }
 }
 
-export async function updateProduct(id: string, data: Partial<{ quantity: number; unitPrice: number; checked: boolean; unit: any }>) {
-    const current = await prisma.shoppingListItem.findUnique({ where: { id } });
+export async function updateProduct(id: string, data: Partial<{ name: string; quantity: number; unitPrice: number; checked: boolean; unit: any }>) {
+    const current = await prisma.shoppingListItem.findUnique({
+        where: { id },
+        include: { catalogProduct: true }
+    });
+
     if (!current) throw new Error("Item not found");
+
+    let catalogProductId = current.catalogProductId;
+
+    // If name changed, we need to link to a different catalog product
+    if (data.name && data.name !== current.catalogProduct.name) {
+        const categoryName = determineCategoryName(data.name);
+
+        // Ensure category
+        const category = await prisma.category.upsert({
+            where: { name: categoryName },
+            update: {},
+            create: { name: categoryName }
+        });
+
+        // Ensure catalog product
+        const cp = await prisma.catalogProduct.upsert({
+            where: { name: data.name },
+            update: { categoryId: category.id },
+            create: { name: data.name, categoryId: category.id }
+        });
+        catalogProductId = cp.id;
+    }
 
     const quantity = data.quantity ?? current.quantity;
     const unitPrice = data.unitPrice !== undefined ? data.unitPrice : current.unitPrice;
@@ -148,12 +174,19 @@ export async function updateProduct(id: string, data: Partial<{ quantity: number
         totalPrice = quantity * unitPrice;
     }
 
+    const updateData: any = {
+        quantity,
+        unitPrice,
+        totalPrice,
+        catalogProductId,
+    };
+
+    if (data.checked !== undefined) updateData.checked = data.checked;
+    if (data.unit !== undefined) updateData.unit = data.unit;
+
     await prisma.shoppingListItem.update({
         where: { id },
-        data: {
-            ...data,
-            totalPrice,
-        },
+        data: updateData,
     });
     revalidatePaths();
 }
