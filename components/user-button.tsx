@@ -35,13 +35,29 @@ export function UserButton() {
                     )}
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuContent className="w-64" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{session.user.name}</p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                            {session.user.email}
-                        </p>
+                    <div className="flex items-center gap-3 mb-2">
+                        {session.user.image ? (
+                            <div className="relative size-10 overflow-hidden rounded-full border-2 border-primary/20">
+                                <Image
+                                    src={session.user.image}
+                                    alt={session.user.name || "User"}
+                                    fill
+                                    className="object-cover"
+                                />
+                            </div>
+                        ) : (
+                            <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20">
+                                <User className="h-5 w-5 text-primary" />
+                            </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium leading-none truncate">{session.user.name}</p>
+                            <p className="text-xs leading-none text-muted-foreground truncate mt-1">
+                                {session.user.email}
+                            </p>
+                        </div>
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />

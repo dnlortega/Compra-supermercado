@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -27,7 +27,6 @@ export const metadata: Metadata = {
   title: "Compra Supermercado - Gerenciador de Listas de Compras",
   description: "App inteligente para controle de compras de supermercado. Organize suas listas, acompanhe gastos e compartilhe com a família.",
   manifest: "/manifest.json",
-  themeColor: "#4285F4",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -49,6 +48,10 @@ export const metadata: Metadata = {
     icon: "/logo.png",
     apple: "/logo.png",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#4285F4",
 };
 
 import { auth } from "@/auth";

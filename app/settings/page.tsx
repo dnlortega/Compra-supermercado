@@ -1,9 +1,13 @@
 import SharingSection from "@/components/sharing-section";
+import { UserProfileSection } from "@/components/user-profile-section";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Settings as SettingsIcon } from "lucide-react";
 import Link from "next/link";
+import { requireUser } from "@/lib/session";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+    const user = await requireUser();
+
     return (
         <div className="container mx-auto p-4 max-w-2xl min-h-screen pb-24">
             <div className="flex items-center gap-4 mb-8">
@@ -20,6 +24,11 @@ export default function SettingsPage() {
 
             <div className="space-y-8">
                 <section>
+                    <h2 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-400 mb-4 ml-2">Perfil</h2>
+                    <UserProfileSection user={user} />
+                </section>
+
+                <section className="pt-8 border-t border-dashed">
                     <h2 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-400 mb-4 ml-2">Colaboração</h2>
                     <SharingSection />
                 </section>

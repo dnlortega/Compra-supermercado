@@ -104,6 +104,12 @@ export default async function Home() {
     console.error("Dashboard: Global error fetch:", error);
   }
 
+  // Calculate user stats
+  const accountAge = user.emailVerified 
+    ? Math.floor((new Date().getTime() - new Date(user.emailVerified).getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+  const isGoogleAccount = user.email?.includes("gmail.com") || user.email?.includes("google");
+
   return (
     <div className="flex flex-col gap-6 p-4 max-w-2xl mx-auto pb-24 animate-in fade-in duration-700">
       <UserGreeting user={user} />
