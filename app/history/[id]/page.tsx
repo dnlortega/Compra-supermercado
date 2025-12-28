@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import HistoryDetailClient from "./history-detail-client";
 
 export default async function HistoryDetailPage({ params }: { params: Promise<{ id: string }> }) {

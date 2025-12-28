@@ -1,4 +1,5 @@
 import { getProducts } from "@/app/actions/products";
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, List } from "lucide-react";

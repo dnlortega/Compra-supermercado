@@ -1,4 +1,5 @@
 import { getProducts } from "@/app/actions/products";
+export const dynamic = "force-dynamic";
 import AddProductForm from "./add-product-form";
 import ProductList from "./product-list";
 import Link from "next/link";
