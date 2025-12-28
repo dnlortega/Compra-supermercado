@@ -2,9 +2,18 @@
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { requireUser } from "@/lib/session";
 
 export async function getCatalogProducts() {
+    const user = await requireUser();
+
     const products = await prisma.catalogProduct.findMany({
+        where: {
+            OR: [
+                { userId: user.id },
+                { userId: null } // Global defaults
+            ]
+        },
         include: { category: true },
         orderBy: { name: "asc" },
     });
@@ -19,10 +28,50 @@ export async function getCatalogProducts() {
 }
 
 export async function getAllCatalogProducts() {
+    const user = await requireUser();
+
     return await prisma.catalogProduct.findMany({
+        where: {
+            OR: [
+                { userId: user.id },
+                { userId: null }
+            ]
+        },
         include: { category: true },
         orderBy: { name: "asc" },
     });
+}
+
+export async function createCatalogProduct(name: string, categoryName?: string) {
+    try {
+        const user = await requireUser();
+        let categoryId: string | undefined;
+
+        if (categoryName) {
+            const category = await prisma.category.upsert({
+                where: { name: categoryName },
+                update: {},
+                create: { name: categoryName }
+            });
+            categoryId = category.id;
+        }
+
+        await prisma.catalogProduct.upsert({
+            where: { name },
+            update: { categoryId },
+            create: {
+                name,
+                categoryId,
+                userId: user.id
+            },
+        });
+
+        revalidatePath("/list");
+        return { success: true };
+    } catch (error) {
+        console.error("Error creating catalog product:", error);
+        return { success: false, error: "Falha ao cadastrar produto" };
+    }
 }
 
 export async function seedCatalog() {
@@ -54,31 +103,4 @@ export async function seedCatalog() {
         }
     }
     revalidatePath("/list");
-}
-
-export async function createCatalogProduct(name: string, categoryName?: string) {
-    try {
-        let categoryId: string | undefined;
-
-        if (categoryName) {
-            const category = await prisma.category.upsert({
-                where: { name: categoryName },
-                update: {},
-                create: { name: categoryName }
-            });
-            categoryId = category.id;
-        }
-
-        await prisma.catalogProduct.upsert({
-            where: { name },
-            update: { categoryId },
-            create: { name, categoryId },
-        });
-
-        revalidatePath("/list");
-        return { success: true };
-    } catch (error) {
-        console.error("Error creating catalog product:", error);
-        return { success: false, error: "Falha ao cadastrar produto" };
-    }
 }

@@ -2,11 +2,17 @@
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { requireUser } from "@/lib/session";
 
 export async function finishShoppingList(name?: string) {
-    // 1. Find the current open list
+    const user = await requireUser();
+
+    // 1. Find the current open list for the user
     let list = await prisma.shoppingList.findFirst({
-        where: { status: "OPEN" },
+        where: {
+            status: "OPEN",
+            userId: user.id
+        },
         include: { items: true },
     });
 
@@ -26,11 +32,12 @@ export async function finishShoppingList(name?: string) {
         }
     });
 
-    // 3. Create a new empty list
+    // 3. Create a new empty list for the user
     await prisma.shoppingList.create({
         data: {
             status: "OPEN",
             date: new Date(),
+            userId: user.id
         },
     });
 

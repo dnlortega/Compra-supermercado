@@ -2,10 +2,15 @@
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { requireUser } from "@/lib/session";
 
 export async function exportAllHistory() {
     try {
+        const user = await requireUser();
         const lists = await prisma.shoppingList.findMany({
+            where: {
+                userId: user.id
+            },
             include: {
                 items: {
                     include: { catalogProduct: true }
@@ -24,6 +29,7 @@ export async function exportAllHistory() {
 
 export async function exportSingleList(id: string) {
     try {
+        const user = await requireUser();
         const list = await prisma.shoppingList.findUnique({
             where: { id },
             include: {
@@ -33,8 +39,8 @@ export async function exportSingleList(id: string) {
             },
         });
 
-        if (!list) {
-            return { success: false, error: "Lista não encontrada" };
+        if (!list || list.userId !== user.id) {
+            return { success: false, error: "Lista não encontrada ou sem permissão" };
         }
 
         return { success: true, data: list };
@@ -46,6 +52,7 @@ export async function exportSingleList(id: string) {
 
 export async function importData(jsonData: string) {
     try {
+        const user = await requireUser();
         const parsed = JSON.parse(jsonData);
         const lists = Array.isArray(parsed) ? parsed : [parsed];
 
@@ -63,7 +70,8 @@ export async function importData(jsonData: string) {
                     ...listInfo,
                     date: new Date(listInfo.date),
                     total: parseFloat(listInfo.total) || 0,
-                    status: listInfo.status || "COMPLETED"
+                    status: listInfo.status || "COMPLETED",
+                    userId: user.id
                 },
             });
 
@@ -82,7 +90,11 @@ export async function importData(jsonData: string) {
                 const catalogProduct = await prisma.catalogProduct.upsert({
                     where: { name: p.name },
                     update: { categoryId: category.id },
-                    create: { name: p.name, categoryId: category.id }
+                    create: {
+                        name: p.name,
+                        categoryId: category.id,
+                        userId: user.id
+                    }
                 });
 
                 // Create Item
