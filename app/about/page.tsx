@@ -26,14 +26,11 @@ export default function AboutPage() {
                     <Image
                         src="/logo.png"
                         alt="App Logo"
-                        width={60}
-                        height={60}
+                        width={80}
+                        height={80}
                         className="rounded-xl object-contain shadow-sm"
                     />
                 </div>
-                <h1 className="text-4xl font-black tracking-tight mb-2 bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent">
-                    Compra Supermercado
-                </h1>
                 <p className="text-muted-foreground text-lg max-w-xl mx-auto">
                     Uma plataforma inteligente e robusta projetada para simplificar a gestão de compras domésticas, controlar gastos e analisar variações de preços.
                 </p>

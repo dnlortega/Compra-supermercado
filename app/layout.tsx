@@ -55,9 +55,6 @@ export default function RootLayout({
                       priority
                     />
                   </div>
-                  <h1 className="text-lg font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                    Compra Supermercado
-                  </h1>
                 </Link>
                 <div className="flex items-center gap-1">
                   <Link href="/about">
