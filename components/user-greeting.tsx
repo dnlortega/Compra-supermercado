@@ -185,7 +185,6 @@ export function UserGreeting({ user }: UserGreetingProps) {
         // Create a simple hash from user ID
         const userHash = user.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
         // Use a combination of day, user hash, and hour to get different verses
-        const hour = now.getHours();
         const verseIndex = (dayOfYear + userHash + hour) % BIBLE_VERSES.length;
         setVerse(BIBLE_VERSES[verseIndex]);
 
