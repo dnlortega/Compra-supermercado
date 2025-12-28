@@ -10,16 +10,31 @@ import { revalidatePath } from "next/cache";
 export async function shareDataAccess(targetEmail: string) {
     try {
         const user = await requireUser();
+        
+        // Validar formato de email básico
+        if (!targetEmail || !targetEmail.includes("@")) {
+            return { 
+                success: false, 
+                error: "Por favor, insira um e-mail válido" 
+            };
+        }
+
         const targetUser = await prisma.user.findUnique({
-            where: { email: targetEmail },
+            where: { email: targetEmail.trim().toLowerCase() },
         });
 
         if (!targetUser) {
-            throw new Error("Usuário não encontrado com este e-mail");
+            return { 
+                success: false, 
+                error: "Usuário não encontrado. O e-mail precisa estar cadastrado no sistema." 
+            };
         }
 
         if (targetUser.id === user.id) {
-            throw new Error("Você não pode compartilhar dados com você mesmo");
+            return { 
+                success: false, 
+                error: "Você não pode compartilhar dados com você mesmo" 
+            };
         }
 
         await prisma.sharedAccess.upsert({
@@ -41,7 +56,11 @@ export async function shareDataAccess(targetEmail: string) {
         return { success: true };
     } catch (error: any) {
         console.error("Error sharing data:", error);
-        throw new Error(error.message || "Falha ao compartilhar dados. Verifique se o banco está sincronizado.");
+        // Retornar erro ao invés de lançar para evitar problemas no render
+        return { 
+            success: false, 
+            error: error.message || "Falha ao compartilhar dados. Verifique se o banco está sincronizado." 
+        };
     }
 }
 
@@ -64,9 +83,13 @@ export async function revokeSharedAccess(targetUserId: string) {
         revalidatePath("/settings");
         await clearAccessibleIdsCache(); // Limpar cache quando há mudanças
         return { success: true };
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error revoking access:", error);
-        throw new Error("Falha ao remover acesso.");
+        // Retornar erro ao invés de lançar para evitar problemas no render
+        return { 
+            success: false, 
+            error: error.message || "Falha ao remover acesso." 
+        };
     }
 }
 

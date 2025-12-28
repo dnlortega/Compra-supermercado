@@ -42,17 +42,21 @@ export default function SharingSection() {
         }
         setLoading(true);
         try {
-            const result = await shareDataAccess(email);
+            const result = await shareDataAccess(email.trim().toLowerCase());
             if (result && result.success) {
                 toast.success("Dados compartilhados com sucesso!");
                 setEmail("");
                 await loadShares();
                 router.refresh();
             } else {
-                toast.error("Erro ao compartilhar dados");
+                // Mostrar mensagem de erro específica
+                const errorMessage = result?.error || "Erro ao compartilhar dados";
+                toast.error(errorMessage);
             }
         } catch (error: any) {
-            toast.error(error.message || "Erro ao compartilhar");
+            // Fallback para erros inesperados
+            console.error("Erro inesperado ao compartilhar:", error);
+            toast.error(error?.message || "Erro inesperado ao compartilhar dados");
         } finally {
             setLoading(false);
         }
