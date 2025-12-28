@@ -14,5 +14,6 @@ export async function requireUser() {
     if (!user || !user.id) {
         throw new Error("Usuário não autenticado")
     }
-    return user
+    // Narrowing the type to guarantee 'id' is a string
+    return user as typeof user & { id: string }
 }
