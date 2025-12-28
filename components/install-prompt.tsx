@@ -87,52 +87,63 @@ export function InstallPrompt() {
         return null;
     }
 
+    // Detectar iOS
+    const isIOS = typeof window !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isSafari = typeof window !== "undefined" && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
     return (
-        <Card className="p-4 bg-gradient-to-r from-primary/10 via-primary/5 to-background border-primary/20 shadow-lg animate-in slide-in-from-bottom duration-500">
-            <div className="flex items-start gap-3">
-                <div className="bg-primary/10 p-2.5 rounded-full">
-                    <Smartphone className="size-6 text-primary" />
-                </div>
-                <div className="flex-1 space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                        <div>
-                            <h3 className="font-bold text-sm flex items-center gap-2">
-                                Instalar App 📱
-                            </h3>
-                            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                                Adicione à tela inicial para acesso rápido e notificações!
-                            </p>
+        <div className="fixed bottom-24 left-0 right-0 z-40 px-4 pb-4 pointer-events-none">
+            <Card className="p-4 bg-gradient-to-r from-primary/10 via-primary/5 to-background border-primary/20 shadow-lg animate-in slide-in-from-bottom duration-500 pointer-events-auto max-w-md mx-auto">
+                <div className="flex items-start gap-3">
+                    <div className="bg-primary/10 p-2.5 rounded-full">
+                        <Smartphone className="size-6 text-primary" />
+                    </div>
+                    <div className="flex-1 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                            <div>
+                                <h3 className="font-bold text-sm flex items-center gap-2">
+                                    Instalar App 📱
+                                </h3>
+                                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                                    {isIOS && isSafari 
+                                        ? "Toque no botão Compartilhar (□↑) e selecione 'Adicionar à Tela de Início'"
+                                        : "Adicione à tela inicial para acesso rápido e notificações!"
+                                    }
+                                </p>
+                            </div>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-6 -mt-1 -mr-1 shrink-0"
+                                onClick={handleDismiss}
+                            >
+                                <X className="size-4" />
+                            </Button>
                         </div>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-6 -mt-1 -mr-1 shrink-0"
-                            onClick={handleDismiss}
-                        >
-                            <X className="size-4" />
-                        </Button>
-                    </div>
-                    <div className="flex gap-2">
-                        <Button
-                            size="sm"
-                            onClick={handleInstallClick}
-                            className="text-xs font-bold bg-primary hover:bg-primary/90"
-                        >
-                            <Download className="size-3.5 mr-1.5" />
-                            Instalar Agora
-                        </Button>
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={handleDismiss}
-                            className="text-xs"
-                        >
-                            Mais tarde
-                        </Button>
+                        {!isIOS && (
+                            <div className="flex gap-2">
+                                <Button
+                                    size="sm"
+                                    onClick={handleInstallClick}
+                                    className="text-xs font-bold bg-primary hover:bg-primary/90"
+                                >
+                                    <Download className="size-3.5 mr-1.5" />
+                                    Instalar Agora
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={handleDismiss}
+                                    className="text-xs"
+                                >
+                                    Mais tarde
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 </div>
-            </div>
-        </Card>
+            </Card>
+        </div>
     );
 }
 

@@ -1,5 +1,6 @@
 import SharingSection from "@/components/sharing-section";
 import { UserProfileSection } from "@/components/user-profile-section";
+import { InstallButton } from "@/components/install-prompt";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Settings as SettingsIcon } from "lucide-react";
 import Link from "next/link";
@@ -31,6 +32,24 @@ export default async function SettingsPage() {
                 <section className="pt-8 border-t border-dashed">
                     <h2 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-400 mb-4 ml-2">Colaboração</h2>
                     <SharingSection />
+                </section>
+
+                <section className="pt-8 border-t border-dashed">
+                    <h2 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-400 mb-4 ml-2">Instalação</h2>
+                    <div className="p-6 rounded-[2rem] bg-zinc-100 dark:bg-zinc-900">
+                        <div className="flex items-center justify-center mb-4">
+                            <InstallButton />
+                        </div>
+                        <div className="text-center space-y-2">
+                            <p className="text-xs text-zinc-500 font-medium">
+                                Instale o app no seu dispositivo móvel
+                            </p>
+                            <div className="text-[10px] text-zinc-400 space-y-1">
+                                <p><strong>Android:</strong> Toque em "Instalar App" ou use o menu do navegador</p>
+                                <p><strong>iOS:</strong> Toque no botão Compartilhar → Adicionar à Tela de Início</p>
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
                 <section className="pt-8 border-t border-dashed">

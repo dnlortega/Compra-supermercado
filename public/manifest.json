@@ -1,24 +1,55 @@
 {
-    "name": "Compra Supermercado",
+    "name": "Compra Supermercado - Gerenciador de Listas",
     "short_name": "Compras",
-    "description": "Gerenciador de listas de compras inteligente",
+    "description": "App inteligente para controle de compras de supermercado. Organize suas listas, acompanhe gastos e compartilhe com a família.",
     "start_url": "/",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#4285F4",
     "orientation": "portrait-primary",
+    "categories": ["shopping", "productivity", "utilities"],
     "icons": [
         {
-            "src": "/logo.png",
+            "src": "/icon-192x192.png",
             "sizes": "192x192",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
+        },
+        {
+            "src": "/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
         },
         {
             "src": "/logo.png",
             "sizes": "512x512",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
+        },
+        {
+            "src": "/logo.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "screenshots": [],
+    "shortcuts": [
+        {
+            "name": "Lista Atual",
+            "short_name": "Lista",
+            "description": "Acesse sua lista de compras atual",
+            "url": "/list",
+            "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Histórico",
+            "short_name": "Histórico",
+            "description": "Veja seu histórico de compras",
+            "url": "/history",
+            "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
         }
     ]
 }

@@ -22,6 +22,7 @@ import { Info } from "lucide-react";
 import Image from "next/image";
 import { SessionProvider } from "@/components/session-provider";
 import { UserButton } from "@/components/user-button";
+import { InstallPrompt } from "@/components/install-prompt";
 
 export const metadata: Metadata = {
   title: "Compra Supermercado - Gerenciador de Listas de Compras",
@@ -45,8 +46,13 @@ export const metadata: Metadata = {
     description: "Gerenciador inteligente de listas de compras",
   },
   icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
+    icon: [
+      { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/logo.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
+    ],
   },
 };
 
@@ -112,6 +118,7 @@ export default async function RootLayout({
               {!hideNav && <BottomNav />}
             </div>
             <Toaster position="top-center" richColors />
+            <InstallPrompt />
           </ThemeProvider>
         </SessionProvider>
       </body>
