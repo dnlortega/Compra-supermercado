@@ -38,7 +38,8 @@ export function ListNameEditor() {
         if (!listId) return;
         setLoading(true);
         try {
-            await updateShoppingList(listId, { name: name.trim() || null });
+            const trimmedName = name.trim();
+            await updateShoppingList(listId, { name: trimmedName || undefined });
             toast.success("Nome da lista atualizado");
             setIsEditing(false);
             router.refresh();
