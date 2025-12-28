@@ -108,7 +108,7 @@ export default async function RootLayout({
               </main>
               {!hideNav && <BottomNav />}
             </div>
-            <Toaster position="top-center" />
+            <Toaster position="top-center" richColors />
           </ThemeProvider>
         </SessionProvider>
       </body>

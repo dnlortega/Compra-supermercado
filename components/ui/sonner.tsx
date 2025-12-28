@@ -32,6 +32,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--border-radius": "var(--radius)",
         } as React.CSSProperties
       }
+      toastOptions={{
+        style: {
+          marginTop: '50vh',
+          transform: 'translateY(-50%)',
+        },
+      }}
       {...props}
     />
   )
