@@ -106,3 +106,28 @@ export async function getShoppingListsForUser(userId: string) {
 
     return lists;
 }
+// ... existing imports
+
+export async function getAllOpenLists() {
+    await requireAdmin();
+
+    const openLists = await prisma.shoppingList.findMany({
+        where: { status: "OPEN" },
+        orderBy: { date: 'desc' },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    image: true
+                }
+            },
+            _count: {
+                select: { items: true }
+            }
+        }
+    });
+
+    return openLists;
+}

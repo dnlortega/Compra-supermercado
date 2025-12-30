@@ -3,7 +3,7 @@ import { UserSharingManager } from "@/components/admin/user-sharing-manager";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft, Shield, Users, Share2, Download, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Shield, Users, Share2, Download, ShoppingBag, AlertCircle } from "lucide-react";
 import Image from "next/image";
 
 // Revalidar a cada 0 segundos (sem cache) para garantir dados frescos no admin
@@ -34,6 +34,14 @@ export default async function AdminUsersPage() {
                         Gestão de Usuários
                     </h1>
                     <p className="text-sm text-muted-foreground">Gerencie quem pode ver os dados de quem.</p>
+                    <div className="mt-2">
+                        <Link href="/admin/pending">
+                            <Button variant="outline" size="sm" className="gap-2">
+                                <AlertCircle className="h-4 w-4" />
+                                Monitorar Listas Pendentes
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
             </div>
 

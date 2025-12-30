@@ -32,10 +32,11 @@ export default async function Home() {
   let recentPurchases: any[] = [];
   let percentageChange = 0;
   let allUsers: any[] = [];
+  let openList: any = null;
 
   try {
     // Paralelizar todas as queries para melhor performance
-    const [currentMonthLists, lastMonthLists, openList, recentPurchasesResult] = await Promise.all([
+    const [currentMonthListsResult, lastMonthListsResult, openListResult, recentPurchasesResult] = await Promise.all([
       // 1. Get total spent this month
       prisma.shoppingList.findMany({
         where: {
@@ -87,6 +88,10 @@ export default async function Home() {
       }),
     ]);
 
+    const currentMonthLists = currentMonthListsResult;
+    const lastMonthLists = lastMonthListsResult;
+    openList = openListResult;
+
     totalSpent = currentMonthLists.reduce((acc, list) => acc + (list.total || 0), 0);
     totalSpentLastMonth = lastMonthLists.reduce((acc, list) => acc + (list.total || 0), 0);
     percentageChange = totalSpentLastMonth > 0
@@ -119,6 +124,25 @@ export default async function Home() {
   return (
     <div className="flex flex-col gap-6 p-4 max-w-2xl mx-auto pb-24 animate-in fade-in duration-700">
       <UserGreeting user={user} />
+
+      {openList && (
+        <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-between gap-4 animate-in slide-in-from-top-2">
+          <div className="flex items-center gap-4">
+            <div className="bg-orange-500/20 p-2 rounded-full hidden sm:block">
+              <ShoppingCart className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-orange-800 dark:text-orange-200">Lista em Andamento</p>
+              <p className="text-xs text-orange-700/80 dark:text-orange-300/80">Você tem uma lista não finalizada.</p>
+            </div>
+          </div>
+          <Link href="/list">
+            <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white border-0 shadow-sm">
+              Continuar
+            </Button>
+          </Link>
+        </div>
+      )}
 
       {pendingItems > 0 && <NotificationManager pendingItemsCount={pendingItems} />}
 
