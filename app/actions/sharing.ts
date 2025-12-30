@@ -10,12 +10,12 @@ import { revalidatePath } from "next/cache";
 export async function shareDataAccess(targetEmail: string) {
     try {
         const user = await requireUser();
-        
+
         // Validar formato de email básico
         if (!targetEmail || !targetEmail.includes("@")) {
-            return { 
-                success: false, 
-                error: "Por favor, insira um e-mail válido" 
+            return {
+                success: false,
+                error: "Por favor, insira um e-mail válido"
             };
         }
 
@@ -24,16 +24,16 @@ export async function shareDataAccess(targetEmail: string) {
         });
 
         if (!targetUser) {
-            return { 
-                success: false, 
-                error: "Usuário não encontrado. O e-mail precisa estar cadastrado no sistema." 
+            return {
+                success: false,
+                error: "Usuário não encontrado. O e-mail precisa estar cadastrado no sistema."
             };
         }
 
         if (targetUser.id === user.id) {
-            return { 
-                success: false, 
-                error: "Você não pode compartilhar dados com você mesmo" 
+            return {
+                success: false,
+                error: "Você não pode compartilhar dados com você mesmo"
             };
         }
 
@@ -57,9 +57,9 @@ export async function shareDataAccess(targetEmail: string) {
     } catch (error: any) {
         console.error("Error sharing data:", error);
         // Retornar erro ao invés de lançar para evitar problemas no render
-        return { 
-            success: false, 
-            error: error.message || "Falha ao compartilhar dados. Verifique se o banco está sincronizado." 
+        return {
+            success: false,
+            error: error.message || "Falha ao compartilhar dados. Verifique se o banco está sincronizado."
         };
     }
 }
@@ -86,9 +86,9 @@ export async function revokeSharedAccess(targetUserId: string) {
     } catch (error: any) {
         console.error("Error revoking access:", error);
         // Retornar erro ao invés de lançar para evitar problemas no render
-        return { 
-            success: false, 
-            error: error.message || "Falha ao remover acesso." 
+        return {
+            success: false,
+            error: error.message || "Falha ao remover acesso."
         };
     }
 }
@@ -156,23 +156,30 @@ export async function getAccessibleUserIds() {
         const user = await requireUser();
         const cacheKey = `accessibleIds_${user.id}`;
         const cached = accessibleIdsCache.get(cacheKey);
-        
+
         // Verificar cache
         if (cached && Date.now() - cached.timestamp < ACCESSIBLE_IDS_CACHE_TTL) {
             return cached.data;
         }
 
-        // Defensive check: handle cases where DB tables are not yet created
-        const sharingWithMe = await prisma.sharedAccess.findMany({
-            where: { sharedToId: user.id },
-            select: { sharedById: true },
-        });
+        const isAdmin = user.email === "dnlortega@gmail.com";
+        let result: string[] = [];
 
-        const result = [user.id, ...sharingWithMe.map(s => s.sharedById)];
-        
+        if (isAdmin) {
+            const allUsers = await prisma.user.findMany({ select: { id: true } });
+            result = allUsers.map(u => u.id);
+        } else {
+            // Defensive check: handle cases where DB tables are not yet created
+            const sharingWithMe = await prisma.sharedAccess.findMany({
+                where: { sharedToId: user.id },
+                select: { sharedById: true },
+            });
+            result = [user.id, ...sharingWithMe.map(s => s.sharedById)];
+        }
+
         // Salvar no cache
         accessibleIdsCache.set(cacheKey, { data: result, timestamp: Date.now() });
-        
+
         return result;
     } catch (error) {
         console.error("Shared access data not available yet:", error);

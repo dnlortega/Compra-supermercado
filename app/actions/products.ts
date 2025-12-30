@@ -101,7 +101,7 @@ export async function getAllProductNames() {
         const user = await requireUser();
         const cacheKey = `productNames_${user.id}`;
         const cached = productNamesCache.get(cacheKey);
-        
+
         // Verificar cache
         if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
             return cached.data;
@@ -119,10 +119,10 @@ export async function getAllProductNames() {
             orderBy: { name: 'asc' }
         });
         const result = Array.from(new Set(items.map(p => p.name)));
-        
+
         // Salvar no cache
         productNamesCache.set(cacheKey, { data: result, timestamp: Date.now() });
-        
+
         return result;
     } catch (err) {
         console.error("Error in getAllProductNames:", err);
@@ -203,9 +203,16 @@ export async function updateProduct(id: string, data: Partial<{ name: string; qu
     });
 
     if (!current) throw new Error("Item not found");
+
     const accessibleIds = await getAccessibleUserIds();
     // Verify ownership or shared access
     if (!accessibleIds.includes(current.shoppingList.userId as string)) throw new Error("Unauthorized");
+
+    // "só quem finalizou a compra pode editar a lista" (Assuming owner = who finished)
+    // Prevent editing history of others
+    if (current.shoppingList.status === 'COMPLETED' && current.shoppingList.userId !== user.id) {
+        throw new Error("Apenas o dono da lista pode editar o histórico.");
+    }
 
     let catalogProductId = current.catalogProductId;
 
@@ -267,6 +274,10 @@ export async function deleteProduct(id: string) {
         const accessibleIds = await getAccessibleUserIds();
         if (!accessibleIds.includes(item.shoppingList.userId as string)) throw new Error("Unauthorized");
 
+        if (item.shoppingList.status === 'COMPLETED' && item.shoppingList.userId !== user.id) {
+            throw new Error("Apenas o dono da lista pode editar o histórico.");
+        }
+
         await prisma.shoppingListItem.delete({ where: { id } });
         revalidatePaths();
         return { success: true };
@@ -282,7 +293,7 @@ function revalidatePaths() {
     revalidatePath("/summary");
     revalidatePath("/history");
     revalidatePath("/");
-    
+
     // Limpar cache de nomes de produtos quando produtos são modificados
     productNamesCache.clear();
 }

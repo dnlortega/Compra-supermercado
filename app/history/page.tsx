@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingBag, Calendar, ChevronDown, ChevronUp, ChevronRight, Trash2, Download, Upload, RotateCcw } from "lucide-react";
+import { ShoppingBag, Calendar, ChevronDown, ChevronUp, ChevronRight, Trash2, Download, Upload, RotateCcw, History } from "lucide-react";
 import { getHistory } from "@/app/actions/history";
 import { exportAllHistory, importData } from "@/app/actions/export-import";
 import { reopenShoppingList } from "@/app/actions/shopping-lists";
@@ -182,7 +182,10 @@ export default function HistoryPage() {
     return (
         <div className="container p-4 pb-24 space-y-6 max-w-2xl mx-auto">
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Histórico de Compras</h1>
+                <h1 className="text-2xl font-bold">
+                    <History className="h-8 w-8 text-primary" />
+                    <span className="sr-only">Histórico de Compras</span>
+                </h1>
                 <div className="flex gap-2">
                     <Button
                         variant="outline"

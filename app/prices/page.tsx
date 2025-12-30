@@ -4,7 +4,7 @@ import { getOpenList } from "@/app/actions/shopping-lists";
 import PriceList from "./price-list";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, History } from "lucide-react";
+import { ArrowLeft, History, Receipt } from "lucide-react";
 
 export default async function PricesPage() {
     const products = await getProducts();
@@ -19,7 +19,10 @@ export default async function PricesPage() {
                             <ArrowLeft className="h-6 w-6" />
                         </Button>
                     </Link>
-                    <h1 className="text-2xl font-bold">Preencher Valores</h1>
+                    <h1 className="text-2xl font-bold">
+                        <Receipt className="h-8 w-8 text-primary" />
+                        <span className="sr-only">Preencher Valores</span>
+                    </h1>
                 </div>
 
                 <div className="flex items-center gap-2">

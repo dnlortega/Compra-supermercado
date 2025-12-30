@@ -23,6 +23,7 @@ import Image from "next/image";
 import { SessionProvider } from "@/components/session-provider";
 import { UserButton } from "@/components/user-button";
 import { InstallPrompt } from "@/components/install-prompt";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   title: "Compra Supermercado - Gerenciador de Listas de Compras",
@@ -119,6 +120,7 @@ export default async function RootLayout({
             </div>
             <Toaster position="top-center" richColors />
             <InstallPrompt />
+            <SpeedInsights />
           </ThemeProvider>
         </SessionProvider>
       </body>

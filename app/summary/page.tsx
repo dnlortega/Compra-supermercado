@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 30; // Revalidar a cada 30 segundos
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, List } from "lucide-react";
+import { ArrowLeft, List, PieChart } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FinishShoppingButton } from "@/components/finish-shopping-button";
@@ -30,7 +30,10 @@ export default async function SummaryPage() {
                             <ArrowLeft className="h-6 w-6" />
                         </Button>
                     </Link>
-                    <h1 className="text-2xl font-bold">Resumo da Compra</h1>
+                    <h1 className="text-2xl font-bold">
+                        <PieChart className="h-8 w-8 text-primary" />
+                        <span className="sr-only">Resumo da Compra</span>
+                    </h1>
                 </div>
 
                 <div className="flex items-center gap-2">

@@ -169,6 +169,7 @@ const BIBLE_VERSES = [
 export function UserGreeting({ user }: UserGreetingProps) {
     const [greeting, setGreeting] = useState("");
     const [weather, setWeather] = useState<{ temp: number; icon: any; description: string } | null>(null);
+    const [locationName, setLocationName] = useState("");
     const [verse, setVerse] = useState({ text: "", ref: "" });
     const firstName = user.name?.split(" ")[0] || "Usuário";
     const now = new Date();
@@ -193,11 +194,26 @@ export function UserGreeting({ user }: UserGreetingProps) {
             navigator.geolocation.getCurrentPosition(async (position) => {
                 try {
                     const { latitude, longitude } = position.coords;
+
+                    // 1. Weather
                     const res = await fetch(
                         `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
                     );
                     const data = await res.json();
                     const { temperature, weathercode } = data.current_weather;
+
+                    // 2. City Name (Reverse Geocoding)
+                    try {
+                        const locRes = await fetch(
+                            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt`
+                        );
+                        const locData = await locRes.json();
+                        if (locData.city || locData.locality) {
+                            setLocationName(locData.city || locData.locality);
+                        }
+                    } catch (e) {
+                        console.error("City fetch error", e);
+                    }
 
                     let icon = Sun;
                     let description = "Céu Limpo";
@@ -230,7 +246,7 @@ export function UserGreeting({ user }: UserGreetingProps) {
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
                         <h1 className="text-2xl font-bold tracking-tight">
-                            {greeting}, {firstName} 👋
+                            {greeting}, {firstName} {locationName && <span className="text-lg font-normal text-muted-foreground">({locationName})</span>} 👋
                         </h1>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground uppercase font-medium">

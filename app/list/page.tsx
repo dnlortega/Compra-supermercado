@@ -5,7 +5,7 @@ import AddProductForm from "./add-product-form";
 import ProductList from "./product-list";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ShoppingCart } from "lucide-react";
 import ImportOpenListButton from "@/components/import-open-list-button";
 import { ListNameEditor } from "@/components/list-name-editor";
 
@@ -21,7 +21,10 @@ export default async function ListPage() {
                             <ArrowLeft className="h-6 w-6" />
                         </Button>
                     </Link>
-                    <h1 className="text-2xl font-bold">Lista de Compras</h1>
+                    <h1 className="text-2xl font-bold">
+                        <ShoppingCart className="h-8 w-8 text-primary" />
+                        <span className="sr-only">Lista de Compras</span>
+                    </h1>
                 </div>
 
                 <div>
