@@ -90,3 +90,19 @@ export async function toggleSharing(ownerId: string, targetUserId: string, enabl
         return { success: false, error: error.message };
     }
 }
+
+export async function getShoppingListsForUser(userId: string) {
+    await requireAdmin();
+
+    const lists = await prisma.shoppingList.findMany({
+        where: { userId: userId },
+        orderBy: { date: 'desc' },
+        include: {
+            _count: {
+                select: { items: true }
+            }
+        }
+    });
+
+    return lists;
+}

@@ -57,15 +57,20 @@ export default async function AdminUsersPage() {
                                         <p className="text-sm text-muted-foreground">{user.email}</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-6 text-xs text-muted-foreground bg-background/50 p-2 rounded-lg border">
-                                    <div className="text-center px-2">
-                                        <span className="font-bold text-lg block text-foreground">{user.sharedWith.length}</span>
-                                        Compartilhando
-                                    </div>
-                                    <div className="w-px h-8 bg-border"></div>
-                                    <div className="text-center px-2">
-                                        <span className="font-bold text-lg block text-foreground">{user.sharedBy.length}</span>
-                                        Recebendo
+                                <div className="flex items-center gap-3">
+                                    <Link href={`/admin/users/${user.id}/lists`}>
+                                        <Button size="sm" variant="outline">Ver Listas</Button>
+                                    </Link>
+                                    <div className="flex items-center gap-6 text-xs text-muted-foreground bg-background/50 p-2 rounded-lg border">
+                                        <div className="text-center px-2">
+                                            <span className="font-bold text-lg block text-foreground">{user.sharedWith.length}</span>
+                                            Compartilhando
+                                        </div>
+                                        <div className="w-px h-8 bg-border"></div>
+                                        <div className="text-center px-2">
+                                            <span className="font-bold text-lg block text-foreground">{user.sharedBy.length}</span>
+                                            Recebendo
+                                        </div>
                                     </div>
                                 </div>
                             </div>
