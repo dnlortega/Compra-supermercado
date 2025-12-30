@@ -104,7 +104,7 @@ const INITIAL_NODES: Node[] = [
 
 const INITIAL_EDGES: Edge[] = [
     // User Relations
-    { id: 'e-user-list', source: 'user', target: 'shopping_list', animated: true, strokeWidth: 2 },
+    { id: 'e-user-list', source: 'user', target: 'shopping_list', animated: true, style: { strokeWidth: 2 } },
     { id: 'e-user-share1', source: 'user', target: 'shared_access', animated: true },
     { id: 'e-user-share2', source: 'user', target: 'shared_access' },
 
