@@ -8,8 +8,11 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import Image from "next/image";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+    const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -19,10 +22,20 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
-            // Nota: Credentials provider precisa ser configurado no auth.ts
-            // Por enquanto, mostraremos um aviso já que o foco principal é o Google 
-            // e para não quebrar o fluxo de produção sem o provider configurado.
-            toast.error("Login por senha está em manutenção. Por favor, use o Google.");
+            const result = await signIn("credentials", {
+                email,
+                password,
+                redirect: false,
+            });
+
+            if (result?.error) {
+                toast.error("Email ou senha incorretos");
+            } else {
+                router.push("/");
+                router.refresh();
+            }
+        } catch (error) {
+            toast.error("Erro ao fazer login");
         } finally {
             setLoading(false);
         }
@@ -69,7 +82,7 @@ export default function LoginPage() {
                             id="email"
                             type="email"
                             placeholder="seu@email.com"
-                            className="h-12 rounded-2xl bg-white dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:ring-primary"
+                            className="h-12 rounded-2xl bg-white dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:ring-primary/20 transition-all font-medium"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -81,7 +94,7 @@ export default function LoginPage() {
                             id="password"
                             type="password"
                             placeholder="••••••••"
-                            className="h-12 rounded-2xl bg-white dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:ring-primary"
+                            className="h-12 rounded-2xl bg-white dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:ring-primary/20 transition-all font-medium"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
@@ -90,7 +103,7 @@ export default function LoginPage() {
                     <Button
                         type="submit"
                         disabled={loading}
-                        className="w-full h-12 rounded-2xl font-bold text-sm bg-primary hover:bg-primary/90 transition-all active:scale-[0.98]"
+                        className="w-full h-12 rounded-2xl font-bold text-sm bg-primary hover:bg-primary/90 transition-all active:scale-[0.98] shadow-lg shadow-primary/20"
                     >
                         {loading ? <Loader2 className="animate-spin h-5 w-5" /> : "Entrar na conta"}
                     </Button>
@@ -104,7 +117,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* Google Button Section */}
-                <div className="w-full">
+                <div className="w-full space-y-4">
                     <Button
                         variant="ghost"
                         size="lg"
@@ -131,6 +144,13 @@ export default function LoginPage() {
                         </svg>
                         <span>Continuar com Google</span>
                     </Button>
+
+                    <div className="text-center text-xs text-muted-foreground">
+                        Não tem uma conta?{" "}
+                        <Link href="/register" className="font-bold text-primary hover:underline">
+                            Cadastre-se
+                        </Link>
+                    </div>
                 </div>
             </div>
         </div>

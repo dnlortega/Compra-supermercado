@@ -66,8 +66,8 @@ export default async function Home() {
           userId: user.id,
           status: "OPEN"
         },
-        select: { 
-          _count: { select: { items: true } } 
+        select: {
+          _count: { select: { items: true } }
         },
       }),
       // 4. Get recent purchases (last 3)
@@ -219,6 +219,13 @@ export default async function Home() {
             <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Usuários do Sistema</h2>
             <Badge variant="outline" className="ml-auto bg-primary/5 text-primary border-primary/20">ADMIN</Badge>
           </div>
+
+          <Link href="/admin/users" className="block">
+            <Button className="w-full bg-primary/90 hover:bg-primary text-primary-foreground font-semibold" size="lg">
+              <Users className="mr-2 h-5 w-5" />
+              Gerenciar Compartilhamento
+            </Button>
+          </Link>
 
           <div className="grid gap-3">
             {allUsers.map((u) => (
