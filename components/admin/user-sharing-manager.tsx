@@ -103,7 +103,9 @@ export function UserSharingManager({
                                             size="sm"
                                             onClick={() => handleToggle(u.id, true)}
                                             disabled={loading}
+                                            className="gap-2"
                                         >
+                                            <UserPlus className="h-3 w-3" />
                                             Adicionar
                                         </Button>
                                     </div>

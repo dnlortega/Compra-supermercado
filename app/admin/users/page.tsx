@@ -3,7 +3,7 @@ import { UserSharingManager } from "@/components/admin/user-sharing-manager";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft, Shield, Users } from "lucide-react";
+import { ArrowLeft, Shield, Users, Share2, Download, ShoppingBag } from "lucide-react";
 import Image from "next/image";
 
 // Revalidar a cada 0 segundos (sem cache) para garantir dados frescos no admin
@@ -59,17 +59,26 @@ export default async function AdminUsersPage() {
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <Link href={`/admin/users/${user.id}/lists`}>
-                                        <Button size="sm" variant="outline">Ver Listas</Button>
+                                        <Button size="sm" variant="outline" className="gap-2">
+                                            <ShoppingBag className="h-4 w-4" />
+                                            Ver Listas
+                                        </Button>
                                     </Link>
                                     <div className="flex items-center gap-6 text-xs text-muted-foreground bg-background/50 p-2 rounded-lg border">
                                         <div className="text-center px-2">
                                             <span className="font-bold text-lg block text-foreground">{user.sharedWith.length}</span>
-                                            Compartilhando
+                                            <div className="flex items-center gap-1">
+                                                <Share2 className="h-3 w-3" />
+                                                Comp.
+                                            </div>
                                         </div>
                                         <div className="w-px h-8 bg-border"></div>
                                         <div className="text-center px-2">
                                             <span className="font-bold text-lg block text-foreground">{user.sharedBy.length}</span>
-                                            Recebendo
+                                            <div className="flex items-center gap-1">
+                                                <Download className="h-3 w-3" />
+                                                Rec.
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
