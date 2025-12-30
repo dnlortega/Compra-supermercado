@@ -186,12 +186,11 @@ export default function HistoryPage() {
                 <div className="flex gap-2">
                     <Button
                         variant="outline"
-                        size="sm"
-                        className="flex items-center gap-2"
+                        size="icon"
                         onClick={handleExport}
+                        title="Exportar"
                     >
                         <Download className="h-4 w-4" />
-                        Exportar
                     </Button>
                     <div className="relative">
                         <input
@@ -203,12 +202,11 @@ export default function HistoryPage() {
                         />
                         <Button
                             variant="outline"
-                            size="sm"
-                            className="flex items-center gap-2"
+                            size="icon"
                             onClick={() => document.getElementById('import-file')?.click()}
+                            title="Importar"
                         >
                             <Upload className="h-4 w-4" />
-                            Importar
                         </Button>
                     </div>
                 </div>

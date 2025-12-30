@@ -24,8 +24,8 @@ export default async function PricesPage() {
 
                 <div className="flex items-center gap-2">
                     <Link href="/prices/price-history-admin">
-                        <Button variant="outline" size="sm">
-                            <History className="h-4 w-4 mr-2" /> Histórico de Preços
+                        <Button variant="outline" size="icon" title="Histórico de Preços">
+                            <History className="h-4 w-4" />
                         </Button>
                     </Link>
                 </div>

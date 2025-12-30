@@ -35,8 +35,8 @@ export default function ImportOpenListButton() {
 
     return (
         <>
-            <Button variant="outline" size="sm" onClick={handleClick} disabled={loading}>
-                <ArrowDownCircle className="h-4 w-4 mr-2" /> Copiar para Histórico
+            <Button variant="outline" size="icon" onClick={handleClick} disabled={loading} title="Copiar para Histórico">
+                <ArrowDownCircle className="h-4 w-4" />
             </Button>
             <CreatedEntriesModal open={open} entries={entries} onOpenChange={setOpen} />
         </>

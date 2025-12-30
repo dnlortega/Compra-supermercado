@@ -35,8 +35,8 @@ export default async function SummaryPage() {
 
                 <div className="flex items-center gap-2">
                     <Link href="/summary/shopping-lists-admin">
-                        <Button variant="outline" size="sm">
-                            <List className="h-4 w-4 mr-2" /> Gerenciar Listas
+                        <Button variant="outline" size="icon" title="Gerenciar Listas">
+                            <List className="h-4 w-4" />
                         </Button>
                     </Link>
                 </div>
