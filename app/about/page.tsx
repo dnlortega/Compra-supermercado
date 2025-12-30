@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import Image from "next/image";
+import DatabaseSchemaViewer from "@/components/about/database-schema-viewer";
 
 export default function AboutPage() {
     return (
@@ -89,6 +90,9 @@ export default function AboutPage() {
                     </div>
 
                     <div className="space-y-4">
+                        <div className="my-8 h-[400px]">
+                            <DatabaseSchemaViewer />
+                        </div>
                         <div className="bg-card border rounded-2xl p-6 shadow-sm">
                             <div className="flex items-start gap-4">
                                 <div className="p-2 rounded-lg bg-green-500/10">
