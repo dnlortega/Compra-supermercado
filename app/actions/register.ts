@@ -14,7 +14,7 @@ export async function register(formData: FormData) {
     const parsed = RegisterSchema.safeParse(Object.fromEntries(formData));
 
     if (!parsed.success) {
-        return { error: parsed.error.flutter().fieldErrors };
+        return { error: parsed.error.flatten().fieldErrors };
     }
 
     const { name, email, password } = parsed.data;
