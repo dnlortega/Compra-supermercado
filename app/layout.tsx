@@ -26,6 +26,7 @@ import { InstallPrompt } from "@/components/install-prompt";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { PageTransition } from "@/components/page-transition";
 import { ProgressBar } from "@/components/progress-bar";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "Compra Supermercado - Gerenciador de Listas de Compras",
@@ -78,6 +79,12 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8911347909113264"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
         <SessionProvider>
           <ThemeProvider
             attribute="class"

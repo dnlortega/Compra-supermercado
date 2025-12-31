@@ -8,7 +8,7 @@ import PriceHistoryForm from "./price-history-form";
 import { listPriceHistory, deletePriceHistoryEntry, createPriceHistoryEntry, updatePriceHistoryEntry, deleteZeroValueHistoryEntries } from "@/app/actions/price-history";
 import { toast } from "sonner";
 import ImportFileToPriceHistoryButton from "@/components/import-file-to-price-history-button";
-import { Trash2 } from "lucide-react";
+import { Trash2, Plus, RefreshCw, TrendingUp } from "lucide-react";
 
 export default function PriceHistoryAdminPage() {
     const [entries, setEntries] = useState<any[]>([]);
@@ -109,18 +109,50 @@ export default function PriceHistoryAdminPage() {
     };
 
     return (
-        <div className="p-4 space-y-4">
-            <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Painel de Controle - Histórico de Preços</h2>
+        <div className="p-4 space-y-4 max-w-7xl mx-auto">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
-                    <input className="input" placeholder="Filtrar por produto" value={filter} onChange={(e) => setFilter(e.target.value)} />
-                    <Button onClick={handleCreate}>Adicionar</Button>
-                    <Button variant="outline" onClick={handleDeleteZeroValues} title="Remove itens com valor 0" className="text-red-500 hover:text-red-700 hover:bg-red-50 border-red-200">
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Limpar Zeros
+                    <TrendingUp className="h-6 w-6 text-primary" />
+                    <span className="sr-only">Painel de Controle - Histórico de Preços</span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                    <input
+                        className="input flex-1 sm:flex-initial sm:w-48"
+                        placeholder="Filtrar produto"
+                        value={filter}
+                        onChange={(e) => setFilter(e.target.value)}
+                    />
+
+                    <Button
+                        size="icon"
+                        onClick={handleCreate}
+                        title="Adicionar novo registro"
+                    >
+                        <Plus className="h-4 w-4" />
                     </Button>
+
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={handleDeleteZeroValues}
+                        title="Limpar registros com valor zero"
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50 border-red-200"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+
                     <ImportFileToPriceHistoryButton />
-                    <Button variant="ghost" onClick={load}>Atualizar</Button>
+
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={load}
+                        title="Atualizar lista"
+                        disabled={loading}
+                    >
+                        <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                    </Button>
                 </div>
             </div>
 

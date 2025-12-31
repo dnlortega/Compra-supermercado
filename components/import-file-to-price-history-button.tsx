@@ -4,6 +4,7 @@ import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ErrorStackModal from "@/components/error-stack-modal";
+import { Upload } from "lucide-react";
 
 export default function ImportFileToPriceHistoryButton() {
     const [errorStack, setErrorStack] = useState<string | null>(null);
@@ -75,7 +76,14 @@ export default function ImportFileToPriceHistoryButton() {
                 onChange={(e) => handleFile(e.target.files ? e.target.files[0] : null)}
                 className="sr-only"
             />
-            <Button variant="outline" onClick={() => inputRef.current?.click()}>Importar JSON</Button>
+            <Button
+                variant="outline"
+                size="icon"
+                onClick={() => inputRef.current?.click()}
+                title="Importar JSON"
+            >
+                <Upload className="h-4 w-4" />
+            </Button>
             <ErrorStackModal open={open} stack={errorStack} onOpenChange={(v) => setOpen(v)} />
         </>
     );
