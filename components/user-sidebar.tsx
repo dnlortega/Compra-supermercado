@@ -42,7 +42,7 @@ export function UserSidebar({ user, children }: UserSidebarProps) {
             <SheetTrigger asChild>
                 {children}
             </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] sm:w-[350px] border-r rounded-r-2xl m-2 h-[calc(100vh-1rem)] shadow-2xl flex flex-col gap-6">
+            <SheetContent side="left" className="w-[85vw] sm:w-[350px] border-r h-[100dvh] shadow-2xl flex flex-col gap-6 p-6">
                 <SheetHeader className="text-left space-y-4">
                     <SheetTitle>Perfil</SheetTitle>
                     <div className="flex items-center gap-4">
@@ -69,7 +69,7 @@ export function UserSidebar({ user, children }: UserSidebarProps) {
                     </div>
                 </SheetHeader>
 
-                <div className="flex flex-col gap-2 flex-1 overflow-y-auto">
+                <div className="flex flex-col gap-2 flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden">
                     <Link href="/settings" className="w-full" onClick={handleLinkClick}>
                         <Button variant="ghost" className="w-full justify-start h-12 text-base font-normal">
                             <Settings className="mr-3 h-5 w-5" />
