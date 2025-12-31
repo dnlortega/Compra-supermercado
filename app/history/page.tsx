@@ -169,10 +169,11 @@ export default function HistoryPage() {
                     />
                     <Button
                         variant="outline"
+                        size="icon"
                         onClick={() => document.getElementById('import-file-empty')?.click()}
+                        title="Importar Dados"
                     >
-                        <Upload className="h-4 w-4 mr-2" />
-                        Importar Dados
+                        <Upload className="h-4 w-4" />
                     </Button>
                 </div>
             </div>

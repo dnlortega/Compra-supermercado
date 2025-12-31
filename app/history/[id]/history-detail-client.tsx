@@ -337,7 +337,9 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
         return (
             <div className="p-8 text-center animate-in fade-in zoom-in-95 duration-300">
                 <h2 className="text-xl font-semibold mb-2">Lista não encontrada</h2>
-                <Button onClick={() => router.push("/history")}>Voltar para o Histórico</Button>
+                <Button variant="outline" size="icon" onClick={() => router.push("/history")} title="Voltar para o Histórico">
+                    <ArrowLeft className="h-4 w-4" />
+                </Button>
             </div>
         );
     }

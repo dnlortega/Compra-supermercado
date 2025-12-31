@@ -193,9 +193,8 @@ export default function AddProductForm() {
                         <p className="text-xs text-red-500 mt-1">{errors.quantity}</p>
                     )}
                 </div>
-                <Button type="submit" loading={loading}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add
+                <Button type="submit" loading={loading} size="icon">
+                    <Plus className="w-4 h-4" />
                 </Button>
             </form>
         </div>
