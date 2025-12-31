@@ -10,7 +10,6 @@ import Image from "next/image";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AdSenseResponsive } from "@/components/adsense";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -61,6 +60,7 @@ export default function LoginPage() {
                             height={56}
                             className="object-contain"
                             priority
+                            fetchPriority="high"
                         />
                     </div>
                 </div>
@@ -151,11 +151,6 @@ export default function LoginPage() {
                         <Link href="/register" className="font-bold text-primary hover:underline">
                             Cadastre-se
                         </Link>
-                    </div>
-
-                    {/* Google AdSense */}
-                    <div className="mt-8">
-                        <AdSenseResponsive className="rounded-2xl overflow-hidden" />
                     </div>
                 </div>
             </div>

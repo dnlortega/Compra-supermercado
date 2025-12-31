@@ -129,6 +129,7 @@ export function UserGreeting({ user }: UserGreetingProps) {
                                     className="object-cover"
                                     loading="lazy"
                                     sizes="56px"
+                                    fetchPriority="low"
                                 />
                             </div>
 

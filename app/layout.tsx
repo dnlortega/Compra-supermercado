@@ -5,11 +5,15 @@ import "./globals.css";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
+  preload: true,
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
+  preload: false,
 });
 
 import { Toaster } from "@/components/ui/sonner";
@@ -26,7 +30,6 @@ import { InstallPrompt } from "@/components/install-prompt";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { PageTransition } from "@/components/page-transition";
 import { ProgressBar } from "@/components/progress-bar";
-import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "Compra Supermercado - Gerenciador de Listas de Compras",
@@ -71,7 +74,13 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch (error) {
+    console.error("Error getting session in layout:", error);
+    // Continue without session if there's an error
+  }
   const hideNav = !session;
 
   return (
@@ -79,12 +88,6 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8911347909113264"
-          crossOrigin="anonymous"
-          strategy="lazyOnload"
-        />
         <SessionProvider>
           <ThemeProvider
             attribute="class"
@@ -92,7 +95,6 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <ProgressBar />
             <div className="flex flex-col min-h-screen">
               {!hideNav && (
                 <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -106,6 +108,8 @@ export default async function RootLayout({
                             fill
                             className="object-contain"
                             priority
+                            fetchPriority="high"
+                            sizes="32px"
                           />
                         </div>
                       </Link>
@@ -124,9 +128,7 @@ export default async function RootLayout({
                 </header>
               )}
               <main className={`flex-1 ${!hideNav ? "pb-20" : ""}`}>
-                <PageTransition>
-                  {children}
-                </PageTransition>
+                {children}
               </main>
               {!hideNav && <BottomNav />}
             </div>

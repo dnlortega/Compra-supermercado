@@ -1,5 +1,6 @@
 import Link from "next/link";
 export const dynamic = "force-dynamic";
+export const revalidate = 30;
 import { PlusCircle, ShoppingCart, TrendingUp, Calendar, ChevronRight, History, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
