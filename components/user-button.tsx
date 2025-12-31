@@ -94,14 +94,17 @@ export function UserButton() {
                                 <span>Gerenciar Todas as Listas</span>
                             </DropdownMenuItem>
                         </Link>
-                        <Link href="/prices/price-history-admin">
-                            <DropdownMenuItem className="cursor-pointer">
-                                <TrendingUp className="mr-2 h-4 w-4" />
-                                <span>Histórico de Preços</span>
-                            </DropdownMenuItem>
-                        </Link>
+
                     </>
                 )}
+
+                <DropdownMenuSeparator />
+                <Link href="/prices/price-history-admin">
+                    <DropdownMenuItem className="cursor-pointer">
+                        <TrendingUp className="mr-2 h-4 w-4" />
+                        <span>Histórico de Preços</span>
+                    </DropdownMenuItem>
+                </Link>
 
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
