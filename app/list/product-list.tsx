@@ -45,7 +45,7 @@ export default function ProductList({ initialProducts }: { initialProducts: Prod
             acc[category].push(product);
             return acc;
         }, {} as Record<string, Product[]>);
-        
+
         return {
             groupedProducts: grouped,
             categories: Object.keys(grouped).sort()
@@ -147,7 +147,7 @@ function ProductItem({ product }: { product: Product }) {
                             <Plus className="h-3 w-3" />
                         </Button>
                     </div>
-                    <span className="font-medium text-lg">{product.name}</span>
+                    <span className="font-medium text-lg break-words whitespace-normal">{product.name}</span>
                 </div>
 
                 <div className="flex gap-2">

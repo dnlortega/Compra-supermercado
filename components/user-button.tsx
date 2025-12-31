@@ -10,7 +10,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { LogOut, User, Settings } from "lucide-react"
+import { LogOut, User, Settings, Users, AlertCircle, TrendingUp, List } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -18,6 +18,8 @@ export function UserButton() {
     const { data: session } = useSession()
 
     if (!session?.user) return null
+
+    const isAdmin = session.user.email === "dnlortega@gmail.com"
 
     return (
         <DropdownMenu>
@@ -67,6 +69,40 @@ export function UserButton() {
                         <span>Configurações</span>
                     </DropdownMenuItem>
                 </Link>
+
+                {isAdmin && (
+                    <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-2">
+                            Administração
+                        </DropdownMenuLabel>
+                        <Link href="/admin/users">
+                            <DropdownMenuItem className="cursor-pointer">
+                                <Users className="mr-2 h-4 w-4" />
+                                <span>Gerenciar Usuários</span>
+                            </DropdownMenuItem>
+                        </Link>
+                        <Link href="/admin/pending">
+                            <DropdownMenuItem className="cursor-pointer">
+                                <AlertCircle className="mr-2 h-4 w-4" />
+                                <span>Listas Pendentes (Geral)</span>
+                            </DropdownMenuItem>
+                        </Link>
+                        <Link href="/summary/shopping-lists-admin">
+                            <DropdownMenuItem className="cursor-pointer">
+                                <List className="mr-2 h-4 w-4" />
+                                <span>Gerenciar Todas as Listas</span>
+                            </DropdownMenuItem>
+                        </Link>
+                        <Link href="/prices/price-history-admin">
+                            <DropdownMenuItem className="cursor-pointer">
+                                <TrendingUp className="mr-2 h-4 w-4" />
+                                <span>Histórico de Preços</span>
+                            </DropdownMenuItem>
+                        </Link>
+                    </>
+                )}
+
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                     className="text-red-500 focus:text-red-500 cursor-pointer"

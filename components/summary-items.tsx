@@ -40,7 +40,7 @@ export function SummaryItems({ products }: { products: Product[] }) {
     const toggleCheck = async (item: typeof flattenedItems[0]) => {
         const unitKey = item.unitKey;
         const isCurrentlyChecked = checkedItems[unitKey];
-        
+
         // Se está marcando como checked, vamos remover 1 unidade do produto
         if (!isCurrentlyChecked) {
             setRemovingItems(prev => ({ ...prev, [unitKey]: true }));
@@ -48,7 +48,7 @@ export function SummaryItems({ products }: { products: Product[] }) {
                 // Buscar o produto atual para ver a quantidade
                 const productItems = flattenedItems.filter(p => p.id === item.id);
                 const currentQuantity = productItems.length;
-                
+
                 if (currentQuantity <= 1) {
                     // Último item, remove o produto completamente
                     const response = await fetch(`/api/product/${item.id}`, {
@@ -111,11 +111,11 @@ export function SummaryItems({ products }: { products: Product[] }) {
                                 className={isChecked ? "bg-muted/50 text-muted-foreground line-through transition-colors opacity-60" : "transition-colors"}
                             >
                                 <TableCell className="text-muted-foreground text-xs font-mono">{index + 1}</TableCell>
-                                <TableCell className="font-medium">{item.name}</TableCell>
+                                <TableCell className="font-medium break-words whitespace-normal">{item.name}</TableCell>
                                 <TableCell className="text-center">
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon" 
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
                                         onClick={async () => {
                                             try {
                                                 const response = await fetch(`/api/product/${item.id}`, {

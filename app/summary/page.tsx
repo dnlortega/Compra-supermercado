@@ -65,7 +65,7 @@ export default async function SummaryPage() {
                         <CardContent>
                             {mostExpensive ? (
                                 <div className="space-y-1">
-                                    <p className="text-sm font-bold truncate">{mostExpensive.name}</p>
+                                    <p className="text-sm font-bold break-words whitespace-normal">{mostExpensive.name}</p>
                                     <p className="text-lg font-black text-red-700 dark:text-red-300">{formatCurrency(mostExpensive.unitPrice ?? 0)}</p>
                                 </div>
                             ) : (
@@ -80,7 +80,7 @@ export default async function SummaryPage() {
                         <CardContent>
                             {cheapest ? (
                                 <div className="space-y-1">
-                                    <p className="text-sm font-bold truncate">{cheapest.name}</p>
+                                    <p className="text-sm font-bold break-words whitespace-normal">{cheapest.name}</p>
                                     <p className="text-lg font-black text-blue-700 dark:text-blue-300">{formatCurrency(cheapest.unitPrice ?? 0)}</p>
                                 </div>
                             ) : (

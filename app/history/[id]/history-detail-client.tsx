@@ -518,7 +518,7 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
                                 <CardContent className="p-4">
                                     <div className="flex justify-between items-start">
                                         <div className="flex-1">
-                                            <h4 className="font-semibold">{product.name}</h4>
+                                            <h4 className="font-semibold break-words">{product.name}</h4>
                                             <p className="text-sm text-muted-foreground">Qtd: {product.quantity}</p>
                                         </div>
                                         <Button
