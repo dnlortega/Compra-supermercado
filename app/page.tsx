@@ -1,5 +1,5 @@
 import Link from "next/link";
-export const dynamic = "force-dynamic";
+import { Suspense } from "react";
 export const revalidate = 30;
 import { PlusCircle, ShoppingCart, TrendingUp, Calendar, ChevronRight, History, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -130,14 +130,16 @@ export default async function Home() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4 max-w-2xl mx-auto pb-24 animate-in fade-in duration-700">
-      <UserGreeting user={user} />
+    <div className="flex flex-col gap-6 p-4 max-w-2xl mx-auto pb-24">
+      <Suspense fallback={<div className="h-32 animate-pulse bg-muted/20 rounded-xl" />}>
+        <UserGreeting user={user} />
+      </Suspense>
 
 
       {openList && daysOpen > 5 ? (
         <OldListAlert listId={openList.id} daysOpen={daysOpen} />
       ) : openList ? (
-        <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-between gap-4 animate-in slide-in-from-top-2">
+        <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="bg-orange-500/20 p-2 rounded-full hidden sm:block">
               <ShoppingCart className="h-5 w-5 text-orange-600 dark:text-orange-400" />

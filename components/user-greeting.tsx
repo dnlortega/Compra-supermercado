@@ -37,7 +37,7 @@ export function UserGreeting({ user }: UserGreetingProps) {
             const userHash = user.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
             const verseIndex = (dayOfYear + userHash) % BIBLE_VERSES.length;
             setVerse(BIBLE_VERSES[verseIndex]);
-        }, 100);
+        }, 200);
 
         // 3. Get Weather (lowest priority, defer more)
         setTimeout(() => {
