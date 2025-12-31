@@ -249,48 +249,7 @@ export default async function Home() {
           </div>
         )}
       </section>
-      {isAdmin && allUsers.length > 0 && (
-        <section className="space-y-4 pt-4 border-t border-dashed">
-          <div className="flex items-center gap-2 ml-1">
-            <Users className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Usuários do Sistema</h2>
-            <Badge variant="outline" className="ml-auto bg-primary/5 text-primary border-primary/20">ADMIN</Badge>
-          </div>
 
-          <Link href="/admin/users" className="block">
-            <Button className="w-full bg-primary/90 hover:bg-primary text-primary-foreground font-semibold" size="lg">
-              <Users className="mr-2 h-5 w-5" />
-              Gerenciar Compartilhamento
-            </Button>
-          </Link>
-
-          <div className="grid gap-3">
-            {allUsers.map((u) => (
-              <div key={u.id} className="flex items-center justify-between p-3 rounded-xl bg-accent/30 border border-primary/5">
-                <div className="flex items-center gap-3">
-                  <div className="relative size-10 overflow-hidden rounded-full border shadow-sm">
-                    {u.image ? (
-                      <Image src={u.image} alt={u.name || "Avatar"} fill className="object-cover" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-muted uppercase text-xs font-bold">
-                        {u.name?.charAt(0) || u.email?.charAt(0) || "?"}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold leading-none">{u.name}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{u.email}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-xs font-bold uppercase text-muted-foreground tracking-tighter">Listas</div>
-                  <div className="text-lg font-black text-primary leading-none">{u._count.shoppingLists}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
     </div>
   );
 }
