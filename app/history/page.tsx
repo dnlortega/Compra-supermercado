@@ -240,7 +240,7 @@ export default function HistoryPage() {
                                     <div key={list.id} className="relative group">
                                         <Link href={`/history/${list.id}`}>
                                             <Card className="overflow-hidden hover:bg-accent/50 transition-colors cursor-pointer">
-                                                <CardContent className="p-4 flex items-center justify-between">
+                                                <CardContent className="p-4 flex items-center justify-between group-hover:pr-24 transition-all duration-300">
                                                     <div className="space-y-1 flex-1">
                                                         <div className="font-medium flex items-center gap-2">
                                                             {list.name || "Compra"}
