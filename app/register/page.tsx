@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Loader2, ArrowLeft } from "lucide-react";
+import { AdSenseResponsive } from "@/components/adsense";
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -127,6 +128,11 @@ export default function RegisterPage() {
                     <Link href="/login" className="font-bold text-primary hover:underline">
                         Fazer login
                     </Link>
+                </div>
+
+                {/* Google AdSense */}
+                <div className="mt-8">
+                    <AdSenseResponsive className="rounded-2xl overflow-hidden" />
                 </div>
             </div>
         </div>
