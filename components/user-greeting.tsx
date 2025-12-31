@@ -27,9 +27,52 @@ export function UserGreeting({ user }: UserGreetingProps) {
     useEffect(() => {
         // 1. Set Greeting IMMEDIATELY (critical for FCP)
         const hour = now.getHours();
-        if (hour < 12) setGreeting("Bom dia");
-        else if (hour < 18) setGreeting("Boa tarde");
-        else setGreeting("Boa noite");
+        const userHash = user.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        
+        // Array de saudações criativas por período do dia
+        const morningGreetings = [
+            "Bom dia",
+            "Bom dia, que seu dia seja abençoado",
+            "Bom dia, que venha com tudo",
+            "Bom dia, que seja produtivo",
+            "Bom dia, que seja incrível",
+            "Bom dia, que seja especial",
+            "Bom dia, que seja cheio de conquistas",
+            "Bom dia, que seja repleto de bênçãos",
+        ];
+        
+        const afternoonGreetings = [
+            "Boa tarde",
+            "Boa tarde, que continue sendo ótima",
+            "Boa tarde, que seja proveitosa",
+            "Boa tarde, que seja abençoada",
+            "Boa tarde, que seja incrível",
+            "Boa tarde, que seja produtiva",
+            "Boa tarde, que seja especial",
+            "Boa tarde, que seja cheia de realizações",
+        ];
+        
+        const eveningGreetings = [
+            "Boa noite",
+            "Boa noite, que seja tranquila",
+            "Boa noite, que seja abençoada",
+            "Boa noite, que seja de descanso",
+            "Boa noite, que seja especial",
+            "Boa noite, que seja serena",
+            "Boa noite, que seja repleta de paz",
+            "Boa noite, que seja cheia de bênçãos",
+        ];
+        
+        let selectedGreeting: string;
+        if (hour < 12) {
+            selectedGreeting = morningGreetings[userHash % morningGreetings.length];
+        } else if (hour < 18) {
+            selectedGreeting = afternoonGreetings[userHash % afternoonGreetings.length];
+        } else {
+            selectedGreeting = eveningGreetings[userHash % eveningGreetings.length];
+        }
+        
+        setGreeting(selectedGreeting);
 
         // 2. Defer verse loading (non-critical, can wait)
         setTimeout(() => {
@@ -98,10 +141,11 @@ export function UserGreeting({ user }: UserGreetingProps) {
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
                         <h1 className="text-2xl font-bold tracking-tight">
-                            {greeting}, {firstName} {locationName && <span className="text-lg font-normal text-muted-foreground">({locationName})</span>} 👋
+                            {greeting}, {firstName} 👋
                         </h1>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground uppercase font-medium">
+                        {locationName && <span>{locationName}, </span>}
                         <span>{format(now, "EEEE, dd 'de' MMMM", { locale: ptBR })}</span>
                         {weather && (
                             <>
