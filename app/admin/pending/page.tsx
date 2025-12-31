@@ -47,17 +47,17 @@ export default async function AdminPendingListsPage() {
                                         {/* User Info */}
                                         <div className="flex items-center gap-3 min-w-[200px]">
                                             <div className="relative h-10 w-10 rounded-full overflow-hidden bg-background border shadow-sm flex-shrink-0">
-                                                {list.user.image ? (
+                                                {list.user?.image ? (
                                                     <Image src={list.user.image} alt={list.user.name || ""} fill className="object-cover" />
                                                 ) : (
                                                     <div className="flex items-center justify-center h-full w-full bg-muted text-muted-foreground font-bold">
-                                                        {list.user.name?.[0] || "?"}
+                                                        {list.user?.name?.[0] || "?"}
                                                     </div>
                                                 )}
                                             </div>
                                             <div className="overflow-hidden">
-                                                <p className="text-sm font-bold truncate">{list.user.name}</p>
-                                                <p className="text-xs text-muted-foreground truncate">{list.user.email}</p>
+                                                <p className="text-sm font-bold truncate">{list.user?.name || "Usuário não encontrado"}</p>
+                                                <p className="text-xs text-muted-foreground truncate">{list.user?.email}</p>
                                             </div>
                                         </div>
 
@@ -79,7 +79,7 @@ export default async function AdminPendingListsPage() {
                                         </div>
                                     </Link>
 
-                                    <AdminDeleteListButton listId={list.id} listName={list.name} userName={list.user.name} />
+                                    <AdminDeleteListButton listId={list.id} listName={list.name} userName={list.user?.name ?? null} />
                                 </div>
                             </CardContent>
                         </Card>
