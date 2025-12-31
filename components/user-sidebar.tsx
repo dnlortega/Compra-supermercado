@@ -1,4 +1,5 @@
 "use client"
+import * as React from "react"
 
 import {
     Sheet,
@@ -30,13 +31,18 @@ interface UserSidebarProps {
 
 export function UserSidebar({ user, children }: UserSidebarProps) {
     const isAdmin = user.email === "dnlortega@gmail.com"
+    const [isOpen, setIsOpen] = React.useState(false)
+
+    const handleLinkClick = () => {
+        setIsOpen(false)
+    }
 
     return (
-        <Sheet>
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
                 {children}
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[350px] border-l rounded-l-2xl m-2 h-[calc(100vh-1rem)] shadow-2xl flex flex-col gap-6">
+            <SheetContent side="left" className="w-[300px] sm:w-[350px] border-r rounded-r-2xl m-2 h-[calc(100vh-1rem)] shadow-2xl flex flex-col gap-6">
                 <SheetHeader className="text-left space-y-4">
                     <SheetTitle>Perfil</SheetTitle>
                     <div className="flex items-center gap-4">
@@ -64,14 +70,14 @@ export function UserSidebar({ user, children }: UserSidebarProps) {
                 </SheetHeader>
 
                 <div className="flex flex-col gap-2 flex-1 overflow-y-auto">
-                    <Link href="/settings" className="w-full">
+                    <Link href="/settings" className="w-full" onClick={handleLinkClick}>
                         <Button variant="ghost" className="w-full justify-start h-12 text-base font-normal">
                             <Settings className="mr-3 h-5 w-5" />
                             Configurações
                         </Button>
                     </Link>
 
-                    <Link href="/prices/price-history-admin" className="w-full">
+                    <Link href="/prices/price-history-admin" className="w-full" onClick={handleLinkClick}>
                         <Button variant="ghost" className="w-full justify-start h-12 text-base font-normal">
                             <TrendingUp className="mr-3 h-5 w-5" />
                             Histórico de Preços
@@ -88,17 +94,17 @@ export function UserSidebar({ user, children }: UserSidebarProps) {
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="pl-11 py-2 space-y-2">
-                                    <Link href="/admin/users" className="block w-full">
+                                    <Link href="/admin/users" className="block w-full" onClick={handleLinkClick}>
                                         <div className="py-2 hover:text-primary transition-colors cursor-pointer text-sm">
                                             Gerenciar Usuários
                                         </div>
                                     </Link>
-                                    <Link href="/admin/pending" className="block w-full">
+                                    <Link href="/admin/pending" className="block w-full" onClick={handleLinkClick}>
                                         <div className="py-2 hover:text-primary transition-colors cursor-pointer text-sm">
                                             Listas Pendentes
                                         </div>
                                     </Link>
-                                    <Link href="/summary/shopping-lists-admin" className="block w-full">
+                                    <Link href="/summary/shopping-lists-admin" className="block w-full" onClick={handleLinkClick}>
                                         <div className="py-2 hover:text-primary transition-colors cursor-pointer text-sm">
                                             Todas as Listas
                                         </div>
