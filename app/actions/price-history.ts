@@ -118,8 +118,7 @@ export async function deleteZeroValueHistoryEntries() {
         where: {
             userId: { in: accessibleIds },
             OR: [
-                { unitPrice: 0 },
-                { unitPrice: null }
+                { unitPrice: 0 }
             ]
         }
     });
