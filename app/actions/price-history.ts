@@ -105,6 +105,29 @@ export async function deletePriceHistoryEntry(id: string) {
     return res;
 }
 
+export async function deleteZeroValueHistoryEntries() {
+    const user = await requireUser();
+
+    // Only allow admin (or logic could be user-specific) - for now assuming user is authorized if they can access this action
+    // But since this deletes potentially shared data or lots of data, let's stick to the current user's accessible scope or just user's own data?
+    // User requested "admin" functionality. And implementation uses accessibleIds usually.
+    // Let's delete entries where unitPrice is 0 or null within accessible scope.
+    const accessibleIds = await getAccessibleUserIds();
+
+    const result = await prisma.priceHistory.deleteMany({
+        where: {
+            userId: { in: accessibleIds },
+            OR: [
+                { unitPrice: 0 },
+                { unitPrice: null }
+            ]
+        }
+    });
+
+    revalidatePath("/prices");
+    return { count: result.count };
+}
+
 export async function createPriceHistoryEntry(productName: string, unitPrice: number, purchaseDate?: Date) {
     const user = await requireUser();
     const cp = await getOrCreateCatalogProduct(productName, user.id);

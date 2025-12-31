@@ -5,9 +5,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import PriceHistoryTable from "./price-history-table";
 import PriceHistoryForm from "./price-history-form";
-import { listPriceHistory, deletePriceHistoryEntry, createPriceHistoryEntry, updatePriceHistoryEntry } from "@/app/actions/price-history";
+import { listPriceHistory, deletePriceHistoryEntry, createPriceHistoryEntry, updatePriceHistoryEntry, deleteZeroValueHistoryEntries } from "@/app/actions/price-history";
 import { toast } from "sonner";
 import ImportFileToPriceHistoryButton from "@/components/import-file-to-price-history-button";
+import { Trash2 } from "lucide-react";
 
 export default function PriceHistoryAdminPage() {
     const [entries, setEntries] = useState<any[]>([]);
@@ -39,7 +40,7 @@ export default function PriceHistoryAdminPage() {
     useEffect(() => { void load(); }, [filter]);
 
     useEffect(() => {
-        const handler = () => { 
+        const handler = () => {
             // Use requestAnimationFrame to defer load operation
             requestAnimationFrame(() => {
                 void load();
@@ -92,6 +93,21 @@ export default function PriceHistoryAdminPage() {
         }
     };
 
+    const handleDeleteZeroValues = async () => {
+        if (!confirm("Tem certeza que deseja remover todos os registros com valor 0 ou nulo?")) return;
+        setLoading(true);
+        try {
+            const result = await deleteZeroValueHistoryEntries();
+            toast.success(`${result.count} registros removidos.`);
+            await load();
+        } catch (e) {
+            console.error(e);
+            toast.error("Erro ao limpar registros zerados");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="p-4 space-y-4">
             <div className="flex items-center justify-between">
@@ -99,6 +115,10 @@ export default function PriceHistoryAdminPage() {
                 <div className="flex items-center gap-2">
                     <input className="input" placeholder="Filtrar por produto" value={filter} onChange={(e) => setFilter(e.target.value)} />
                     <Button onClick={handleCreate}>Adicionar</Button>
+                    <Button variant="outline" onClick={handleDeleteZeroValues} title="Remove itens com valor 0" className="text-red-500 hover:text-red-700 hover:bg-red-50 border-red-200">
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Limpar Zeros
+                    </Button>
                     <ImportFileToPriceHistoryButton />
                     <Button variant="ghost" onClick={load}>Atualizar</Button>
                 </div>
