@@ -24,6 +24,8 @@ import { SessionProvider } from "@/components/session-provider";
 import { UserButton } from "@/components/user-button";
 import { InstallPrompt } from "@/components/install-prompt";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { PageTransition } from "@/components/page-transition";
+import { ProgressBar } from "@/components/progress-bar";
 
 export const metadata: Metadata = {
   title: "Compra Supermercado - Gerenciador de Listas de Compras",
@@ -83,6 +85,7 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <ProgressBar />
             <div className="flex flex-col min-h-screen">
               {!hideNav && (
                 <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -114,7 +117,9 @@ export default async function RootLayout({
                 </header>
               )}
               <main className={`flex-1 ${!hideNav ? "pb-20" : ""}`}>
-                {children}
+                <PageTransition>
+                  {children}
+                </PageTransition>
               </main>
               {!hideNav && <BottomNav />}
             </div>
