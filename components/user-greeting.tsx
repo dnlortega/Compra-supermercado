@@ -6,6 +6,7 @@ import { ptBR } from "date-fns/locale";
 import { Cloud, CloudRain, Sun, CloudLightning, Wind, Quote } from "lucide-react";
 import Image from "next/image";
 import { BIBLE_VERSES } from "@/lib/bible-verses";
+import { UserSidebar } from "@/components/user-sidebar";
 
 interface UserGreetingProps {
     user: {
@@ -24,69 +25,71 @@ export function UserGreeting({ user }: UserGreetingProps) {
     const now = new Date();
 
     useEffect(() => {
-        // 1. Set Greeting
+        // 1. Set Greeting IMMEDIATELY (critical for FCP)
         const hour = now.getHours();
         if (hour < 12) setGreeting("Bom dia");
         else if (hour < 18) setGreeting("Boa tarde");
         else setGreeting("Boa noite");
 
-        // 2. Set Verse (random each time, but consistent per day per user)
-        const dayOfYear = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86400000);
-        // Create a simple hash from user ID
-        const userHash = user.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        // Use a combination of day and user hash to get different verses (consistent for the whole day)
-        const verseIndex = (dayOfYear + userHash) % BIBLE_VERSES.length;
-        setVerse(BIBLE_VERSES[verseIndex]);
+        // 2. Defer verse loading (non-critical, can wait)
+        setTimeout(() => {
+            const dayOfYear = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86400000);
+            const userHash = user.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            const verseIndex = (dayOfYear + userHash) % BIBLE_VERSES.length;
+            setVerse(BIBLE_VERSES[verseIndex]);
+        }, 100);
 
-        // 3. Get Weather
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                try {
-                    const { latitude, longitude } = position.coords;
-
-                    // 1. Weather
-                    const res = await fetch(
-                        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
-                    );
-                    const data = await res.json();
-                    const { temperature, weathercode } = data.current_weather;
-
-                    // 2. City Name (Reverse Geocoding)
+        // 3. Get Weather (lowest priority, defer more)
+        setTimeout(() => {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
                     try {
-                        const locRes = await fetch(
-                            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt`
+                        const { latitude, longitude } = position.coords;
+
+                        // 1. Weather
+                        const res = await fetch(
+                            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
                         );
-                        const locData = await locRes.json();
-                        if (locData.city || locData.locality) {
-                            setLocationName(locData.city || locData.locality);
+                        const data = await res.json();
+                        const { temperature, weathercode } = data.current_weather;
+
+                        // 2. City Name (Reverse Geocoding)
+                        try {
+                            const locRes = await fetch(
+                                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt`
+                            );
+                            const locData = await locRes.json();
+                            if (locData.city || locData.locality) {
+                                setLocationName(locData.city || locData.locality);
+                            }
+                        } catch (e) {
+                            console.error("City fetch error", e);
                         }
-                    } catch (e) {
-                        console.error("City fetch error", e);
+
+                        let icon = Sun;
+                        let description = "Céu Limpo";
+
+                        if (weathercode >= 1 && weathercode <= 3) {
+                            icon = Cloud;
+                            description = "Parcialmente Nublado";
+                        } else if (weathercode >= 45 && weathercode <= 48) {
+                            icon = Wind;
+                            description = "Nevoeiro";
+                        } else if (weathercode >= 51 && weathercode <= 67) {
+                            icon = CloudRain;
+                            description = "Chuva";
+                        } else if (weathercode >= 95) {
+                            icon = CloudLightning;
+                            description = "Trovoada";
+                        }
+
+                        setWeather({ temp: Math.round(temperature), icon, description });
+                    } catch (err) {
+                        console.error("Failed to fetch weather", err);
                     }
-
-                    let icon = Sun;
-                    let description = "Céu Limpo";
-
-                    if (weathercode >= 1 && weathercode <= 3) {
-                        icon = Cloud;
-                        description = "Parcialmente Nublado";
-                    } else if (weathercode >= 45 && weathercode <= 48) {
-                        icon = Wind;
-                        description = "Nevoeiro";
-                    } else if (weathercode >= 51 && weathercode <= 67) {
-                        icon = CloudRain;
-                        description = "Chuva";
-                    } else if (weathercode >= 95) {
-                        icon = CloudLightning;
-                        description = "Trovoada";
-                    }
-
-                    setWeather({ temp: Math.round(temperature), icon, description });
-                } catch (err) {
-                    console.error("Failed to fetch weather", err);
-                }
-            });
-        }
+                });
+            }
+        }, 500);
     }, []);
 
     return (
@@ -124,6 +127,8 @@ export function UserGreeting({ user }: UserGreetingProps) {
                                     alt={user.name || "Perfil"}
                                     fill
                                     className="object-cover"
+                                    loading="lazy"
+                                    sizes="56px"
                                 />
                             </div>
 
