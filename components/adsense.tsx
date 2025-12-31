@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface AdSenseProps {
     adSlot: string;
@@ -15,14 +15,59 @@ export function AdSense({
     fullWidthResponsive = true,
     className = ""
 }: AdSenseProps) {
+    const [isReady, setIsReady] = useState(false);
+
     useEffect(() => {
-        try {
-            // @ts-ignore
-            (window.adsbygoogle = window.adsbygoogle || []).push({});
-        } catch (err) {
-            console.error("AdSense error:", err);
+        // Verificar se o slot está configurado
+        if (!adSlot || adSlot.includes("YOUR_")) {
+            return;
         }
-    }, []);
+
+        // Aguardar o script do AdSense carregar antes de inicializar
+        const initAdSense = () => {
+            try {
+                if (typeof window !== "undefined") {
+                    const adsbygoogle = (window as any).adsbygoogle;
+                    if (adsbygoogle && adsbygoogle.loaded) {
+                        adsbygoogle.push({});
+                        setIsReady(true);
+                        return true;
+                    } else if (adsbygoogle) {
+                        adsbygoogle.push({});
+                        setIsReady(true);
+                        return true;
+                    }
+                }
+            } catch (err) {
+                console.error("AdSense error:", err);
+            }
+            return false;
+        };
+
+        // Tentar inicializar imediatamente
+        if (initAdSense()) {
+            return;
+        }
+
+        // Se não funcionar, tentar novamente após delays
+        const timeouts = [
+            setTimeout(() => {
+                if (initAdSense()) return;
+            }, 500),
+            setTimeout(() => {
+                if (initAdSense()) return;
+            }, 2000),
+        ];
+
+        return () => {
+            timeouts.forEach(timeout => clearTimeout(timeout));
+        };
+    }, [adSlot]);
+
+    // Não renderizar se o slot não estiver configurado
+    if (!adSlot || adSlot.includes("YOUR_")) {
+        return null;
+    }
 
     return (
         <div className={`adsense-container ${className}`}>
