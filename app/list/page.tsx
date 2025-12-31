@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ShoppingCart } from "lucide-react";
 import ImportOpenListButton from "@/components/import-open-list-button";
 import { ListNameEditor } from "@/components/list-name-editor";
+import { DeleteListButton } from "@/components/delete-list-button";
 
 export default async function ListPage() {
     const products = await getProducts();
@@ -27,8 +28,9 @@ export default async function ListPage() {
                     </h1>
                 </div>
 
-                <div>
+                <div className="flex items-center gap-2">
                     <ImportOpenListButton />
+                    {products.length > 0 && <DeleteListButton hasItems={true} />}
                 </div>
             </div>
 

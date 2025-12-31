@@ -5,13 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/db";
 import { formatCurrency } from "@/lib/utils";
-import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { format, startOfMonth, endOfMonth, subMonths, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { requireUser } from "@/lib/session";
 import Image from "next/image";
 import { UserGreeting } from "@/components/user-greeting";
 import { NotificationManager } from "@/components/notification-manager";
+import { OldListAlert } from "@/components/old-list-alert";
+import { DeleteListButton } from "@/components/delete-list-button";
 
 export default async function Home() {
   const user = await requireUser();
@@ -33,6 +35,7 @@ export default async function Home() {
   let percentageChange = 0;
   let allUsers: any[] = [];
   let openList: any = null;
+  let daysOpen = 0;
 
   try {
     // Paralelizar todas as queries para melhor performance
@@ -68,6 +71,8 @@ export default async function Home() {
           status: "OPEN"
         },
         select: {
+          id: true,
+          date: true,
           _count: { select: { items: true } }
         },
       }),
@@ -91,6 +96,8 @@ export default async function Home() {
     const currentMonthLists = currentMonthListsResult;
     const lastMonthLists = lastMonthListsResult;
     openList = openListResult;
+
+    daysOpen = openList ? differenceInDays(new Date(), new Date(openList.date)) : 0;
 
     totalSpent = currentMonthLists.reduce((acc, list) => acc + (list.total || 0), 0);
     totalSpentLastMonth = lastMonthLists.reduce((acc, list) => acc + (list.total || 0), 0);
@@ -125,7 +132,10 @@ export default async function Home() {
     <div className="flex flex-col gap-6 p-4 max-w-2xl mx-auto pb-24 animate-in fade-in duration-700">
       <UserGreeting user={user} />
 
-      {openList && (
+
+      {openList && daysOpen > 5 ? (
+        <OldListAlert listId={openList.id} daysOpen={daysOpen} />
+      ) : openList ? (
         <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-between gap-4 animate-in slide-in-from-top-2">
           <div className="flex items-center gap-4">
             <div className="bg-orange-500/20 p-2 rounded-full hidden sm:block">
@@ -136,13 +146,16 @@ export default async function Home() {
               <p className="text-xs text-orange-700/80 dark:text-orange-300/80">Você tem uma lista não finalizada.</p>
             </div>
           </div>
-          <Link href="/list">
-            <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white border-0 shadow-sm">
-              Continuar
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <DeleteListButton hasItems={openList._count.items > 0} />
+            <Link href="/list">
+              <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white border-0 shadow-sm">
+                Continuar
+              </Button>
+            </Link>
+          </div>
         </div>
-      )}
+      ) : null}
 
       {pendingItems > 0 && <NotificationManager pendingItemsCount={pendingItems} />}
 

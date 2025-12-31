@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
+import { AdminDeleteListButton } from "@/components/admin/admin-delete-list-button";
 
 export const dynamic = "force-dynamic";
 
@@ -38,10 +39,10 @@ export default async function AdminPendingListsPage() {
                     </div>
                 ) : (
                     openLists.map((list) => (
-                        <Link key={list.id} href={`/admin/users/${list.userId}/lists`} className="block">
-                            <Card className="hover:bg-accent/50 transition-colors border-l-4 border-l-yellow-400 hover:border-l-yellow-500">
-                                <CardContent className="p-4">
-                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <Card key={list.id} className="transition-colors border-l-4 border-l-yellow-400 hover:border-l-yellow-500">
+                            <CardContent className="p-4">
+                                <div className="flex items-center justify-between gap-4">
+                                    <Link href={`/admin/users/${list.userId}/lists`} className="flex-1 flex flex-col md:flex-row md:items-center gap-4 hover:opacity-70 transition-opacity">
 
                                         {/* User Info */}
                                         <div className="flex items-center gap-3 min-w-[200px]">
@@ -76,11 +77,12 @@ export default async function AdminPendingListsPage() {
                                                 <span>{list._count.items} itens</span>
                                             </div>
                                         </div>
+                                    </Link>
 
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </Link>
+                                    <AdminDeleteListButton listId={list.id} listName={list.name} userName={list.user.name} />
+                                </div>
+                            </CardContent>
+                        </Card>
                     ))
                 )}
             </div>

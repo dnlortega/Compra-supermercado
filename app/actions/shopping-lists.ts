@@ -144,7 +144,7 @@ export async function reopenShoppingList(id: string) {
             }
         }
     });
-    
+
     if (!list || !accessibleIds.includes(list.userId as string)) throw new Error("Unauthorized");
 
     // Create a new list with the same items
@@ -173,4 +173,31 @@ export async function reopenShoppingList(id: string) {
     revalidatePath("/summary");
     revalidatePath("/history");
     return newList;
+}
+
+export async function deleteCurrentOpenList() {
+    const user = await requireUser();
+
+    // Find open list for THIS user (owner)
+    const list = await prisma.shoppingList.findFirst({
+        where: {
+            userId: user.id,
+            status: "OPEN"
+        }
+    });
+
+    if (!list) {
+        throw new Error("Nenhuma lista aberta encontrada para excluir.");
+    }
+
+    await prisma.shoppingList.delete({
+        where: { id: list.id }
+    });
+
+    revalidatePath("/");
+    revalidatePath("/list");
+    revalidatePath("/prices");
+    revalidatePath("/summary");
+    revalidatePath("/history");
+    return { success: true };
 }

@@ -131,3 +131,19 @@ export async function getAllOpenLists() {
 
     return openLists;
 }
+
+export async function deleteListAsAdmin(listId: string) {
+    await requireAdmin();
+
+    try {
+        await prisma.shoppingList.delete({
+            where: { id: listId }
+        });
+        revalidatePath("/admin/pending");
+        revalidatePath("/admin/users");
+        return { success: true };
+    } catch (error: any) {
+        console.error("Failed to delete list as admin:", error);
+        return { success: false, error: error.message };
+    }
+}
