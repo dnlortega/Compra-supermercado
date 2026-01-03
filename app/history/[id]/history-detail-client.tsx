@@ -55,10 +55,16 @@ interface ShoppingListDetail {
     updatedAt: Date;
 }
 
-export default function HistoryDetailClient({ listId }: { listId: string }) {
+export default function HistoryDetailClient({
+    listId,
+    initialData
+}: {
+    listId: string;
+    initialData: ShoppingListDetail;
+}) {
     const router = useRouter();
-    const [list, setList] = useState<ShoppingListDetail | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [list, setList] = useState<ShoppingListDetail>(initialData);
+    const [loading, setLoading] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editPrice, setEditPrice] = useState<number>(0);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -87,8 +93,11 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
         );
     }, [list, searchTerm]);
 
+    // Apenas atualizar se o ID mudar (raro neste contexto)
     useEffect(() => {
-        loadList();
+        if (listId !== initialData.id) {
+            loadList();
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [listId]);
 

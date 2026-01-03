@@ -1,3 +1,4 @@
+import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 
@@ -6,6 +7,7 @@ const outfit = Outfit({
   subsets: ["latin"],
   display: "swap",
   preload: true,
+  adjustFontFallback: true, // Melhora o CLS ao carregar fontes
 });
 
 import { Toaster } from "@/components/ui/sonner";
@@ -99,8 +101,9 @@ export default async function RootLayout({
                             alt="Logo"
                             fill
                             className="object-contain"
-                            priority
+                            priority={true}
                             fetchPriority="high"
+                            loading="eager"
                             sizes="32px"
                           />
                         </div>
