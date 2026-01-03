@@ -25,7 +25,7 @@
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
   }
- 
+
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
@@ -53,13 +53,27 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+    font-size: 16px;
+    text-transform: uppercase;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Melhoria de legibilidade para inputs e botões */
+  input,
+  button,
+  textarea,
+  select {
+    font-family: inherit;
     text-transform: uppercase;
   }
 
-  input, button, textarea, select {
-    text-transform: uppercase;
+  /* Classe utilitária para labels que devem permanecer em destaque */
+  .text-label {
+    @apply text-[10px] font-bold uppercase tracking-widest text-muted-foreground;
   }
 }
 
@@ -68,6 +82,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -78,6 +93,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -89,6 +105,7 @@
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -100,6 +117,7 @@
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -110,6 +128,7 @@
   0% {
     background-position: -1000px 0;
   }
+
   100% {
     background-position: 1000px 0;
   }
@@ -133,12 +152,10 @@
 
 .animate-shimmer {
   animation: shimmer 2s infinite linear;
-  background: linear-gradient(
-    to right,
-    transparent 0%,
-    rgba(255, 255, 255, 0.1) 50%,
-    transparent 100%
-  );
+  background: linear-gradient(to right,
+      transparent 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      transparent 100%);
   background-size: 1000px 100%;
 }
 
@@ -147,15 +164,24 @@
   .transition-smooth {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  
+
   .transition-bounce {
     transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 }
 
 @keyframes pulse-subtle {
-  0%, 100% { opacity: 1; border-color: rgba(251, 191, 36, 0.4); }
-  50% { opacity: 0.95; border-color: rgba(251, 191, 36, 0.8); }
+
+  0%,
+  100% {
+    opacity: 1;
+    border-color: rgba(251, 191, 36, 0.4);
+  }
+
+  50% {
+    opacity: 0.95;
+    border-color: rgba(251, 191, 36, 0.8);
+  }
 }
 
 .animate-pulse-subtle {
@@ -165,6 +191,7 @@
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;

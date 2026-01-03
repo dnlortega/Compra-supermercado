@@ -72,6 +72,9 @@ const config = {
                 "accordion-up": "accordion-up 0.2s ease-out",
                 "spin-slow": "spin 10s linear infinite", // Aumentado de 8s para 10s (25% mais lento)
             },
+            fontFamily: {
+                sans: ["var(--font-outfit)", "sans-serif"],
+            },
         },
     },
     plugins: [require("tailwindcss-animate")],
