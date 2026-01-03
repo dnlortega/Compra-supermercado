@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Edit2, Save, X, Trash2, Plus, Download, RotateCcw } from "lucide-react";
+import { ArrowLeft, Edit2, Save, X, Trash2, Plus, Download, RotateCcw, Search } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { exportSingleList } from "@/app/actions/export-import";
 import { reopenShoppingList } from "@/app/actions/shopping-lists";
@@ -77,6 +77,15 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
     const [tempCreatedAt, setTempCreatedAt] = useState("");
     const [isEditingUpdatedAt, setIsEditingUpdatedAt] = useState(false);
     const [tempUpdatedAt, setTempUpdatedAt] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
+
+    // Filtrar produtos baseados no termo de busca
+    const filteredProducts = useMemo(() => {
+        if (!list) return [];
+        return list.products.filter(product =>
+            product.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [list, searchTerm]);
 
     useEffect(() => {
         loadList();
@@ -292,12 +301,15 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
         setIsEditingName(true);
     };
 
-    const groupedProducts = list?.products.reduce((acc, product) => {
-        const category = product.category || "Outros";
-        if (!acc[category]) acc[category] = [];
-        acc[category].push(product);
-        return acc;
-    }, {} as Record<string, Product[]>) || {};
+    const groupedProducts = useMemo(() => {
+        if (!list) return {};
+        return filteredProducts.reduce((acc, product) => {
+            const category = product.category || "Outros";
+            if (!acc[category]) acc[category] = [];
+            acc[category].push(product);
+            return acc;
+        }, {} as Record<string, Product[]>);
+    }, [list, filteredProducts]);
 
     const categories = Object.keys(groupedProducts).sort();
 
@@ -509,6 +521,16 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
                 </CardContent>
             </Card>
 
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                    placeholder="Buscar produto..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                />
+            </div>
+
             <div className="space-y-6">
                 {categories.map((category) => (
                     <div key={category} className="space-y-3">
@@ -584,6 +606,9 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
                         ))}
                     </div>
                 ))}
+                {list.products.length > 0 && filteredProducts.length === 0 && (
+                    <p className="text-center text-muted-foreground p-8">Nenhum produto encontrado.</p>
+                )}
             </div>
 
             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

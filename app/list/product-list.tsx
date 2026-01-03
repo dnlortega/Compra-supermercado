@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 
-import { Trash2, Edit2, Minus, Plus } from "lucide-react";
+import { Trash2, Edit2, Minus, Plus, Search } from "lucide-react";
 import { updateProduct } from "@/app/actions/products";
 import { toast } from "sonner";
 import {
@@ -37,9 +37,18 @@ interface Product {
 }
 
 export default function ProductList({ initialProducts }: { initialProducts: Product[] }) {
+    const [searchTerm, setSearchTerm] = useState("");
+
+    // Filtrar produtos baseados no termo de busca
+    const filteredProducts = useMemo(() => {
+        return initialProducts.filter(product =>
+            product.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [initialProducts, searchTerm]);
+
     // Memoizar agrupamento de produtos para evitar recálculos desnecessários
     const { groupedProducts, categories } = useMemo(() => {
-        const grouped = initialProducts.reduce((acc, product) => {
+        const grouped = filteredProducts.reduce((acc, product) => {
             const category = product.category || "Outros";
             if (!acc[category]) acc[category] = [];
             acc[category].push(product);
@@ -50,10 +59,22 @@ export default function ProductList({ initialProducts }: { initialProducts: Prod
             groupedProducts: grouped,
             categories: Object.keys(grouped).sort()
         };
-    }, [initialProducts]);
+    }, [filteredProducts]);
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            {initialProducts.length > 0 && (
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Buscar produto..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                    />
+                </div>
+            )}
+
             {categories.map((category) => (
                 <div key={category} className="space-y-2">
                     <h3 className="font-semibold text-muted-foreground ml-2 uppercase text-xs tracking-wider">{category}</h3>
@@ -64,6 +85,9 @@ export default function ProductList({ initialProducts }: { initialProducts: Prod
             ))}
             {initialProducts.length === 0 && (
                 <p className="text-center text-muted-foreground p-8">Sua lista está vazia.</p>
+            )}
+            {initialProducts.length > 0 && filteredProducts.length === 0 && (
+                <p className="text-center text-muted-foreground p-8">Nenhum produto encontrado.</p>
             )}
         </div>
     );

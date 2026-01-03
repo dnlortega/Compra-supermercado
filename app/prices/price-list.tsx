@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { updateProduct } from "@/app/actions/products";
@@ -10,7 +10,7 @@ import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { History, TrendingUp, TrendingDown, Calendar, Trash2 } from "lucide-react";
+import { History, TrendingUp, TrendingDown, Calendar, Trash2, Search } from "lucide-react";
 import {
     Popover,
     PopoverContent,
@@ -50,6 +50,14 @@ export default function PriceList({
         const d = new Date(initialDate);
         return d.toISOString().split('T')[0];
     });
+    const [searchTerm, setSearchTerm] = useState("");
+
+    // Filtrar produtos baseados no termo de busca
+    const filteredProducts = useMemo(() => {
+        return initialProducts.filter(product =>
+            product.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [initialProducts, searchTerm]);
 
     const handleDateChange = async (newDate: string) => {
         setDate(newDate);
@@ -63,24 +71,38 @@ export default function PriceList({
         }
     };
 
-    const groupedProducts = initialProducts.reduce((acc, product) => {
-        const category = product.category || "Outros";
-        if (!acc[category]) acc[category] = [];
-        acc[category].push(product);
-        // Sort within category: null/0 prices first
-        acc[category].sort((a, b) => {
-            const aHasPrice = a.unitPrice && a.unitPrice > 0;
-            const bHasPrice = b.unitPrice && b.unitPrice > 0;
-            if (aHasPrice === bHasPrice) return a.name.localeCompare(b.name);
-            return aHasPrice ? 1 : -1;
-        });
-        return acc;
-    }, {} as Record<string, Product[]>);
+    const groupedProducts = useMemo(() => {
+        return filteredProducts.reduce((acc, product) => {
+            const category = product.category || "Outros";
+            if (!acc[category]) acc[category] = [];
+            acc[category].push(product);
+            // Sort within category: null/0 prices first
+            acc[category].sort((a, b) => {
+                const aHasPrice = a.unitPrice && a.unitPrice > 0;
+                const bHasPrice = b.unitPrice && b.unitPrice > 0;
+                if (aHasPrice === bHasPrice) return a.name.localeCompare(b.name);
+                return aHasPrice ? 1 : -1;
+            });
+            return acc;
+        }, {} as Record<string, Product[]>);
+    }, [filteredProducts]);
 
     const categories = Object.keys(groupedProducts).sort();
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            {initialProducts.length > 0 && (
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Buscar produto..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                    />
+                </div>
+            )}
+
             <Card className="p-4 bg-muted/50 border-none shadow-none">
                 <div className="space-y-2">
                     <Label className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -135,6 +157,9 @@ export default function PriceList({
             ))}
             {initialProducts.length === 0 && (
                 <p className="text-center text-muted-foreground p-8">Sua lista está vazia.</p>
+            )}
+            {initialProducts.length > 0 && filteredProducts.length === 0 && (
+                <p className="text-center text-muted-foreground p-8">Nenhum produto encontrado.</p>
             )}
         </div>
     );
@@ -263,9 +288,9 @@ function PriceItem({ product }: { product: Product }) {
                         const response = await fetch(`/api/product/${product.id}`, {
                             method: 'DELETE',
                         });
-                        
+
                         const data = await response.json();
-                        
+
                         if (response.ok && data.success) {
                             toast.success("Produto removido");
                             requestAnimationFrame(() => {
