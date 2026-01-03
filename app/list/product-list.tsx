@@ -205,7 +205,14 @@ function ProductItem({ product }: { product: Product }) {
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="qty">Quantidade</Label>
-                                    <Input id="qty" type="number" min={1} value={editQty} onChange={(e) => setEditQty(parseInt(e.target.value))} />
+                                    <Input
+                                        id="qty"
+                                        type="number"
+                                        min={1}
+                                        value={editQty}
+                                        onChange={(e) => setEditQty(parseInt(e.target.value) || 0)}
+                                        onFocus={(e) => e.target.select()}
+                                    />
                                 </div>
                             </div>
                             <DialogFooter>

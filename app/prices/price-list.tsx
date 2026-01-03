@@ -335,6 +335,7 @@ function PriceItem({ product }: { product: Product }) {
                             value={quantity}
                             onChange={(e) => handleQtyChange(e.target.value)}
                             onBlur={handleBlur}
+                            onFocus={(e) => e.target.select()}
                             disabled={loading}
                             className="text-lg"
                         />
@@ -347,6 +348,7 @@ function PriceItem({ product }: { product: Product }) {
                                 value={unitPrice}
                                 onValueChange={handlePriceChange}
                                 onBlur={handleBlur}
+                                onFocus={(e) => e.target.select()}
                                 disabled={loading}
                                 className="text-lg"
                             />

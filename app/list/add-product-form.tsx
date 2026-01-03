@@ -80,26 +80,26 @@ export default function AddProductForm() {
 
     const validateForm = () => {
         const newErrors: { name?: string; quantity?: string } = {};
-        
+
         if (!name.trim()) {
             newErrors.name = "O nome do produto é obrigatório";
         }
-        
+
         if (!quantity || quantity < 1) {
             newErrors.quantity = "A quantidade deve ser maior que zero";
         }
-        
+
         if (isNaN(quantity) || quantity <= 0) {
             newErrors.quantity = "A quantidade deve ser um número válido maior que zero";
         }
-        
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        
+
         if (!validateForm()) {
             if (errors.name) toast.error(errors.name);
             if (errors.quantity) toast.error(errors.quantity);
@@ -182,10 +182,11 @@ export default function AddProductForm() {
                         min={1}
                         value={quantity}
                         onChange={(e) => {
-                            const value = parseInt(e.target.value) || 0;
-                            setQuantity(value);
+                            const value = parseInt(e.target.value);
+                            setQuantity(isNaN(value) ? 0 : value);
                             if (errors.quantity) setErrors(prev => ({ ...prev, quantity: undefined }));
                         }}
+                        onFocus={(e) => e.target.select()}
                         disabled={loading}
                         className={errors.quantity ? "border-red-500" : ""}
                     />

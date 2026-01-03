@@ -449,6 +449,7 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
                                             type="number"
                                             value={newProduct.quantity}
                                             onChange={(e) => setNewProduct(prev => ({ ...prev, quantity: e.target.value }))}
+                                            onFocus={(e) => (e.target as HTMLInputElement).select()}
                                             placeholder="1"
                                         />
                                     </div>
@@ -458,6 +459,7 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
                                             id="product-price"
                                             value={newProduct.unitPrice}
                                             onValueChange={(val) => setNewProduct(prev => ({ ...prev, unitPrice: val }))}
+                                            onFocus={(e) => (e.target as HTMLInputElement).select()}
                                             placeholder="0,00"
                                         />
                                     </div>
@@ -560,6 +562,7 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
                                                     <CurrencyInput
                                                         value={editPrice}
                                                         onValueChange={setEditPrice}
+                                                        onFocus={(e) => (e.target as HTMLInputElement).select()}
                                                         className="w-24 h-8"
                                                     />
                                                     <Button
