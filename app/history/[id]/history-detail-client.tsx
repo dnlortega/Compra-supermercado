@@ -536,100 +536,239 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
             <div className="space-y-6">
                 {categories.map((category) => (
                     <div key={category} className="space-y-3">
-                        <h3 className="font-semibold text-muted-foreground ml-2 uppercase text-xs tracking-wider">
-                            {category}
-                        </h3>
+                        <div className="flex items-center gap-2 ml-2">
+                            <div className="h-4 w-1 bg-primary rounded-full" />
+                            <h3 className="font-black text-muted-foreground uppercase text-[10px] tracking-[0.2em]">
+                                {category}
+                            </h3>
+                        </div>
                         {groupedProducts[category].map((product) => (
-                            <Card key={product.id} className="relative group">
-                                <CardContent className="p-4">
-                                    <div className="flex justify-between items-start">
-                                        <div className="flex-1">
-                                            <h4 className="font-semibold break-words">{product.name}</h4>
-                                            <p className="text-sm text-muted-foreground">Qtd: {product.quantity}</p>
-                                        </div>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 text-muted-foreground hover:text-destructive"
-                                            onClick={() => handleRemoveProduct(product.id, product.name)}
-                                            title="Remover produto"
-                                        >
-                                            <X className="h-3 w-3" />
-                                        </Button>
-                                        <div className="text-right space-y-1">
-                                            {editingId === product.id ? (
-                                                <div className="flex items-center gap-2">
-                                                    <CurrencyInput
-                                                        value={editPrice}
-                                                        onValueChange={setEditPrice}
-                                                        onFocus={(e) => (e.target as HTMLInputElement).select()}
-                                                        className="w-24 h-8"
-                                                    />
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        className="h-8 w-8"
-                                                        onClick={() => handleSave(product.id, product.quantity)}
-                                                    >
-                                                        <Save className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        className="h-8 w-8"
-                                                        onClick={() => setEditingId(null)}
-                                                    >
-                                                        <X className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    <div className="flex items-center gap-2">
-                                                        <p className="text-sm text-muted-foreground">
-                                                            {product.unitPrice !== null ? formatCurrency(product.unitPrice) : "-"}
-                                                        </p>
-                                                        <Button
-                                                            size="icon"
-                                                            variant="ghost"
-                                                            className="h-6 w-6"
-                                                            onClick={() => handleEdit(product)}
-                                                        >
-                                                            <Edit2 className="h-3 w-3" />
-                                                        </Button>
-                                                    </div>
-                                                    <p className="font-bold">
-                                                        {product.totalPrice !== null ? formatCurrency(product.totalPrice) : "-"}
-                                                    </p>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            <HistoryItem
+                                key={product.id}
+                                product={product}
+                                listId={listId}
+                                onRefresh={loadList}
+                                onRemove={() => handleRemoveProduct(product.id, product.name)}
+                            />
                         ))}
                     </div>
                 ))}
+
                 {list.products.length > 0 && filteredProducts.length === 0 && (
-                    <p className="text-center text-muted-foreground p-8">Nenhum produto encontrado.</p>
+                    <div className="text-center py-12 bg-muted/20 rounded-2xl border-2 border-dashed">
+                        <p className="text-muted-foreground font-medium italic">Nenhum produto encontrado na busca.</p>
+                    </div>
                 )}
             </div>
 
             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                <AlertDialogContent>
+                <AlertDialogContent className="rounded-3xl border-2 shadow-2xl">
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Tem certeza que deseja excluir esta compra? Esta ação não pode ser desfeita e todos os produtos serão removidos.
+                        <AlertDialogTitle className="font-black text-2xl uppercase tracking-tight">Confirmar Exclusão</AlertDialogTitle>
+                        <AlertDialogDescription className="text-base font-medium">
+                            Tem certeza que deseja excluir esta compra? Esta ação NÃO pode ser desfeita e todos os dados serão perdidos.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                            Excluir
+                    <AlertDialogFooter className="gap-2">
+                        <AlertDialogCancel className="rounded-xl font-bold uppercase tracking-widest text-[10px] h-11">Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={confirmDelete}
+                            className="bg-red-500 hover:bg-red-600 rounded-xl font-black uppercase tracking-widest text-[10px] h-11"
+                        >
+                            Excluir Compra
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
         </div>
+    );
+}
+
+function HistoryItem({
+    product,
+    listId,
+    onRefresh,
+    onRemove
+}: {
+    product: Product;
+    listId: string;
+    onRefresh: () => void;
+    onRemove: () => void;
+}) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [unitPrice, setUnitPrice] = useState<number>(product.unitPrice || 0);
+    const [quantity, setQuantity] = useState<string>(product.quantity.toString());
+    const [total, setTotal] = useState<number>(product.totalPrice || 0);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        setUnitPrice(product.unitPrice || 0);
+        setQuantity(product.quantity.toString());
+        setTotal(product.totalPrice || 0);
+    }, [product]);
+
+    const handlePriceChange = (val: number) => {
+        setUnitPrice(val);
+        const numQty = parseInt(quantity);
+        if (!isNaN(val) && !isNaN(numQty)) {
+            setTotal(val * numQty);
+        } else if (!isNaN(val)) {
+            setTotal(val * product.quantity);
+        }
+    };
+
+    const handleQtyChange = (val: string) => {
+        setQuantity(val);
+        const numQty = parseInt(val);
+        if (!isNaN(numQty)) {
+            setTotal(numQty * unitPrice);
+        }
+    };
+
+    const handleSave = async () => {
+        const numQty = parseInt(quantity);
+        if (isNaN(numQty) || numQty <= 0) {
+            toast.error("Quantidade inválida");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            // Primeiro atualiza o preço se necessário (usando a lógica da API do histórico)
+            await fetch(`/api/shopping-list/${listId}/product/${product.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    unitPrice: unitPrice,
+                    quantity: numQty
+                }),
+            });
+
+            toast.success("Produto atualizado");
+            setIsEditing(false);
+            onRefresh();
+        } catch (_error) {
+            toast.error("Erro ao atualizar");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const hasNoPrice = !unitPrice || unitPrice === 0;
+
+    return (
+        <Card
+            className={`relative overflow-hidden transition-all duration-300 border-l-4 ${isEditing ? 'ring-2 ring-primary/20 shadow-md scale-[1.02]' : 'shadow-sm'
+                } ${hasNoPrice ? 'border-l-amber-500 bg-amber-50/5' : 'border-l-green-500 bg-card shadow-sm'
+                }`}
+        >
+            <div className="p-4 space-y-4">
+                {/* Cabeçalho - CLIQUE AQUI PARA EXPANDIR */}
+                <div
+                    className="flex justify-between items-start gap-4 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => setIsEditing(!isEditing)}
+                >
+                    <div className="space-y-1 flex-1">
+                        <div className="flex items-center gap-2">
+                            <h3 className={`font-black tracking-tight transition-all ${isEditing ? 'text-lg' : 'text-base'}`}>
+                                {product.name}
+                            </h3>
+                            {!isEditing && (
+                                <span className="text-[10px] font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                                    {quantity} UN
+                                </span>
+                            )}
+                        </div>
+                        {product.category && (
+                            <div className="flex flex-wrap gap-2 items-center">
+                                <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full text-muted-foreground font-bold border capitalize">
+                                    {product.category}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="text-right shrink-0">
+                        <div className={`font-black tabular-nums transition-all ${isEditing ? 'text-2xl' : 'text-lg'} ${hasNoPrice ? 'text-amber-600' : 'text-green-600'}`}>
+                            {hasNoPrice ? "R$ ---" : formatCurrency(total)}
+                        </div>
+                        {!isEditing && !hasNoPrice && (
+                            <div className="text-[10px] font-bold text-muted-foreground uppercase">
+                                {formatCurrency(unitPrice)} / un
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {isEditing && (
+                    <div className="animate-in slide-in-from-top-2 duration-300 space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-dashed">
+                            {/* Coluna Quantidade */}
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Quantidade</Label>
+                                <Input
+                                    type="number"
+                                    value={quantity}
+                                    onChange={(e) => handleQtyChange(e.target.value)}
+                                    onFocus={(e) => e.target.select()}
+                                    disabled={loading}
+                                    className="h-12 text-xl font-bold bg-muted/30 border-2 focus:border-primary transition-all"
+                                />
+                            </div>
+
+                            {/* Coluna Preço Unitário */}
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Preço Unitário</Label>
+                                <CurrencyInput
+                                    placeholder="0,00"
+                                    value={unitPrice}
+                                    onValueChange={handlePriceChange}
+                                    onFocus={(e) => e.target.select()}
+                                    disabled={loading}
+                                    className="h-12 text-xl font-bold bg-muted/30 border-2 focus:border-primary transition-all flex-1"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Rodapé do Card */}
+                        <div className="flex items-center justify-between pt-2 border-t">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-10 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 px-3 flex gap-2 items-center"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (confirm(`Remover ${product.name.toUpperCase()}?`)) {
+                                        onRemove();
+                                    }
+                                }}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                                <span className="text-xs font-black uppercase">Remover</span>
+                            </Button>
+
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-10 px-4 font-bold"
+                                    onClick={() => setIsEditing(false)}
+                                >
+                                    CANCELAR
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    className="h-10 px-6 font-black bg-green-600 hover:bg-green-700 text-white"
+                                    onClick={handleSave}
+                                    disabled={loading}
+                                >
+                                    SALVAR
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </Card>
     );
 }
