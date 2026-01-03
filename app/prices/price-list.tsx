@@ -80,23 +80,35 @@ export default function PriceList({
         }
     };
 
-    const groupedProducts = useMemo(() => {
-        return filteredProducts.reduce((acc, product) => {
-            const category = product.category || "Outros";
-            if (!acc[category]) acc[category] = [];
-            acc[category].push(product);
-            // Sort within category: null/0 prices first
-            acc[category].sort((a, b) => {
-                const aHasPrice = a.unitPrice && a.unitPrice > 0;
-                const bHasPrice = b.unitPrice && b.unitPrice > 0;
-                if (aHasPrice === bHasPrice) return a.name.localeCompare(b.name);
-                return aHasPrice ? 1 : -1;
-            });
-            return acc;
-        }, {} as Record<string, Product[]>);
-    }, [filteredProducts]);
+    const { pendentes, groupedSortedProducts, pricedCategories } = useMemo(() => {
+        const pends: Product[] = [];
+        const normalGrouped: Record<string, Product[]> = {};
 
-    const categories = Object.keys(groupedProducts).sort();
+        filteredProducts.forEach(product => {
+            const isPendente = !product.unitPrice || product.unitPrice === 0;
+            if (isPendente) {
+                pends.push(product);
+            } else {
+                const category = product.category || "Outros";
+                if (!normalGrouped[category]) normalGrouped[category] = [];
+                normalGrouped[category].push(product);
+            }
+        });
+
+        // Ordenar pendentes por nome
+        pends.sort((a, b) => a.name.localeCompare(b.name));
+
+        // Ordenar produtos dentro de cada categoria por nome
+        Object.keys(normalGrouped).forEach(cat => {
+            normalGrouped[cat].sort((a, b) => a.name.localeCompare(b.name));
+        });
+
+        return {
+            pendentes: pends,
+            groupedSortedProducts: normalGrouped,
+            pricedCategories: Object.keys(normalGrouped).sort()
+        };
+    }, [filteredProducts]);
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -173,10 +185,22 @@ export default function PriceList({
                 </div>
             </div>
 
-            {categories.map((category) => (
+            {pendentes.length > 0 && (
+                <div className="space-y-3">
+                    <h3 className="font-bold text-amber-600 ml-2 uppercase text-xs tracking-wider flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                        Itens Pendentes ({pendentes.length})
+                    </h3>
+                    {pendentes.map((product) => (
+                        <PriceItem key={product.id} product={product} />
+                    ))}
+                </div>
+            )}
+
+            {pricedCategories.map((category) => (
                 <div key={category} className="space-y-3">
                     <h3 className="font-semibold text-muted-foreground ml-2 uppercase text-xs tracking-wider">{category}</h3>
-                    {groupedProducts[category].map((product) => (
+                    {groupedSortedProducts[category].map((product) => (
                         <PriceItem key={product.id} product={product} />
                     ))}
                 </div>
@@ -301,8 +325,13 @@ function PriceItem({ product }: { product: Product }) {
     return (
         <Card className={`p-4 flex flex-col gap-2 transition-all duration-300 ${hasNoPrice ? 'border-amber-400/50 bg-amber-50/10 shadow-sm animate-pulse-subtle' : 'animate-in zoom-in-95 duration-300'}`}>
             <div className="flex justify-between items-start">
-                <div>
-                    <h3 className="font-semibold text-lg">{product.name}</h3>
+                <div className="space-y-1">
+                    <h3 className="font-semibold text-lg leading-tight">{product.name}</h3>
+                    {hasNoPrice && product.category && (
+                        <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full text-muted-foreground font-bold">
+                            {product.category}
+                        </span>
+                    )}
                 </div>
                 <div className="text-right">
                     <p className={`font-bold text-lg ${hasNoPrice ? 'text-amber-600' : 'text-green-600'}`}>
