@@ -216,6 +216,8 @@ export default function PriceList({
 }
 
 function PriceItem({ product }: { product: Product }) {
+    const hasNoPrice = !product.unitPrice || product.unitPrice === 0;
+
     const [unitPrice, setUnitPrice] = useState<number>(product.unitPrice || 0);
     const [quantity, setQuantity] = useState<string>(product.quantity.toString());
     const [total, setTotal] = useState<number>(product.totalPrice || 0);
@@ -223,13 +225,15 @@ function PriceItem({ product }: { product: Product }) {
     const [lastPrice, setLastPrice] = useState<number | null>(null);
     const [priceHistory, setPriceHistory] = useState<PriceHistoryEntry[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
+    const [isEditing, setIsEditing] = useState(hasNoPrice);
 
     // Sincronizar estado quando produto mudar (apenas quando o ID do produto mudar)
     useEffect(() => {
         setUnitPrice(product.unitPrice || 0);
         setQuantity(product.quantity.toString());
         setTotal(product.totalPrice || 0);
-    }, [product.id]);
+        setIsEditing(!product.unitPrice || product.unitPrice === 0);
+    }, [product.id, product.unitPrice]);
 
     useEffect(() => {
         loadLastPrice();
@@ -264,7 +268,10 @@ function PriceItem({ product }: { product: Product }) {
         const priceChanged = Math.abs(normalizedValPrice - normalizedCurrentPrice) > 0.001;
         const qtyChanged = !isNaN(valQty) && valQty !== product.quantity;
 
-        if (!priceChanged && !qtyChanged) return;
+        if (!priceChanged && !qtyChanged) {
+            setIsEditing(false);
+            return;
+        }
 
         setLoading(true);
         try {
@@ -282,6 +289,7 @@ function PriceItem({ product }: { product: Product }) {
 
             setTotal(currentPrice * currentQty);
             if (priceChanged && valPrice > 0) setLastPrice(valPrice);
+            setIsEditing(false);
             toast.success("Alterações salvas");
         } catch (error) {
             console.error("Error saving product:", error);
@@ -320,137 +328,185 @@ function PriceItem({ product }: { product: Product }) {
     };
 
     const priceDifference = lastPrice && unitPrice ? unitPrice - lastPrice : 0;
-    const hasNoPrice = !product.unitPrice || product.unitPrice === 0;
 
     return (
-        <Card className={`p-4 flex flex-col gap-2 transition-all duration-300 ${hasNoPrice ? 'border-amber-400/50 bg-amber-50/10 shadow-sm animate-pulse-subtle' : 'animate-in zoom-in-95 duration-300'}`}>
-            <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                    <h3 className="font-semibold text-lg leading-tight">{product.name}</h3>
-                    {hasNoPrice && product.category && (
-                        <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full text-muted-foreground font-bold">
-                            {product.category}
-                        </span>
-                    )}
-                </div>
-                <div className="text-right">
-                    <p className={`font-bold text-lg ${hasNoPrice ? 'text-amber-600' : 'text-green-600'}`}>
-                        {hasNoPrice ? "Pendente" : formatCurrency(total)}
-                    </p>
-                </div>
-            </div>
-
-            <div className="flex justify-end mt-2">
-                <Button variant="ghost" size="icon" onClick={async () => {
-                    try {
-                        const response = await fetch(`/api/product/${product.id}`, {
-                            method: 'DELETE',
-                        });
-
-                        const data = await response.json();
-
-                        if (response.ok && data.success) {
-                            toast.success("Produto removido");
-                            requestAnimationFrame(() => {
-                                window.location.reload();
-                            });
-                        } else {
-                            toast.error(data?.error || "Erro ao remover produto");
-                        }
-                    } catch (e) {
-                        console.error("Error deleting product:", e);
-                        toast.error("Erro ao remover produto");
-                    }
-                }}>
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                </Button>
-            </div>
-
-            <div className="mt-2 space-y-2">
-                <div className="flex items-center justify-between">
-                    <label className="text-xs font-medium text-muted-foreground">Valor Unitário</label>
-                    {lastPrice && (
+        <Card
+            onClick={() => !isEditing && setIsEditing(true)}
+            className={`relative overflow-hidden transition-all duration-300 border-l-4 cursor-pointer ${isEditing ? 'ring-2 ring-primary/20 shadow-md' : 'hover:bg-muted/50'
+                } ${hasNoPrice ? 'border-l-amber-500 bg-amber-50/5 animate-pulse-subtle' : 'border-l-green-500 bg-card shadow-sm'
+                }`}
+        >
+            <div className="p-4 space-y-4">
+                {/* Cabeçalho do Card */}
+                <div className="flex justify-between items-start gap-4">
+                    <div className="space-y-1 flex-1">
                         <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">
-                                Último: {formatCurrency(lastPrice)}
-                            </span>
+                            <h3 className={`font-black tracking-tight transition-all ${isEditing ? 'text-lg' : 'text-base'}`}>
+                                {product.name}
+                            </h3>
+                            {!isEditing && !hasNoPrice && (
+                                <span className="text-[10px] font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                                    {quantity} UN
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex flex-wrap gap-2 items-center">
+                            {product.category && (
+                                <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full text-muted-foreground font-bold border">
+                                    {product.category}
+                                </span>
+                            )}
+                            {lastPrice && hasNoPrice && isEditing && (
+                                <span className="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full font-bold border border-blue-200 dark:border-blue-800">
+                                    SUGESTÃO: {formatCurrency(lastPrice)}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                        <div className={`font-black tabular-nums transition-all ${isEditing ? 'text-2xl' : 'text-lg'} ${hasNoPrice ? 'text-amber-600' : 'text-green-600'}`}>
+                            {hasNoPrice ? "R$ ---" : formatCurrency(total)}
+                        </div>
+                        {hasNoPrice && isEditing && (
+                            <div className="text-[10px] font-black uppercase text-amber-500 animate-pulse">
+                                Aguardando Preço
+                            </div>
+                        )}
+                        {!isEditing && !hasNoPrice && (
+                            <div className="text-[10px] font-bold text-muted-foreground uppercase">
+                                {formatCurrency(unitPrice)} / un
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {isEditing && (
+                    <div className="animate-in slide-in-from-top-2 duration-300">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-dashed">
+                            {/* Coluna Quantidade */}
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Qtd</Label>
+                                </div>
+                                <Input
+                                    type="number"
+                                    value={quantity}
+                                    onChange={(e) => handleQtyChange(e.target.value)}
+                                    onBlur={handleBlur}
+                                    onFocus={(e) => e.target.select()}
+                                    disabled={loading}
+                                    autoFocus
+                                    className="h-12 text-xl font-bold bg-muted/30 border-2 focus:border-primary transition-all"
+                                />
+                            </div>
+
+                            {/* Coluna Preço Unitário */}
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Preço Unitário</Label>
+                                    {lastPrice && (
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                useLastPrice();
+                                            }}
+                                            className="h-6 px-2 text-[10px] font-black bg-blue-500 text-white hover:bg-blue-600 shadow-sm border-none"
+                                        >
+                                            USAR ÚLTIMO
+                                        </Button>
+                                    )}
+                                </div>
+                                <div className="relative flex gap-2">
+                                    <CurrencyInput
+                                        placeholder="0,00"
+                                        value={unitPrice}
+                                        onValueChange={handlePriceChange}
+                                        onBlur={handleBlur}
+                                        onFocus={(e) => e.target.select()}
+                                        disabled={loading}
+                                        className="h-12 text-xl font-bold bg-muted/30 border-2 focus:border-primary transition-all flex-1"
+                                    />
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                size="icon"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    loadPriceHistory();
+                                                }}
+                                                disabled={loadingHistory}
+                                                className="h-12 w-12 shrink-0 bg-background border-2"
+                                            >
+                                                <History className="h-5 w-5" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-80" align="end" onClick={(e) => e.stopPropagation()}>
+                                            <div className="space-y-3 p-1">
+                                                <h4 className="font-black text-sm uppercase tracking-wider border-b pb-2">Histórico de Preços</h4>
+                                                {priceHistory.length === 0 ? (
+                                                    <p className="text-xs text-muted-foreground py-4 text-center">Nenhum histórico encontrado</p>
+                                                ) : (
+                                                    <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                                                        {priceHistory.map((entry) => (
+                                                            <div key={entry.id} className="flex justify-between items-center text-sm p-2 rounded bg-muted/30 border">
+                                                                <span className="text-muted-foreground font-bold">
+                                                                    {format(new Date(entry.purchaseDate), "dd/MM/yyyy", { locale: ptBR })}
+                                                                </span>
+                                                                <span className="font-black text-primary">{formatCurrency(entry.unitPrice)}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Rodapé do Card */}
+                        <div className="flex items-center justify-between pt-2">
+                            <div className="flex-1">
+                                {priceDifference !== 0 && lastPrice && (
+                                    <div className={`flex items-center gap-1.5 text-xs font-bold ${priceDifference > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                        {priceDifference > 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                                        <span>
+                                            {priceDifference > 0 ? '+' : ''}{formatCurrency(Math.abs(priceDifference))} VS ÚLTIMA COMPRA
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={useLastPrice}
-                                className="h-6 text-xs"
+                                className="h-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 px-2 group"
+                                onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (!confirm(`REMOVER ${product.name.toUpperCase()}?`)) return;
+                                    try {
+                                        const response = await fetch(`/api/product/${product.id}`, {
+                                            method: 'DELETE',
+                                        });
+                                        const data = await response.json();
+                                        if (response.ok && data.success) {
+                                            toast.success("PRODUTO REMOVIDO");
+                                            window.location.reload();
+                                        }
+                                    } catch (e) {
+                                        console.error("Error deleting product:", e);
+                                        toast.error("ERRO AO REMOVER");
+                                    }
+                                }}
                             >
-                                Usar
+                                <Trash2 className="h-4 w-4 mr-1 opacity-70 group-hover:opacity-100" />
+                                <span className="text-[10px] font-black uppercase">Excluir</span>
                             </Button>
                         </div>
-                    )}
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-medium text-muted-foreground uppercase">Quantidade</Label>
-                        <Input
-                            type="number"
-                            value={quantity}
-                            onChange={(e) => handleQtyChange(e.target.value)}
-                            onBlur={handleBlur}
-                            onFocus={(e) => e.target.select()}
-                            disabled={loading}
-                            className="text-lg"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-medium text-muted-foreground uppercase">Valor Unitário (R$)</Label>
-                        <div className="flex gap-2 items-center">
-                            <CurrencyInput
-                                placeholder="0,00"
-                                value={unitPrice}
-                                onValueChange={handlePriceChange}
-                                onBlur={handleBlur}
-                                onFocus={(e) => e.target.select()}
-                                disabled={loading}
-                                className="text-lg"
-                            />
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={loadPriceHistory}
-                                        disabled={loadingHistory}
-                                        className="shrink-0"
-                                    >
-                                        <History className="h-4 w-4" />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-80">
-                                    <div className="space-y-2">
-                                        <h4 className="font-semibold text-sm">Histórico de Preços</h4>
-                                        {priceHistory.length === 0 ? (
-                                            <p className="text-sm text-muted-foreground">Nenhum histórico encontrado</p>
-                                        ) : (
-                                            <div className="space-y-2 max-h-60 overflow-y-auto">
-                                                {priceHistory.map((entry) => (
-                                                    <div key={entry.id} className="flex justify-between items-center text-sm border-b pb-2">
-                                                        <span className="text-muted-foreground">
-                                                            {format(new Date(entry.purchaseDate), "dd/MM/yyyy", { locale: ptBR })}
-                                                        </span>
-                                                        <span className="font-medium">{formatCurrency(entry.unitPrice)}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </PopoverContent>
-                            </Popover>
-                        </div>
-                    </div>
-                </div>
-                {priceDifference !== 0 && lastPrice && (
-                    <div className={`flex items-center gap-1 text-xs ${priceDifference > 0 ? 'text-red-500' : 'text-green-500'}`}>
-                        {priceDifference > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                        <span>
-                            {priceDifference > 0 ? '+' : ''}{formatCurrency(Math.abs(priceDifference))} vs última compra
-                        </span>
                     </div>
                 )}
             </div>
