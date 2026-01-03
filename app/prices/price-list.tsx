@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { updateProduct } from "@/app/actions/products";
-import { savePriceHistory, getLastPrice, getPriceHistory } from "@/app/actions/price-history";
+import { savePriceHistory, getPriceHistory, getLastPricesBatch } from "@/app/actions/price-history";
 import { updateShoppingListDate } from "@/app/actions/shopping-lists";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
@@ -45,21 +45,30 @@ export default function PriceList({
     listId?: string,
     initialDate: Date
 }) {
-    // Format to YYYY-MM-DD correctly without timezone shifts for the input value
     const [date, setDate] = useState<string>(() => {
         const d = new Date(initialDate);
         return d.toISOString().split('T')[0];
     });
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("Tudo");
+    const [lastPricesMap, setLastPricesMap] = useState<Record<string, number | null>>({});
 
-    // Extrair categorias únicas presentes na lista
+    useEffect(() => {
+        const loadAllLastPrices = async () => {
+            const names = Array.from(new Set(initialProducts.map(p => p.name)));
+            if (names.length > 0) {
+                const results = await getLastPricesBatch(names);
+                setLastPricesMap(results);
+            }
+        };
+        loadAllLastPrices();
+    }, [initialProducts]);
+
     const allCategories = useMemo(() => {
         const cats = new Set(initialProducts.map(p => p.category || "Outros"));
         return ["Tudo", ...Array.from(cats).sort()];
     }, [initialProducts]);
 
-    // Filtrar produtos baseados no termo de busca e categoria selecionada
     const filteredProducts = useMemo(() => {
         return initialProducts.filter(product => {
             const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -95,10 +104,7 @@ export default function PriceList({
             }
         });
 
-        // Ordenar pendentes por nome
         pends.sort((a, b) => a.name.localeCompare(b.name));
-
-        // Ordenar produtos dentro de cada categoria por nome
         Object.keys(normalGrouped).forEach(cat => {
             normalGrouped[cat].sort((a, b) => a.name.localeCompare(b.name));
         });
@@ -123,8 +129,6 @@ export default function PriceList({
                             className="pl-10 h-11"
                         />
                     </div>
-
-                    {/* Catálogos (Filtros de Categoria) */}
                     <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar -mx-1 px-1">
                         {allCategories.map((cat) => (
                             <Button
@@ -192,7 +196,11 @@ export default function PriceList({
                         Itens Pendentes ({pendentes.length})
                     </h3>
                     {pendentes.map((product) => (
-                        <PriceItem key={product.id} product={product} />
+                        <PriceItem
+                            key={product.id}
+                            product={product}
+                            suggestedPrice={lastPricesMap[product.name]}
+                        />
                     ))}
                 </div>
             )}
@@ -201,10 +209,15 @@ export default function PriceList({
                 <div key={category} className="space-y-3">
                     <h3 className="font-semibold text-muted-foreground ml-2 uppercase text-xs tracking-wider">{category}</h3>
                     {groupedSortedProducts[category].map((product) => (
-                        <PriceItem key={product.id} product={product} />
+                        <PriceItem
+                            key={product.id}
+                            product={product}
+                            suggestedPrice={lastPricesMap[product.name]}
+                        />
                     ))}
                 </div>
             ))}
+
             {initialProducts.length === 0 && (
                 <p className="text-center text-muted-foreground p-8">Sua lista está vazia.</p>
             )}
@@ -215,37 +228,31 @@ export default function PriceList({
     );
 }
 
-function PriceItem({ product }: { product: Product }) {
+function PriceItem({ product, suggestedPrice }: { product: Product, suggestedPrice?: number | null }) {
     const hasNoPrice = !product.unitPrice || product.unitPrice === 0;
 
     const [unitPrice, setUnitPrice] = useState<number>(product.unitPrice || 0);
     const [quantity, setQuantity] = useState<string>(product.quantity.toString());
     const [total, setTotal] = useState<number>(product.totalPrice || 0);
     const [loading, setLoading] = useState(false);
-    const [lastPrice, setLastPrice] = useState<number | null>(null);
+    const [lastPrice, setLastPrice] = useState<number | null>(suggestedPrice ?? null);
     const [priceHistory, setPriceHistory] = useState<PriceHistoryEntry[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
     const [isEditing, setIsEditing] = useState(hasNoPrice);
 
-    // Sincronizar estado quando produto mudar (apenas quando o ID do produto mudar)
+    useEffect(() => {
+        if (suggestedPrice !== undefined) {
+            setLastPrice(suggestedPrice);
+        }
+    }, [suggestedPrice]);
+
     useEffect(() => {
         setUnitPrice(product.unitPrice || 0);
         setQuantity(product.quantity.toString());
         setTotal(product.totalPrice || 0);
-        // Só começa editando se não tiver preço
         const noPrice = !product.unitPrice || product.unitPrice === 0;
         setIsEditing(noPrice);
     }, [product.id, product.unitPrice]);
-
-    useEffect(() => {
-        loadLastPrice();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [product.name]);
-
-    const loadLastPrice = async () => {
-        const price = await getLastPrice(product.name);
-        setLastPrice(price);
-    };
 
     const loadPriceHistory = async () => {
         setLoadingHistory(true);
@@ -261,12 +268,10 @@ function PriceItem({ product }: { product: Product }) {
         const valPrice = unitPrice;
         const valQty = parseInt(quantity);
 
-        // Normalizar valores para comparação
         const currentUnitPrice = product.unitPrice ?? 0;
         const normalizedValPrice = valPrice || 0;
         const normalizedCurrentPrice = currentUnitPrice || 0;
 
-        // Se mudou preço ou quantidade
         const priceChanged = Math.abs(normalizedValPrice - normalizedCurrentPrice) > 0.001;
         const qtyChanged = !isNaN(valQty) && valQty !== product.quantity;
 
@@ -338,7 +343,6 @@ function PriceItem({ product }: { product: Product }) {
                 }`}
         >
             <div className="p-4 space-y-4">
-                {/* Cabeçalho - CLIQUE AQUI PARA EXPANDIR */}
                 <div
                     className="flex justify-between items-start gap-4 cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={() => setIsEditing(!isEditing)}
@@ -391,11 +395,8 @@ function PriceItem({ product }: { product: Product }) {
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-dashed">
-                            {/* Coluna Quantidade */}
                             <div className="space-y-2">
-                                <div className="flex justify-between items-center">
-                                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Qtd</Label>
-                                </div>
+                                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Qtd</Label>
                                 <Input
                                     type="number"
                                     value={quantity}
@@ -407,7 +408,6 @@ function PriceItem({ product }: { product: Product }) {
                                 />
                             </div>
 
-                            {/* Coluna Preço Unitário */}
                             <div className="space-y-2">
                                 <div className="flex justify-between items-center">
                                     <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Preço Unitário</Label>
@@ -474,7 +474,6 @@ function PriceItem({ product }: { product: Product }) {
                             </div>
                         </div>
 
-                        {/* Rodapé do Card */}
                         <div className="flex items-center justify-between pt-2">
                             <div className="flex-1">
                                 {priceDifference !== 0 && lastPrice && (

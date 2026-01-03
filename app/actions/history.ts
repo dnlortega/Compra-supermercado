@@ -19,9 +19,15 @@ export async function getHistory() {
             orderBy: {
                 date: "desc",
             },
-            include: {
-                items: true,
-            },
+            select: {
+                id: true,
+                date: true,
+                total: true,
+                name: true,
+                _count: {
+                    select: { items: true }
+                }
+            }
         });
 
         const grouped: Record<string, any[]> = {};
@@ -37,8 +43,8 @@ export async function getHistory() {
             grouped[monthKey].push({
                 id: list.id,
                 date: list.date,
-                total: list.total || list.items.reduce((acc: number, item: any) => acc + (item.totalPrice || 0), 0),
-                itemCount: list.items.length,
+                total: list.total || 0,
+                itemCount: list._count.items,
                 name: list.name,
             });
         }

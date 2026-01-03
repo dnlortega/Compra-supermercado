@@ -72,6 +72,49 @@ export async function getLastPrice(productName: string) {
     return lastEntry?.unitPrice || null;
 }
 
+/**
+ * Busca os últimos preços de vários produtos de uma só vez (Performance)
+ */
+export async function getLastPricesBatch(productNames: string[]) {
+    if (!productNames.length) return {};
+
+    const user = await requireUser();
+    const accessibleIds = await getAccessibleUserIds();
+
+    // 1. Buscar todos os CatalogProducts correspondentes de uma vez
+    const products = await prisma.catalogProduct.findMany({
+        where: {
+            name: { in: productNames, mode: 'insensitive' }
+        },
+        select: { id: true, name: true }
+    });
+
+    if (!products.length) return {};
+
+    const productIds = products.map(p => p.id);
+    const idToName = products.reduce((acc, p) => ({ ...acc, [p.id]: p.name }), {} as Record<string, string>);
+
+    // 2. Buscar o último preço de cada um
+    // Usamos uma query bruta para performance em batch, ou map se o volume for pequeno.
+    // Para SQLite/Postgres o findMany + distinct costuma ser complexo. 
+    // Vamos usar a estratégia de promessas paralelas controladas ou uma query otimizada.
+    const results = await Promise.all(
+        products.map(async (p) => {
+            const lastEntry = await prisma.priceHistory.findFirst({
+                where: {
+                    catalogProductId: p.id,
+                    userId: { in: accessibleIds }
+                },
+                orderBy: { purchaseDate: 'desc' },
+                select: { unitPrice: true }
+            });
+            return { name: p.name, price: lastEntry?.unitPrice || null };
+        })
+    );
+
+    return results.reduce((acc, res) => ({ ...acc, [res.name]: res.price }), {} as Record<string, number | null>);
+}
+
 export async function listPriceHistory(filter?: { productName?: string; take?: number }) {
     const user = await requireUser();
     const accessibleIds = await getAccessibleUserIds();
