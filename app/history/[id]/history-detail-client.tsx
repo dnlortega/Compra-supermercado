@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Edit2, Save, X, Trash2, Plus, Download, RotateCcw, Search } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, determineCategoryName } from "@/lib/utils";
 import { exportSingleList } from "@/app/actions/export-import";
 import { reopenShoppingList } from "@/app/actions/shopping-lists";
 import { toast } from "sonner";
@@ -434,7 +434,11 @@ export default function HistoryDetailClient({ listId }: { listId: string }) {
                                     <Input
                                         id="product-name"
                                         value={newProduct.name}
-                                        onChange={(e) => setNewProduct(prev => ({ ...prev, name: e.target.value }))}
+                                        onChange={(e) => {
+                                            const name = e.target.value;
+                                            const category = determineCategoryName(name);
+                                            setNewProduct(prev => ({ ...prev, name, category }));
+                                        }}
                                         placeholder="Ex: Arroz, Feijão..."
                                         spellCheck="true"
                                         autoCorrect="on"

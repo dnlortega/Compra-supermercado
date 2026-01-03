@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
+import { determineCategoryName } from "@/lib/utils";
 
 export async function POST(
     request: Request,
@@ -9,7 +10,10 @@ export async function POST(
     try {
         const { id } = await params;
         const body = await request.json();
-        const { name, quantity, unitPrice, category: categoryName = "Outros" } = body;
+        const { name, quantity, unitPrice, category: inputCategory } = body;
+        const categoryName = (!inputCategory || inputCategory === "Outros")
+            ? determineCategoryName(name)
+            : inputCategory;
 
         if (!name || !quantity) {
             return NextResponse.json({ error: "Nome e quantidade são obrigatórios" }, { status: 400 });
