@@ -13,7 +13,11 @@ export async function GET(
             where: { id },
             include: {
                 items: {
-                    include: { catalogProduct: true },
+                    include: {
+                        catalogProduct: {
+                            include: { category: true }
+                        }
+                    },
                     orderBy: { catalogProduct: { name: 'asc' } }
                 }
             },
