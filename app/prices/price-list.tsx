@@ -232,7 +232,9 @@ function PriceItem({ product }: { product: Product }) {
         setUnitPrice(product.unitPrice || 0);
         setQuantity(product.quantity.toString());
         setTotal(product.totalPrice || 0);
-        setIsEditing(!product.unitPrice || product.unitPrice === 0);
+        // Só começa editando se não tiver preço
+        const noPrice = !product.unitPrice || product.unitPrice === 0;
+        setIsEditing(noPrice);
     }, [product.id, product.unitPrice]);
 
     useEffect(() => {
@@ -331,14 +333,16 @@ function PriceItem({ product }: { product: Product }) {
 
     return (
         <Card
-            onClick={() => !isEditing && setIsEditing(true)}
-            className={`relative overflow-hidden transition-all duration-300 border-l-4 cursor-pointer ${isEditing ? 'ring-2 ring-primary/20 shadow-md' : 'hover:bg-muted/50'
+            className={`relative overflow-hidden transition-all duration-300 border-l-4 ${isEditing ? 'ring-2 ring-primary/20 shadow-md' : 'shadow-sm'
                 } ${hasNoPrice ? 'border-l-amber-500 bg-amber-50/5 animate-pulse-subtle' : 'border-l-green-500 bg-card shadow-sm'
                 }`}
         >
             <div className="p-4 space-y-4">
-                {/* Cabeçalho do Card */}
-                <div className="flex justify-between items-start gap-4">
+                {/* Cabeçalho - CLIQUE AQUI PARA EXPANDIR */}
+                <div
+                    className="flex justify-between items-start gap-4 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => setIsEditing(!isEditing)}
+                >
                     <div className="space-y-1 flex-1">
                         <div className="flex items-center gap-2">
                             <h3 className={`font-black tracking-tight transition-all ${isEditing ? 'text-lg' : 'text-base'}`}>
@@ -382,7 +386,10 @@ function PriceItem({ product }: { product: Product }) {
                 </div>
 
                 {isEditing && (
-                    <div className="animate-in slide-in-from-top-2 duration-300">
+                    <div
+                        className="animate-in slide-in-from-top-2 duration-300 space-y-4"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-dashed">
                             {/* Coluna Quantidade */}
                             <div className="space-y-2">
@@ -396,7 +403,6 @@ function PriceItem({ product }: { product: Product }) {
                                     onBlur={handleBlur}
                                     onFocus={(e) => e.target.select()}
                                     disabled={loading}
-                                    autoFocus
                                     className="h-12 text-xl font-bold bg-muted/30 border-2 focus:border-primary transition-all"
                                 />
                             </div>
