@@ -51,13 +51,22 @@ export default function PriceList({
         return d.toISOString().split('T')[0];
     });
     const [searchTerm, setSearchTerm] = useState("");
+    const [selectedCategory, setSelectedCategory] = useState("Tudo");
 
-    // Filtrar produtos baseados no termo de busca
+    // Extrair categorias únicas presentes na lista
+    const allCategories = useMemo(() => {
+        const cats = new Set(initialProducts.map(p => p.category || "Outros"));
+        return ["Tudo", ...Array.from(cats).sort()];
+    }, [initialProducts]);
+
+    // Filtrar produtos baseados no termo de busca e categoria selecionada
     const filteredProducts = useMemo(() => {
-        return initialProducts.filter(product =>
-            product.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [initialProducts, searchTerm]);
+        return initialProducts.filter(product => {
+            const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesCategory = selectedCategory === "Tudo" || (product.category || "Outros") === selectedCategory;
+            return matchesSearch && matchesCategory;
+        });
+    }, [initialProducts, searchTerm, selectedCategory]);
 
     const handleDateChange = async (newDate: string) => {
         setDate(newDate);
@@ -92,14 +101,31 @@ export default function PriceList({
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
             {initialProducts.length > 0 && (
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Buscar produto..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                    />
+                <div className="space-y-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Buscar produto..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10 h-11"
+                        />
+                    </div>
+
+                    {/* Catálogos (Filtros de Categoria) */}
+                    <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar -mx-1 px-1">
+                        {allCategories.map((cat) => (
+                            <Button
+                                key={cat}
+                                variant={selectedCategory === cat ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setSelectedCategory(cat)}
+                                className="whitespace-nowrap rounded-full px-4 h-8 text-xs font-semibold"
+                            >
+                                {cat}
+                            </Button>
+                        ))}
+                    </div>
                 </div>
             )}
 
@@ -270,15 +296,18 @@ function PriceItem({ product }: { product: Product }) {
     };
 
     const priceDifference = lastPrice && unitPrice ? unitPrice - lastPrice : 0;
+    const hasNoPrice = !product.unitPrice || product.unitPrice === 0;
 
     return (
-        <Card className="p-4 flex flex-col gap-2 animate-in zoom-in-95 duration-300">
+        <Card className={`p-4 flex flex-col gap-2 transition-all duration-300 ${hasNoPrice ? 'border-amber-400/50 bg-amber-50/10 shadow-sm animate-pulse-subtle' : 'animate-in zoom-in-95 duration-300'}`}>
             <div className="flex justify-between items-start">
                 <div>
                     <h3 className="font-semibold text-lg">{product.name}</h3>
                 </div>
                 <div className="text-right">
-                    <p className="font-bold text-lg text-green-600">{formatCurrency(total)}</p>
+                    <p className={`font-bold text-lg ${hasNoPrice ? 'text-amber-600' : 'text-green-600'}`}>
+                        {hasNoPrice ? "Pendente" : formatCurrency(total)}
+                    </p>
                 </div>
             </div>
 
