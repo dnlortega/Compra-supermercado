@@ -56,7 +56,6 @@ export function BottomNav() {
                             )}
                         >
                             <Icon className="size-6" />
-                            <span className="text-[10px]">{item.label}</span>
                         </Link>
                     )
                 })}
