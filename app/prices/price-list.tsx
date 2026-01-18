@@ -11,7 +11,7 @@ import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { History, TrendingUp, TrendingDown, Calendar, Trash2, Search, Camera, Loader2 } from "lucide-react";
+import { History, TrendingUp, TrendingDown, Calendar, Trash2, Search, Camera, Loader2, Check, X } from "lucide-react";
 import {
     Popover,
     PopoverContent,
@@ -241,6 +241,8 @@ function PriceItem({ product, suggestedPrice }: { product: Product, suggestedPri
     const [loadingHistory, setLoadingHistory] = useState(false);
     const [isEditing, setIsEditing] = useState(hasNoPrice);
     const [aiLoading, setAiLoading] = useState(false);
+    const [pendingAiPrice, setPendingAiPrice] = useState<number | null>(null);
+    const [showAiPop, setShowAiPop] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -353,8 +355,8 @@ function PriceItem({ product, suggestedPrice }: { product: Product, suggestedPri
                 const base64 = reader.result as string;
                 const extractedPrice = await extractPriceFromImage(base64);
                 if (extractedPrice > 0) {
-                    handlePriceChange(extractedPrice);
-                    toast.success(`Preço extraído: ${formatCurrency(extractedPrice)}`);
+                    setPendingAiPrice(extractedPrice);
+                    setShowAiPop(true);
                 } else {
                     toast.error("Não foi possível encontrar o preço na imagem.");
                 }
@@ -362,11 +364,19 @@ function PriceItem({ product, suggestedPrice }: { product: Product, suggestedPri
                 toast.error(err.message || "Erro ao processar imagem.");
             } finally {
                 setAiLoading(false);
-                // Clear input
                 if (fileInputRef.current) fileInputRef.current.value = "";
             }
         };
         reader.readAsDataURL(file);
+    };
+
+    const confirmAiPrice = () => {
+        if (pendingAiPrice !== null) {
+            handlePriceChange(pendingAiPrice);
+            toast.success(`Preço confirmado: ${formatCurrency(pendingAiPrice)}`);
+            setShowAiPop(false);
+            setPendingAiPrice(null);
+        }
     };
 
     const priceDifference = lastPrice && unitPrice ? unitPrice - lastPrice : 0;
@@ -478,19 +488,51 @@ function PriceItem({ product, suggestedPrice }: { product: Product, suggestedPri
                                         onChange={handleFileChange}
                                         className="hidden"
                                     />
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={handleCameraClick}
-                                        disabled={loading || aiLoading}
-                                        className="h-12 w-12 shrink-0 bg-background border-2 border-primary/50 text-primary hover:bg-primary/5"
-                                    >
-                                        {aiLoading ? (
-                                            <Loader2 className="h-5 w-5 animate-spin" />
-                                        ) : (
-                                            <Camera className="h-5 w-5" />
-                                        )}
-                                    </Button>
+                                    <Popover open={showAiPop} onOpenChange={setShowAiPop}>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                size="icon"
+                                                onClick={handleCameraClick}
+                                                disabled={loading || aiLoading}
+                                                className="h-12 w-12 shrink-0 bg-background border-2 border-primary/50 text-primary hover:bg-primary/5"
+                                            >
+                                                {aiLoading ? (
+                                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                                ) : (
+                                                    <Camera className="h-5 w-5" />
+                                                )}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-64 p-4 shadow-xl border-2" side="top" align="center" onClick={(e) => e.stopPropagation()}>
+                                            <div className="space-y-4">
+                                                <div className="text-center space-y-1">
+                                                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Valor Encontrado</p>
+                                                    <p className="text-3xl font-black text-primary">{pendingAiPrice ? formatCurrency(pendingAiPrice) : ""}</p>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        className="flex-1 h-10 border-red-200 text-red-500 hover:bg-red-50"
+                                                        onClick={() => {
+                                                            setShowAiPop(false);
+                                                            setPendingAiPrice(null);
+                                                        }}
+                                                    >
+                                                        <X className="h-4 w-4 mr-2" />
+                                                        DESCARTAR
+                                                    </Button>
+                                                    <Button
+                                                        className="flex-1 h-10 bg-green-600 hover:bg-green-700 text-white"
+                                                        onClick={confirmAiPrice}
+                                                    >
+                                                        <Check className="h-4 w-4 mr-2" />
+                                                        CONFIRMAR
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </PopoverContent>
+                                    </Popover>
                                     <Popover>
                                         <PopoverTrigger asChild>
                                             <Button
