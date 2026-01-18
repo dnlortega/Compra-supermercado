@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { updateProduct } from "@/app/actions/products";
 import { savePriceHistory, getPriceHistory, getLastPricesBatch } from "@/app/actions/price-history";
 import { updateShoppingListDate } from "@/app/actions/shopping-lists";
+import { extractPriceFromImage } from "@/app/actions/ai-prices";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { History, TrendingUp, TrendingDown, Calendar, Trash2, Search } from "lucide-react";
+import { History, TrendingUp, TrendingDown, Calendar, Trash2, Search, Camera, Loader2 } from "lucide-react";
 import {
     Popover,
     PopoverContent,
@@ -239,6 +240,8 @@ function PriceItem({ product, suggestedPrice }: { product: Product, suggestedPri
     const [priceHistory, setPriceHistory] = useState<PriceHistoryEntry[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
     const [isEditing, setIsEditing] = useState(hasNoPrice);
+    const [aiLoading, setAiLoading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (suggestedPrice !== undefined) {
@@ -332,6 +335,38 @@ function PriceItem({ product, suggestedPrice }: { product: Product, suggestedPri
             setUnitPrice(lastPrice);
             setTotal(lastPrice * product.quantity);
         }
+    };
+
+    const handleCameraClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setAiLoading(true);
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+            try {
+                const base64 = reader.result as string;
+                const extractedPrice = await extractPriceFromImage(base64);
+                if (extractedPrice > 0) {
+                    handlePriceChange(extractedPrice);
+                    toast.success(`Preço extraído: ${formatCurrency(extractedPrice)}`);
+                } else {
+                    toast.error("Não foi possível encontrar o preço na imagem.");
+                }
+            } catch (err: any) {
+                toast.error(err.message || "Erro ao processar imagem.");
+            } finally {
+                setAiLoading(false);
+                // Clear input
+                if (fileInputRef.current) fileInputRef.current.value = "";
+            }
+        };
+        reader.readAsDataURL(file);
     };
 
     const priceDifference = lastPrice && unitPrice ? unitPrice - lastPrice : 0;
@@ -432,9 +467,30 @@ function PriceItem({ product, suggestedPrice }: { product: Product, suggestedPri
                                         onValueChange={handlePriceChange}
                                         onBlur={handleBlur}
                                         onFocus={(e) => e.target.select()}
-                                        disabled={loading}
+                                        disabled={loading || aiLoading}
                                         className="h-12 text-xl font-bold bg-muted/30 border-2 focus:border-primary transition-all flex-1"
                                     />
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        capture="environment"
+                                        ref={fileInputRef}
+                                        onChange={handleFileChange}
+                                        className="hidden"
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={handleCameraClick}
+                                        disabled={loading || aiLoading}
+                                        className="h-12 w-12 shrink-0 bg-background border-2 border-primary/50 text-primary hover:bg-primary/5"
+                                    >
+                                        {aiLoading ? (
+                                            <Loader2 className="h-5 w-5 animate-spin" />
+                                        ) : (
+                                            <Camera className="h-5 w-5" />
+                                        )}
+                                    </Button>
                                     <Popover>
                                         <PopoverTrigger asChild>
                                             <Button
